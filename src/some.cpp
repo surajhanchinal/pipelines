@@ -1,6 +1,6 @@
 #include <iostream>
 #include "things.h"
-
+#include "node.h"
 namespace sm
 {
     namespace lbr
