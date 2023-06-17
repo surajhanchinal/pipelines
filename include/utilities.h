@@ -86,8 +86,9 @@ public:
   static bool constexpr value = std::tuple_size<InputTuple>::value == 0;
 };
 
-template <typename InputTuple, typename CurrNode, typename... RestOfTheNodes>
-struct match_input_output<InputTuple, CurrNode, RestOfTheNodes...> {
+template <typename InputTuple, typename CurrNodeRef,typename... RestOfTheNodes>
+struct match_input_output<InputTuple, CurrNodeRef, RestOfTheNodes...> {
+  using CurrNode = typename std::remove_pointer<CurrNodeRef>::type;
 
   static int constexpr currNodeInputSize =
       std::tuple_size<typename CurrNode::input_tuple_type>::value;
