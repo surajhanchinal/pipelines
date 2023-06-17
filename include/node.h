@@ -28,24 +28,19 @@ struct match_input_output<InputTuple, CurrNode, RestOfTheNodes...> {
   static int constexpr currNodeInputSize =
       std::tuple_size<typename CurrNode::input_tuple_type>::value;
   static int constexpr currTupleSize = std::tuple_size<InputTuple>::value;
-  using relevantOutputSeq = typename empty_seq_if_bigger_than_tuple<
-      InputTuple, typename MakeSeq<0, currNodeInputSize - 1, 0>::type>::type;
-
-  using relevantNextCheckTupleSeq = typename empty_seq_if_bigger_than_tuple<
-      InputTuple, typename MakeSeq<currNodeInputSize,currTupleSize - 1,
-                                   currNodeInputSize>::type>::type;
 
   using relevantOutputType =
-      typename filter_tuple<InputTuple, relevantOutputSeq>::type;
-  using relevantNextCheckTuple =
-      typename filter_tuple<InputTuple, relevantNextCheckTupleSeq>::type;
+      typename get_first_n<InputTuple, currNodeInputSize>::type;
+
+  using relevantNextCheckType =
+      typename get_after_first_n<InputTuple, currNodeInputSize>::type;
 
 public:
   static bool constexpr value =
       (currNodeInputSize <= currTupleSize) &&
       std::is_same<relevantOutputType,
                    typename CurrNode::input_tuple_type>::value &&
-      match_input_output<relevantNextCheckTuple, RestOfTheNodes...>::value;
+      match_input_output<relevantNextCheckType, RestOfTheNodes...>::value;
 };
 
 // match_input_output End

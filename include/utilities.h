@@ -36,27 +36,45 @@ public:
   using type = Seq<>;
 };
 
-// Filter Tuple Start
+// Better tuples start
 
-template <typename... unusedTypes> struct filter_tuple {};
+template <typename... unusedTypes> struct FilterTuple {};
 
-template <typename Tuple, int... Ints>
-struct filter_tuple<Tuple, Seq<Ints...>> {
-public:
-  using type = std::tuple<typename std::tuple_element<Ints, Tuple>::type...>;
-};
+template <typename Tuple, int... Ints> struct FilterTuple<Tuple, Seq<Ints...>> {
+private:
+  template <typename... unusedTypes> struct IFilteredTuple {};
 
-template <typename A, typename B> struct empty_seq_if_bigger_than_tuple {};
-
-template <typename Tuple, int... Ints>
-struct empty_seq_if_bigger_than_tuple<Tuple, Seq<Ints...>> {
-  static bool constexpr validSeq =
+  template <typename ITuple, int... IInts>
+  struct IFilteredTuple<ITuple, Seq<IInts...>> {
+  public:
+    using type =
+        std::tuple<typename std::tuple_element<IInts, ITuple>::type...>;
+  };
+  static bool constexpr isValid =
       std::tuple_size<Tuple>::value >= sizeof...(Ints);
+  using validatedSeqType =
+      typename std::conditional<isValid, Seq<Ints...>, Seq<>>::type;
 
 public:
-  using type = typename std::conditional<validSeq, Seq<Ints...>, Seq<>>::type;
+  using type = typename IFilteredTuple<Tuple, validatedSeqType>::type;
 };
 
-// Filter Tuple End
+template <typename Tuple, int N> struct get_first_n {
+public:
+  using type =
+      typename FilterTuple<Tuple, typename MakeSeq<0, N - 1, 0>::type>::type;
+};
+
+template <typename Tuple, int N> struct get_after_first_n {
+private:
+  static int const tupleSize = std::tuple_size<Tuple>::value;
+
+public:
+  using type =
+      typename FilterTuple<Tuple,
+                           typename MakeSeq<N, tupleSize - 1, N>::type>::type;
+};
+
+// Better Tuples End
 
 #endif
