@@ -13,38 +13,6 @@ template <typename... Types> struct type_list_t {};
 
 template <typename... Types> class Node {};
 
-// match_input_output Start
-
-template <typename... unusedTypes> struct match_input_output {};
-
-template <typename InputTuple> struct match_input_output<InputTuple> {
-public:
-  static bool constexpr value = std::tuple_size<InputTuple>::value == 0;
-};
-
-template <typename InputTuple, typename CurrNode, typename... RestOfTheNodes>
-struct match_input_output<InputTuple, CurrNode, RestOfTheNodes...> {
-
-  static int constexpr currNodeInputSize =
-      std::tuple_size<typename CurrNode::input_tuple_type>::value;
-  static int constexpr currTupleSize = std::tuple_size<InputTuple>::value;
-
-  using relevantOutputType =
-      typename get_first_n<InputTuple, currNodeInputSize>::type;
-
-  using relevantNextCheckType =
-      typename get_after_first_n<InputTuple, currNodeInputSize>::type;
-
-public:
-  static bool constexpr value =
-      (currNodeInputSize <= currTupleSize) &&
-      std::is_same<relevantOutputType,
-                   typename CurrNode::input_tuple_type>::value &&
-      match_input_output<relevantNextCheckType, RestOfTheNodes...>::value;
-};
-
-// match_input_output End
-
 template <typename... inputs_t, typename... outputs_t>
 class Node<type_list_t<inputs_t...>, type_list_t<outputs_t...>> {
 private:
