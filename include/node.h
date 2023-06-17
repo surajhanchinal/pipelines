@@ -4,29 +4,7 @@
 #include <iostream>
 #include <tuple>
 #include <type_traits>
-
-/*template<typename... Args>
-class Node {
-        using Tuple = std::tuple<Args...>;
-        static constexpr auto Size  = sizeof...(Args);
-        template <std::size_t N>
-        using Nth = typename std::tuple_element<N, Tuple>::type;
-        using First = Nth<0>;
-        using Last = Nth<Size  - 1>;
-};*/
-/*template<typename... Ts>
-class NodeSequence {
-        private:
-                int a = 5;
-};
-
-template<typename std::tuple<typename In...>::type,std::tuple<typename Out...>
-OutT> class Node { template<typename... Ts,class I,class O> NodeSequence<Ts...>
-attach(Node<I,O> node){ return NodeSequence<In,Out,I,O>();
-}
-NodeSequence attach(NodeSequence sequence);
-};
-*/
+#include "utilities.h"
 // test struct wrapper. eventually a buffer
 template <typename T> struct my_buffer {
   T a;
