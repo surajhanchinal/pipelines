@@ -11,12 +11,13 @@ int main() {
 
   static_assert(std::is_same<typename MakeSeq<5, 10, 5>::type,
                              Seq<5, 6, 7, 8, 9, 10>>::value);
-  auto node1 = ExampleFirstNode();
-  auto node2 = ExampleSecondNode();
-  auto node3 = ExampleSecondNode();
-  node1.attach(node2, node3);
+  auto node1 = new ExampleFirstNode();
+  auto node2 = new ExampleSecondNode();
+  auto node3 = new ExampleSecondNode();
+auto myTuple =  node1->attach(node2, node3);
 
   cout << "Hello world!" << endl;
+  
   sm::lbr::printSomething();
   cout << someString << endl;
   return 0;
