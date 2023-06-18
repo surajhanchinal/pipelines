@@ -1,38 +1,29 @@
 #include "node.h"
 #include "orchestrator.h"
-#include "some.h"
-#include "things.h"
-#include "utilities.h"
 #include <iostream>
 using namespace std;
 
 int main() {
-  using node_input_type = type_list_t<int, int>;
-  using node_output_type = type_list_t<int, int>;
 
-  static_assert(std::is_same<typename MakeSeq<5, 10, 5>::type,
-                             Seq<5, 6, 7, 8, 9, 10>>::value);
-  auto node1 = new ExampleFirstNode();
-  auto node2 = new ExampleSecondNode();
-  auto node3 = new ExampleSecondNode();
+  auto node1 = new Node(0, 3);
+  node1->name = "hey";
 
-  auto tuple = std::tuple(1, 2, 'c', node1);
+  auto node2 = new Node(3, 0);
+  node2->name = "bcd";
 
   auto o1 = Orchestrator();
 
-  // auto o2 = Orchestrator(o1, node1);
+  o1.attachNode(node1);
+  o1.attachNode(node2);
 
-  // auto o3 = Orchestrator(Orchestrator(Orchestrator(),node2),node3);
-  //  auto o8 = Orchestrator() | node1;
-  auto o4 = Orchestrator() | node1 | node2 | node3;
+  node1->outputs->ports[0]->setOtherPort(node2->inputs->ports[0]);
 
-  auto x = std::get<0>(std::get<2>(o4.nodes)->outputs.ports)->buffer->data;
+  node1->outputs->ports[1]->setOtherPort(node2->inputs->ports[1]);
+  node1->outputs->ports[2]->setOtherPort(node2->inputs->ports[2]);
 
-  x = node3->my_idx;
+  auto isValid = o1.validateGraph();
 
-  cout << "hey" << x << endl;
+  cout << "hey  " << isValid << endl;
 
-  sm::lbr::printSomething();
-  cout << someString << endl;
   return 0;
 }

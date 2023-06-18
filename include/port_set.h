@@ -1,31 +1,24 @@
-#ifndef PORT_SET_H
-#define PORT_SET_H
-
+#pragma once
 #include "port.h"
 #include <iostream>
 #include <tuple>
+#include <vector>
 
-template <typename... Is> class PortSet {
+class PortSet {
 public:
-  std::tuple<Port<Is> *...> ports;
+  std::vector<Port *> ports;
   int nodeIdx;
-  PortSet<Is...>() { ports = std::make_tuple(new Port<Is>()...); }
+  PortSet(int n) {
+    for (int i = 0; i < n; i++) {
+      ports.push_back(new Port());
+    }
+  }
 
   void updateNodeIdx(int nodeIdx) {
-    std::apply([&](auto &&...args) { ((args->setNodeIdx(nodeIdx)), ...); },
-               ports);
+    for (auto const &port : ports) {
+      port->setNodeIdx(nodeIdx);
+    }
   };
 
-  void createBuffers() {
-    std::apply([&](auto &&...args) { ((args->createBuffer(nodeIdx)), ...); },
-               ports);
-  }
-
-  template <typename T, typename... Us>
-  void attachPort(int index, Port<T> *port) {
-    Port<T> currPort = std::get<index>(ports);
-    currPort.otherPort = port;
-  }
+  void attachPort(int idx, Port *const dest) { ports[idx]->setOtherPort(dest); }
 };
-
-#endif
