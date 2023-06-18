@@ -1,13 +1,17 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include "buffer.h"
+#include "port_set.h"
 #include "utilities.h"
 #include <iostream>
 #include <tuple>
 #include <type_traits>
-template <typename T> struct my_buffer {
+#include <vector>
+
+/*template <typename T> struct my_buffer {
   T a;
-};
+};*/
 
 template <typename... Types> struct type_list_t {};
 
@@ -33,6 +37,9 @@ public:
                   "This code is trash, Inputs of nodes being attach do not "
                   "match the output of the current node output");
   }
+  int my_idx = -1;
+  PortSet<inputs_t...> inputs;
+  PortSet<outputs_t...> outputs;
 };
 
 class ExampleFirstNode : public Node<type_list_t<int, int, char>,
