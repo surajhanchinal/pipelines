@@ -1,3 +1,4 @@
+#include "camel_buffer.h"
 #include "node.h"
 #include "orchestrator.h"
 #include <iostream>
@@ -23,7 +24,19 @@ int main() {
 
   auto isValid = o1.validateGraph();
 
-  cout << "hey  " << isValid << endl;
+
+  std::cout<<"size of pointer: " << sizeof(node1) << " "<< sizeof(Node*)<<std::endl;
+
+  auto mybuffer = moodycamel::BlockingReaderWriterCircularBuffer(100,sizeof(Node*));
+
+
+  mybuffer.try_enqueue(node1);
+
+  Node* x;
+
+  mybuffer.try_dequeue(x);
+
+  cout << "hey  " << x->name << endl;
 
   return 0;
 }

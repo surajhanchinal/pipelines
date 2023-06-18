@@ -25,7 +25,7 @@ public:
       return;
     nodes.push_back(_node);
     for (auto const &port : _node->outputs->ports) {
-      auto buf = new Buffer();
+      auto buf = new Buffer(1,2);
       bufs.push_back(buf);
       port->setNodeIdx(nodes.size() - 1);
       port->setBuffer(buf);
