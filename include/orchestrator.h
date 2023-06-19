@@ -1,6 +1,7 @@
 #pragma once
 
 #include "buffer.h"
+#include "camel_buffer.h"
 #include "node.h"
 #include <iostream>
 #include <queue>
@@ -9,7 +10,7 @@
 class Orchestrator {
 private:
   std::vector<NodeBase *> nodes;
-  std::vector<Buffer *> bufs;
+  std::vector<moodycamel::BlockingReaderWriterCircularBuffer *> bufs;
 
 public:
   void registerNode(NodeBase *_node) {
@@ -25,7 +26,7 @@ public:
       return;
     nodes.push_back(_node);
     for (auto const &port : _node->outputs->ports) {
-      auto buf = new Buffer(1, 2);
+      auto buf = new moodycamel::BlockingReaderWriterCircularBuffer(100, 8);
       bufs.push_back(buf);
       port->setNodeIdx(nodes.size() - 1);
       port->setBuffer(buf);

@@ -17,10 +17,14 @@ int main() {
   o1.registerNode(node1);
   o1.registerNode(node2);
 
-  node1->outputs->ports[0]->setOtherPort(node2->inputs->ports[0]);
+  // node1->outputs->ports[0]->setOtherPort(node2->inputs->ports[0]);
 
-  node1->outputs->ports[1]->setOtherPort(node2->inputs->ports[1]);
-  node1->outputs->ports[2]->setOtherPort(node2->inputs->ports[2]);
+  // node1->outputs->ports[1]->setOtherPort(node2->inputs->ports[1]);
+  // node1->outputs->ports[2]->setOtherPort(node2->inputs->ports[2]);
+
+  node1->attachPort<0, 0>(node2);
+  node1->attachPort<1, 1>(node2);
+  //  node1->attachPort<2, 2>(node2);
 
   auto isValid = o1.validateGraph();
 
@@ -38,7 +42,7 @@ int main() {
 
   mybuffer.try_dequeue(x);
 
-  cout << "hey  " << x->name << endl;
+  cout << "hey  " << x->name << "   " << isValid << endl;
 
   return 0;
 }

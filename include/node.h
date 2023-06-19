@@ -1,7 +1,6 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "buffer.h"
 #include "port_set.h"
 #include "utilities.h"
 #include <iostream>
@@ -34,12 +33,32 @@ public:
     while (1) {
     }
   }
+
+  template <int I> Port *getIPort() { return inputs->ports[I]; }
+
+  template <int I> Port *getOPort() { return outputs->ports[I]; };
+
+  template <typename T, int I> T readData() {
+    Port *p = getIPort<I>();
+    T t;
+    p->buffer->try_dequeue(t);
+    return t;
+  }
+
+  template <typename T, int I> void writeData(T t) {
+    Port *p = getOPort<I>();
+    p->buffer->try_enqueue(t);
+    return;
+  }
+  template <int I, int J, typename T> void attachPort(T *otherNode) {
+    getOPort<I>()->setOtherPort(otherNode->template getIPort<J>());
+  }
 };
 
 class ExampleFirstNode
-    : public Node<type_list_t<int, int, char>, type_list_t<char, int, char>> {};
+    : public Node<type_list_t<>, type_list_t<char, int, char>> {};
 
 class ExampleSecondNode
-    : public Node<type_list_t<char, int, int>, type_list_t<int>> {};
+    : public Node<type_list_t<char, int, char>, type_list_t<>> {};
 
 #endif
