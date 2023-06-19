@@ -6,16 +6,16 @@ using namespace std;
 
 int main() {
 
-  auto node1 = new Node(0, 3);
-  node1->name = "hey";
+  auto node1 = new ExampleFirstNode();
+  node1->name = "yuem";
 
-  auto node2 = new Node(3, 0);
+  auto node2 = new ExampleSecondNode();
   node2->name = "bcd";
 
   auto o1 = Orchestrator();
 
-  o1.attachNode(node1);
-  o1.attachNode(node2);
+  o1.registerNode(node1);
+  o1.registerNode(node2);
 
   node1->outputs->ports[0]->setOtherPort(node2->inputs->ports[0]);
 
@@ -24,15 +24,17 @@ int main() {
 
   auto isValid = o1.validateGraph();
 
+  std::cout << "size of pointer: " << sizeof(node1) << " " << sizeof(NodeBase *)
+            << std::endl;
 
-  std::cout<<"size of pointer: " << sizeof(node1) << " "<< sizeof(Node*)<<std::endl;
-
-  auto mybuffer = moodycamel::BlockingReaderWriterCircularBuffer(100,sizeof(Node*));
-
+  auto mybuffer =
+      moodycamel::BlockingReaderWriterCircularBuffer(100, sizeof(NodeBase *));
 
   mybuffer.try_enqueue(node1);
 
-  Node* x;
+  cout << "checking if I still have node: " << node1->name << endl;
+
+  ExampleSecondNode *x;
 
   mybuffer.try_dequeue(x);
 

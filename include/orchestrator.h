@@ -8,11 +8,11 @@
 
 class Orchestrator {
 private:
-  std::vector<Node *> nodes;
+  std::vector<NodeBase *> nodes;
   std::vector<Buffer *> bufs;
 
 public:
-  void attachNode(Node *_node) {
+  void registerNode(NodeBase *_node) {
     bool found = false;
     for (auto const &node : nodes) {
       if (node == _node) {
@@ -25,7 +25,7 @@ public:
       return;
     nodes.push_back(_node);
     for (auto const &port : _node->outputs->ports) {
-      auto buf = new Buffer(1,2);
+      auto buf = new Buffer(1, 2);
       bufs.push_back(buf);
       port->setNodeIdx(nodes.size() - 1);
       port->setBuffer(buf);
@@ -37,7 +37,7 @@ public:
 
   bool validateGraph() {
     std::vector<bool> visited(nodes.size(), 0);
-    std::queue<Node *> qq;
+    std::queue<NodeBase *> qq;
     for (int i = 0; i < nodes.size(); i++) {
       if (nodes[i]->inputs->ports.size() == 0) {
         qq.push(nodes[i]);

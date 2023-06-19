@@ -9,20 +9,37 @@
 #include <type_traits>
 #include <vector>
 
-class Node {
+class NodeBase {
+public:
+  PortSet *inputs;
+  PortSet *outputs;
+  NodeBase(){};
+  virtual ~NodeBase(){};
+};
+
+template <typename... Types> struct type_list_t {};
+
+template <typename... Types> class Node : public NodeBase {};
+
+template <typename... inputs_t, typename... outputs_t>
+class Node<type_list_t<inputs_t...>, type_list_t<outputs_t...>>
+    : public NodeBase {
 public:
   std::string name;
-  Node(int in_c,int out_c){
-    inputs = new PortSet(in_c);
-    outputs = new PortSet(out_c);
+  Node() {
+    inputs = new PortSet(sizeof...(inputs_t));
+    outputs = new PortSet(sizeof...(outputs_t));
   }
   void process() {
     while (1) {
-      
     }
   }
-  PortSet *inputs;
-  PortSet *outputs;
 };
+
+class ExampleFirstNode
+    : public Node<type_list_t<int, int, char>, type_list_t<char, int, char>> {};
+
+class ExampleSecondNode
+    : public Node<type_list_t<char, int, int>, type_list_t<int>> {};
 
 #endif
