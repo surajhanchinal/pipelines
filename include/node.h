@@ -34,14 +34,14 @@ public:
 
   template <int I> Port *getOPort() { return outputs->ports[I]; };
 
-  template <typename T, int I> T readData() {
+  template <int I, typename T> T readData() {
     Port *p = getIPort<I>();
     T t;
     p->buffer->try_dequeue(t);
     return t;
   }
 
-  template <typename T, int I> void writeData(T t) {
+  template <int I, typename T> void writeData(T t) {
     Port *p = getOPort<I>();
     p->buffer->try_enqueue(t);
     return;
@@ -54,13 +54,29 @@ public:
 class ExampleFirstNode
     : public Node<type_list_t<>, type_list_t<char, int, char>> {
 
-  void process() { std::cout << "Hey N1" << std::endl; }
+  void process() {
+    std::cout << "Hey N1" << std::endl;
+    char first = 'h';
+    int second = 10;
+    char third = 'c';
+    writeData<0>(first);
+    writeData<1>(second);
+    writeData<2>(third);
+  }
 };
 
 class ExampleSecondNode
     : public Node<type_list_t<char, int, char>, type_list_t<>> {
 
-  void process() { std::cout << "Hey N2" << std::endl; }
+  void process() {
+    std::cout << "Hey N2" << std::endl;
+    auto firstR = readData<0, char>();
+    auto secondR = readData<1, int>();
+    auto thirdR = readData<2, char>();
+
+    std::cout << "This is the data I read:  " << firstR << "  " << secondR
+              << "  " << thirdR << std::endl;
+  }
 };
 
 #endif
