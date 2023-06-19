@@ -4,6 +4,7 @@
 #include "port_set.h"
 #include "utilities.h"
 #include <iostream>
+#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -43,7 +44,7 @@ public:
                   "use a compatible type. Refer to Node definition");
     Port *p = getIPort<I>();
     T t;
-    p->buffer->try_dequeue(t);
+    p->buffer->wait_dequeue(t);
     return t;
   }
 
@@ -62,12 +63,15 @@ class ExampleFirstNode
 
   void process() {
     std::cout << "Hey N1" << std::endl;
-    char first = 'h';
-    int second = 10;
-    char third = 'c';
-    writeData<0>(first);
-    writeData<1>(second);
-    writeData<2>(third);
+    while (true) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+      char first = 'h';
+      int second = 10;
+      char third = 'c';
+      writeData<0>(first);
+      writeData<1>(second);
+      writeData<2>(third);
+    }
   }
 };
 
@@ -76,12 +80,14 @@ class ExampleSecondNode
 
   void process() {
     std::cout << "Hey N2" << std::endl;
-    auto firstR = readData<0, char>();
-    auto secondR = readData<1, int>();
-    auto thirdR = readData<2, char>();
+    while (true) {
+      auto firstR = readData<0, char>();
+      auto secondR = readData<1, int>();
+      auto thirdR = readData<2, char>();
 
-    std::cout << "This is the data I read:  " << firstR << "  " << secondR
-              << "  " << thirdR << std::endl;
+      std::cout << "This is the data I read:  " << firstR << "  " << secondR
+                << "  " << thirdR << std::endl;
+    }
   }
 };
 
