@@ -6,6 +6,7 @@
 #include <iostream>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 class NodeBase {
@@ -25,6 +26,8 @@ template <typename... inputs_t, typename... outputs_t>
 class Node<type_list_t<inputs_t...>, type_list_t<outputs_t...>>
     : public NodeBase {
 public:
+  using input_tuple_type = std::tuple<inputs_t...>;
+  using output_tuple_type = std::tuple<outputs_t...>;
   Node() {
     inputs = new PortSet(sizeof...(inputs_t));
     outputs = new PortSet(sizeof...(outputs_t));
@@ -35,6 +38,9 @@ public:
   template <int I> Port *getOPort() { return outputs->ports[I]; };
 
   template <int I, typename T> T readData() {
+    static_assert(std::is_same_v<T, std::tuple_element_t<I, input_tuple_type>>,
+                  "The port type does not match the type being read. Please "
+                  "use a compatible type. Refer to Node definition");
     Port *p = getIPort<I>();
     T t;
     p->buffer->try_dequeue(t);
@@ -71,7 +77,7 @@ class ExampleSecondNode
   void process() {
     std::cout << "Hey N2" << std::endl;
     auto firstR = readData<0, char>();
-    auto secondR = readData<1, int>();
+    auto secondR = readData<1, char>();
     auto thirdR = readData<2, char>();
 
     std::cout << "This is the data I read:  " << firstR << "  " << secondR
