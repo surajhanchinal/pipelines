@@ -5,6 +5,7 @@
 #include "node.h"
 #include <iostream>
 #include <queue>
+#include <thread>
 #include <vector>
 
 class Orchestrator {
@@ -41,9 +42,13 @@ public:
       std::cout << "Computation graph is not valid" << std::endl;
       return false;
     }
-    // starts the pipeline. Non threaded rn to process method
+    std::vector<std::thread> threads;
     for (auto const &node : nodes) {
-      node->process();
+      threads.push_back(std::thread(&NodeBase::process, node));
+    }
+
+    for (int i = 0; i < threads.size(); i++) {
+      threads[i].join();
     }
     return true;
   }

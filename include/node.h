@@ -77,7 +77,7 @@ class ExampleSecondNode
   void process() {
     std::cout << "Hey N2" << std::endl;
     auto firstR = readData<0, char>();
-    auto secondR = readData<1, char>();
+    auto secondR = readData<1, int>();
     auto thirdR = readData<2, char>();
 
     std::cout << "This is the data I read:  " << firstR << "  " << secondR
