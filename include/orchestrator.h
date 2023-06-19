@@ -12,9 +12,10 @@ class Orchestrator {
 private:
   std::vector<NodeBase *> nodes;
   std::vector<moodycamel::BlockingReaderWriterCircularBuffer *> bufs;
+  int mainNodeIdx = -1;
 
 public:
-  void registerNode(NodeBase *_node) {
+  void registerNode(NodeBase *_node, bool runOnMain = false) {
     bool found = false;
     for (auto const &node : nodes) {
       if (node == _node) {
@@ -27,13 +28,16 @@ public:
       return;
     nodes.push_back(_node);
     for (auto const &port : _node->outputs->ports) {
-      auto buf = new moodycamel::BlockingReaderWriterCircularBuffer(100, 8);
+      auto buf = new moodycamel::BlockingReaderWriterCircularBuffer(1000, 100);
       bufs.push_back(buf);
       port->setNodeIdx(nodes.size() - 1);
       port->setBuffer(buf);
     }
     for (auto const &port : _node->inputs->ports) {
       port->setNodeIdx(nodes.size() - 1);
+    }
+    if (runOnMain) {
+      mainNodeIdx = nodes.size() - 1;
     }
   }
 
@@ -43,8 +47,15 @@ public:
       return false;
     }
     std::vector<std::thread> threads;
-    for (auto const &node : nodes) {
-      threads.push_back(std::thread(&NodeBase::process, node));
+    for (int i = 0; i < nodes.size(); i++) {
+      if (i == mainNodeIdx) {
+        continue;
+      }
+      threads.push_back(std::thread(&NodeBase::process, nodes[i]));
+    }
+
+    if (mainNodeIdx != -1) {
+      nodes[mainNodeIdx]->process();
     }
 
     for (int i = 0; i < threads.size(); i++) {
