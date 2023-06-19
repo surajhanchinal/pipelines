@@ -14,6 +14,7 @@ public:
   PortSet *outputs;
   NodeBase(){};
   virtual ~NodeBase(){};
+  virtual void process() = 0;
 };
 
 template <typename... Types> struct type_list_t {};
@@ -24,14 +25,9 @@ template <typename... inputs_t, typename... outputs_t>
 class Node<type_list_t<inputs_t...>, type_list_t<outputs_t...>>
     : public NodeBase {
 public:
-  std::string name;
   Node() {
     inputs = new PortSet(sizeof...(inputs_t));
     outputs = new PortSet(sizeof...(outputs_t));
-  }
-  void process() {
-    while (1) {
-    }
   }
 
   template <int I> Port *getIPort() { return inputs->ports[I]; }
@@ -56,9 +52,15 @@ public:
 };
 
 class ExampleFirstNode
-    : public Node<type_list_t<>, type_list_t<char, int, char>> {};
+    : public Node<type_list_t<>, type_list_t<char, int, char>> {
+
+  void process() { std::cout << "Hey N1" << std::endl; }
+};
 
 class ExampleSecondNode
-    : public Node<type_list_t<char, int, char>, type_list_t<>> {};
+    : public Node<type_list_t<char, int, char>, type_list_t<>> {
+
+  void process() { std::cout << "Hey N2" << std::endl; }
+};
 
 #endif

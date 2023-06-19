@@ -36,6 +36,18 @@ public:
     }
   }
 
+  bool start() {
+    if (!validateGraph()) {
+      std::cout << "Computation graph is not valid" << std::endl;
+      return false;
+    }
+    // starts the pipeline. Non threaded rn to process method
+    for (auto const &node : nodes) {
+      node->process();
+    }
+    return true;
+  }
+
   bool validateGraph() {
     std::vector<bool> visited(nodes.size(), 0);
     std::queue<NodeBase *> qq;
