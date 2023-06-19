@@ -20,7 +20,6 @@ class FrameDisplay : public Node<input_type_fd, output_type_fd> {
     int64 start = cv::getTickCount();
     while (1) {
       frame = readData<0, cv::Mat>();
-      cout << "in: " << sizeof(frame) << endl;
       if (frame.empty()) {
         break;
       }
