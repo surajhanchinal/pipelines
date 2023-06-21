@@ -1,4 +1,5 @@
 #pragma once
+#include "fps_counter.h"
 #include "node.h"
 #include <iostream>
 #include <opencv2/core/utility.hpp>
@@ -14,11 +15,10 @@ class FrameDisplay : public Node<input_type_fd, output_type_fd> {
   void process() {
     cv::namedWindow("frame1", cv::WINDOW_OPENGL);
     cv::resizeWindow("frame1", 1920, 1080);
-
+    auto fc = FpsCounter(120);
     cv::Mat frame;
-    int fps_count = 0;
-    int64 start = cv::getTickCount();
     while (1) {
+      fc.loop();
       frame = readData<0, cv::Mat>();
       if (frame.empty()) {
         break;
@@ -27,16 +27,8 @@ class FrameDisplay : public Node<input_type_fd, output_type_fd> {
       char c = (char)cv::waitKey(1);
       if (c == 27)
         break;
-      if (fps_count == 60) {
-        int64 end = cv::getTickCount();
-        double te = (end - start) / cv::getTickFrequency();
-        double fps = 60 / te;
-        std::cout << "FPS : " << fps << std::endl;
-        start = end;
-        fps_count = 0;
-      }
-      fps_count++;
     }
+    fc.reset();
   }
 
   ~FrameDisplay() { cv::destroyAllWindows(); }
