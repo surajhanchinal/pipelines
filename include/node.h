@@ -49,6 +49,10 @@ public:
   }
 
   template <int I, typename T> void writeData(T t) {
+    static_assert(std::is_same_v<T, std::tuple_element_t<I, output_tuple_type>>,
+                  "The port type does not match the type being read. Please "
+                  "use a compatible type. Refer to Node definition");
+
     Port *p = getOPort<I>();
     p->buffer->try_enqueue(t);
     return;
