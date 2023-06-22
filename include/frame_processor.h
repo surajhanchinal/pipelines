@@ -1,5 +1,6 @@
 #pragma once
 #include "atomicops.h"
+#include "fps_counter.h"
 #include "frame_buffer.h"
 #include "node.h"
 #include <iostream>
@@ -10,7 +11,7 @@
 
 namespace frame_processor {
 using input_type = type_list_t<cv::Mat>;
-using output_type = type_list_t<cv::Mat, cv::Mat>;
+using output_type = type_list_t<cv::Mat>;
 }; // namespace frame_processor
 
 class FrameProcessor
@@ -35,7 +36,9 @@ public:
     cv::Mat gprev, gcurr, gnext;
     cv::Mat diff1, diff2;
     cv::Mat diff_and;
+    FpsCounter fc(60);
     while (true) {
+      // fc.loop();
       auto inputFrame = readData<0, cv::Mat>();
       fb->insertFrame(inputFrame);
       fb->getFrames(prev, curr, next);
@@ -69,7 +72,7 @@ public:
       }
 
       writeData<0>(inputFrame);
-      writeData<1>(diff_and);
+      // writeData<1>(diff_and);
     }
   }
 
