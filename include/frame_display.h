@@ -38,7 +38,7 @@ public:
         break;
       }
       // cout << frame1.size() << " " << frame2.size() << endl;
-      imshow("frame1", frame1);
+      imshow(windowName, frame1);
       // imshow("frame2", frame2);
       char c = (char)cv::waitKey(1);
       if (c == 27)
