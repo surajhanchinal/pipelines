@@ -20,8 +20,8 @@ public:
     cap->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
     cap->set(cv::CAP_PROP_FPS, 60);
 
-    cap->set(cv::CAP_PROP_FRAME_HEIGHT, 1080);
-    cap->set(cv::CAP_PROP_FRAME_WIDTH, 1920);
+    cap->set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+    cap->set(cv::CAP_PROP_FRAME_WIDTH, 1280);
 
     // cap->set(cv::CAP_PROP_AUTO_EXPOSURE, 1);
     // cap->set(cv::CAP_PROP_EXPOSURE, 400);

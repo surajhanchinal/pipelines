@@ -3,6 +3,7 @@
 #include "frame_processor.h"
 #include "frame_reader.h"
 #include "imgui.h"
+#include "imgui_image_node.h"
 #include "node.h"
 #include "orchestrator.h"
 #include "window_node.h"
@@ -28,12 +29,14 @@ int main() {
 
   auto frameReader1 = new FrameReader(0, "camera");
 
-  // auto frameReader2 = new FrameReader(2, "camera");
+  auto frameReader2 = new FrameReader(2, "camera");
+
+  auto frameProcessor1 = new FrameProcessor(720, 1280, 3);
+
+  auto frameProcessor2 = new FrameProcessor(720, 1280, 3);
 
   auto frameDisplay = new FrameDisplay("fr1");
-  // auto fD2 = new FrameDisplay("fr2");
-  auto frameProcessor1 = new FrameProcessor(1080, 1920, 3);
-  // auto frameProcessor2 = new FrameProcessor(1080, 1920, 3);
+
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
 
@@ -42,35 +45,29 @@ int main() {
 
   auto window1 = glfwCreateWindow(1280, 720, "w1", nullptr, nullptr);
 
-  auto window2 = glfwCreateWindow(1280, 720, "w2", nullptr, nullptr);
+  // auto window2 = glfwCreateWindow(1920, 1080, "w2", nullptr, nullptr);
 
-  auto windowNode1 = new WindowNode("w1", window1);
+  auto imguiImageNode = new ImGuiImageNode("w1", window1);
 
-  auto windowNode2 = new WindowNode("w2", window2);
+  // auto image2Node = new ImGuiImageNode("w2", window2);
 
   auto o1 = Orchestrator();
 
   o1.registerNode(frameReader1);
-  // o1.registerNode(frameReader2);
+  o1.registerNode(frameReader2);
   o1.registerNode(frameDisplay, true);
   o1.registerNode(frameProcessor1);
-  // o1.registerNode(fD2);
-  o1.registerNode(windowNode1);
-  o1.registerNode(windowNode2);
-  //  o1.registerNode(frameProcessor2);
-
-  frameReader1->attachPort<0, 0>(frameProcessor1);
-
-  // frameReader2->attachPort<0, 0>(frameDisplay);
+  o1.registerNode(frameProcessor2);
+  o1.registerNode(imguiImageNode);
+  // o1.registerNode(image2Node);
 
   // frameReader1->attachPort<0, 0>(frameProcessor1);
-  // frameProcessor1->attachPort<0, 0>(fD2);
-  frameProcessor1->attachPort<0, 0>(frameDisplay);
-  //  frameProcessor1->attachPort<1, 1>(frameDisplay);
 
-  // frameReader2->attachPort<0, 0>(frameProcessor2);
-  // frameProcessor2->attachPort<0, 2>(frameDisplay);
-  // frameProcessor2->attachPort<1, 3>(frameDisplay);
+  frameReader1->attachPort<0, 0>(frameProcessor1);
+  frameProcessor1->attachPort<0, 0>(imguiImageNode);
+  frameReader2->attachPort<0, 0>(frameProcessor2);
+  frameProcessor2->attachPort<0, 0>(frameDisplay);
+
   cout << "size:" << sizeof(cv::Mat) << endl;
 
   auto isValid = o1.start();

@@ -19,7 +19,7 @@ public:
   void process() {
     cout << "hey: " << windowName << endl;
     cv::namedWindow(windowName, cv::WINDOW_OPENGL);
-    cv::resizeWindow(windowName, 1920, 1080);
+    cv::resizeWindow(windowName, 1280, 720);
     cout << "hey after: " << windowName << endl;
 
     // cv::namedWindow("frame2", cv::WINDOW_OPENGL);
