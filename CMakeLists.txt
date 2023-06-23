@@ -48,3 +48,10 @@ add_executable(BareGuiTest src/bare_gui.cpp)
 target_link_libraries(BareGuiTest OpenGL glfw IMGUI GLEW)
 
 target_include_directories(PipeTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+
+add_executable(SingleTest src/single_cam.cpp)
+
+target_link_libraries( SingleTest ${OpenCV_LIBS} ${CURSES_LIBRARIES} OpenGL glfw IMGUI GLEW)
+
+target_include_directories(SingleTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
