@@ -17,14 +17,13 @@ using output_type = type_list_t<cv::Mat>;
 class FrameProcessor
     : public Node<frame_processor::input_type, frame_processor::output_type> {
 public:
-  FrameProcessor(int _height, int _width, int _gap) {
-    height = _height;
-    width = _width;
+  FrameProcessor(const cv::Size _imageSize, int _gap) {
+    imageSize = _imageSize;
     gap = _gap;
-    fb = new FrameBuffer(height, width, gap);
-    cv::Mat circleImage = cv::Mat(height, width, CV_8UC1);
-    circle(circleImage, cv::Point(width / 2, height / 2), 100, cv::Scalar(255),
-           -1, cv::LINE_AA);
+    fb = new FrameBuffer(imageSize.height, imageSize.width, gap);
+    cv::Mat circleImage = cv::Mat(imageSize.height, imageSize.width, CV_8UC1);
+    circle(circleImage, cv::Point(imageSize.width / 2, imageSize.height / 2),
+           100, cv::Scalar(255), -1, cv::LINE_AA);
     vector<vector<cv::Point>> contours;
     findContours(circleImage, contours, cv::RETR_EXTERNAL,
                  cv::CHAIN_APPROX_SIMPLE);
@@ -79,7 +78,6 @@ public:
 private:
   vector<cv::Point> circleContour;
   FrameBuffer *fb;
-  int height;
-  int width;
+  cv::Size imageSize;
   int gap;
 };

@@ -12,25 +12,26 @@ using output_type = type_list_t<cv::Mat>;
 
 class FrameReader : public Node<input_type, output_type> {
 public:
-  FrameReader(int _camera, std::string _cameraName) {
+  FrameReader(int _camera, std::string _cameraName, const cv::Size _imageSize) {
     // initialze camera object
     camera = _camera;
     cameraName = _cameraName;
+    imageSize = _imageSize;
     cap = new cv::VideoCapture(camera, cv::CAP_V4L2);
     cap->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
     cap->set(cv::CAP_PROP_FPS, 60);
 
-    cap->set(cv::CAP_PROP_FRAME_HEIGHT, 720);
-    cap->set(cv::CAP_PROP_FRAME_WIDTH, 1280);
+    cap->set(cv::CAP_PROP_FRAME_HEIGHT, imageSize.height);
+    cap->set(cv::CAP_PROP_FRAME_WIDTH, imageSize.width);
 
     // cap->set(cv::CAP_PROP_AUTO_EXPOSURE, 1);
     // cap->set(cv::CAP_PROP_EXPOSURE, 400);
   }
 
   void process() {
-    FpsCounter fc(20);
+    FpsCounter fc(240);
     while (1) {
-      // fc.loop();
+      fc.loop();
       cap->read(_frame);
       // Should be very slow. Clone allocates new memory and writes to it. This
       // should be better done by implementing a memory pool of cv::Mats
@@ -49,4 +50,5 @@ private:
   int camera;
   std::string cameraName;
   cv::Mat _frame;
+  cv::Size imageSize;
 };

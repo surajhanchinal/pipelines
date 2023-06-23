@@ -14,21 +14,32 @@
 class ImGuiImageNode : public Node<type_list_t<cv::Mat>, type_list_t<>> {
 
 public:
-  ImGuiImageNode(std::string _windowName, GLFWwindow *_window) {
+  ImGuiImageNode(std::string _windowName, const cv::Size _imageSize) {
     windowName = _windowName;
-    window = _window;
-  }
-  void init() {
+    imageSize = _imageSize;
+
+    // Window creation is in the constructor as it needs to be done in the main
+    // thread. Also have other things such as texture creation and ImGui context
+    // creation because why not.
     // GL 3.0 + GLSL 130
-    const char *glsl_version = "#version 130";
+
+    window = glfwCreateWindow(imageSize.width, imageSize.height,
+                              windowName.c_str(), nullptr, nullptr);
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(0); // Enable vsync
+    glfwSwapInterval(0); // Disable  vsync
 
+    // That's all here. We need to create ImGui context in the thread to make
+    // use of the threadlocal thingie
+  }
+
+  void initImGui() {
+
+    const char *glsl_version = "#version 130";
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     g_pcImGuiTLSContext = ImGui::CreateContext();
-    io = ImGui::GetIO();
+    auto io = ImGui::GetIO();
     io.ConfigFlags |=
         ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |=
@@ -56,10 +67,11 @@ public:
 
   void process() {
 
-    std::cout << " process:  " << g_pcImGuiTLSContext << std::endl;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    init();
+    initImGui();
+
+    std::cout << "init done" << std::endl;
 
     glfwMakeContextCurrent(window);
     while (!glfwWindowShouldClose(window)) {
@@ -72,46 +84,15 @@ public:
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      // 2. Show a simple window that we create ourselves. We use a Begin/End
-      // pair to create a named window.
-      {
-        static float f = 0.0f;
-        static int counter = 0;
-
-        ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!"
-                                       // and append into it.
-
-        ImGui::Text("This is some useful text."); // Display some text (you can
-                                                  // use a format strings too)
-
-        ImGui::SliderFloat(
-            "float", &f, 0.0f,
-            1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3(
-            "clear color",
-            (float *)&clear_color); // Edit 3 floats representing a color
-
-        if (ImGui::Button(
-                "Button")) // Buttons return true when clicked (most widgets
-                           // return true when edited/activated)
-          counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
-        auto io = ImGui::GetIO();
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                    1000.0f / io.Framerate, io.Framerate);
-        ImGui::End();
-      }
-
       glBindTexture(GL_TEXTURE_2D,
                     videotex); // Allocate GPU memory for handle (Texture ID)
 
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
       // Set texture clamping method
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
       auto frame = readData<0, cv::Mat>();
 
@@ -131,9 +112,16 @@ public:
 
         // Show video cam0
         ImGui::Begin("cam0");
-        ImGui::Text("pointer = %p", videotex);
-        ImGui::Text("size = %d x %d", 1920, 1080);
-        ImGui::Image((void *)(intptr_t)videotex, ImVec2(1280, 720));
+        ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height + 80));
+        // ImGui::Text("pointer = %p", videotex);A
+        auto io = ImGui::GetIO();
+        ImGui::SameLine();
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                    1000.0f / io.Framerate, io.Framerate);
+
+        ImGui::Text("size = %d x %d", imageSize.width, imageSize.height);
+        ImGui::Image((void *)(intptr_t)videotex,
+                     ImVec2(imageSize.width, imageSize.height));
         ImGui::End();
       }
 
@@ -160,8 +148,7 @@ public:
 
 private:
   GLuint videotex;
-  ImGuiContext *myCtx;
   std::string windowName;
   GLFWwindow *window;
-  ImGuiIO io;
+  cv::Size imageSize;
 };

@@ -6,7 +6,6 @@
 #include "imgui_image_node.h"
 #include "node.h"
 #include "orchestrator.h"
-#include "window_node.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GLFW/glfw3.h>
@@ -26,10 +25,13 @@ using namespace cv;
 using namespace std;
 
 int main() {
+  const int height = 1080;
+  const int width = 1920;
+  const cv::Size captureSize(width, height);
 
-  auto frameReader1 = new FrameReader(0, "camera");
+  auto frameReader1 = new FrameReader(0, "camera", captureSize);
 
-  auto frameProcessor1 = new FrameProcessor(720, 1280, 3);
+  auto frameProcessor1 = new FrameProcessor(captureSize, 3);
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -37,9 +39,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  auto window1 = glfwCreateWindow(1280, 720, "w1", nullptr, nullptr);
-
-  auto imguiImageNode = new ImGuiImageNode("w1", window1);
+  auto imguiImageNode = new ImGuiImageNode("w1", captureSize);
 
   auto o1 = Orchestrator();
 

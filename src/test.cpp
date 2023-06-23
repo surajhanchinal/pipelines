@@ -6,7 +6,6 @@
 #include "imgui_image_node.h"
 #include "node.h"
 #include "orchestrator.h"
-#include "window_node.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GLFW/glfw3.h>
@@ -27,13 +26,17 @@ using namespace std;
 
 int main() {
 
-  auto frameReader1 = new FrameReader(0, "camera");
+  const int height = 1080;
+  const int width = 1920;
+  const cv::Size captureSize(width, height);
 
-  auto frameReader2 = new FrameReader(2, "camera");
+  auto frameReader1 = new FrameReader(0, "camera", captureSize);
 
-  auto frameProcessor1 = new FrameProcessor(720, 1280, 3);
+  auto frameReader2 = new FrameReader(2, "camera", captureSize);
 
-  auto frameProcessor2 = new FrameProcessor(720, 1280, 3);
+  auto frameProcessor1 = new FrameProcessor(captureSize, 3);
+
+  auto frameProcessor2 = new FrameProcessor(captureSize, 3);
 
   // auto frameDisplay = new FrameDisplay("fr1");
 
@@ -43,13 +46,9 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  auto window1 = glfwCreateWindow(1280, 720, "w1", nullptr, nullptr);
+  auto imguiImageNode = new ImGuiImageNode("w1", captureSize);
 
-  auto window2 = glfwCreateWindow(1920, 1080, "w2", nullptr, nullptr);
-
-  auto imguiImageNode = new ImGuiImageNode("w1", window1);
-
-  auto image2Node = new ImGuiImageNode("w2", window2);
+  auto image2Node = new ImGuiImageNode("w2", captureSize);
 
   auto o1 = Orchestrator();
 
