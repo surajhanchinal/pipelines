@@ -23,7 +23,7 @@ public:
     const char *glsl_version = "#version 130";
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
+    glfwSwapInterval(0); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -133,7 +133,7 @@ public:
         ImGui::Begin("cam0");
         ImGui::Text("pointer = %p", videotex);
         ImGui::Text("size = %d x %d", 1920, 1080);
-        ImGui::Image((void *)(intptr_t)videotex, ImVec2(1920, 1080));
+        ImGui::Image((void *)(intptr_t)videotex, ImVec2(1280, 720));
         ImGui::End();
       }
 

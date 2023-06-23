@@ -35,7 +35,7 @@ int main() {
 
   auto frameProcessor2 = new FrameProcessor(720, 1280, 3);
 
-  auto frameDisplay = new FrameDisplay("fr1");
+  // auto frameDisplay = new FrameDisplay("fr1");
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -45,28 +45,28 @@ int main() {
 
   auto window1 = glfwCreateWindow(1280, 720, "w1", nullptr, nullptr);
 
-  // auto window2 = glfwCreateWindow(1920, 1080, "w2", nullptr, nullptr);
+  auto window2 = glfwCreateWindow(1920, 1080, "w2", nullptr, nullptr);
 
   auto imguiImageNode = new ImGuiImageNode("w1", window1);
 
-  // auto image2Node = new ImGuiImageNode("w2", window2);
+  auto image2Node = new ImGuiImageNode("w2", window2);
 
   auto o1 = Orchestrator();
 
   o1.registerNode(frameReader1);
   o1.registerNode(frameReader2);
-  o1.registerNode(frameDisplay, true);
+  // o1.registerNode(frameDisplay, true);
   o1.registerNode(frameProcessor1);
   o1.registerNode(frameProcessor2);
-  o1.registerNode(imguiImageNode);
-  // o1.registerNode(image2Node);
+  o1.registerNode(imguiImageNode, true);
+  o1.registerNode(image2Node);
 
   // frameReader1->attachPort<0, 0>(frameProcessor1);
 
   frameReader1->attachPort<0, 0>(frameProcessor1);
   frameProcessor1->attachPort<0, 0>(imguiImageNode);
   frameReader2->attachPort<0, 0>(frameProcessor2);
-  frameProcessor2->attachPort<0, 0>(frameDisplay);
+  frameProcessor2->attachPort<0, 0>(image2Node);
 
   cout << "size:" << sizeof(cv::Mat) << endl;
 
