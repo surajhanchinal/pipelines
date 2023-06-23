@@ -45,6 +45,13 @@ public:
       cv::cvtColor(prev, gprev, cv::COLOR_BGR2GRAY);
       cv::cvtColor(curr, gcurr, cv::COLOR_BGR2GRAY);
       cv::cvtColor(prev, gnext, cv::COLOR_BGR2GRAY);
+
+      cv::GaussianBlur(gprev, gprev, cv::Size(5, 5), 0);
+
+      cv::GaussianBlur(gcurr, gcurr, cv::Size(5, 5), 0);
+
+      cv::GaussianBlur(gnext, gnext, cv::Size(5, 5), 0);
+
       cv::absdiff(gprev, gcurr, diff1);
       cv::absdiff(gcurr, gnext, diff2);
 
@@ -64,13 +71,15 @@ public:
           filtered_contours.push_back(x);
         }
       }
-      curr.copyTo(inputFrame);
-      for (int i = 0; i < filtered_contours.size(); i++) {
-        cv::drawContours(inputFrame, filtered_contours, i, cv::Scalar(255), 10,
-                         cv::LINE_AA);
-      }
+      // curr.copyTo(inputFrame);
+      // for (int i = 0; i < filtered_contours.size(); i++) {
+      //   cv::drawContours(inputFrame, filtered_contours, i, cv::Scalar(255),
+      //   10,
+      //                    cv::LINE_AA);
+      // }
 
-      writeData<0>(inputFrame);
+      cv::cvtColor(diff_and, inputFrame, cv::COLOR_GRAY2BGR);
+      writeData<0>(diff_and);
       // writeData<1>(diff_and);
     }
   }

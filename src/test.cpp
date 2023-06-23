@@ -34,9 +34,9 @@ int main() {
 
   auto frameReader2 = new FrameReader(2, "camera", captureSize);
 
-  auto frameProcessor1 = new FrameProcessor(captureSize, 3);
+  auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 
-  auto frameProcessor2 = new FrameProcessor(captureSize, 3);
+  auto frameProcessor2 = new FrameProcessor(captureSize, 0);
 
   // auto frameDisplay = new FrameDisplay("fr1");
 
