@@ -35,6 +35,7 @@ public:
 
   void initImGui() {
 
+    glfwMakeContextCurrent(window);
     const char *glsl_version = "#version 130";
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -73,7 +74,8 @@ public:
 
     std::cout << "init done" << std::endl;
 
-    glfwMakeContextCurrent(window);
+    std::cout << " process:  " << g_pcImGuiTLSContext << std::endl;
+
     while (!glfwWindowShouldClose(window)) {
       ImGui::SetCurrentContext(g_pcImGuiTLSContext);
       glfwPollEvents();

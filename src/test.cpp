@@ -26,8 +26,8 @@ using namespace std;
 
 int main() {
 
-  const int height = 1080;
-  const int width = 1920;
+  const int height = 720;
+  const int width = 1280;
   const cv::Size captureSize(width, height);
 
   auto frameReader1 = new FrameReader(0, "camera", captureSize);
