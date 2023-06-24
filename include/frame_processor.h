@@ -59,6 +59,11 @@ public:
       threshold(diff2, diff2, 20, 255, cv::THRESH_BINARY);
 
       bitwise_and(diff1, diff2, diff_and);
+      cv::Mat elementHor(15, 1, CV_8U, cv::Scalar(1));
+      cv::Mat elementVer(1, 15, CV_8U, cv::Scalar(1));
+      // cv::morphologyEx(diff_and, diff_and, cv::MORPH_CLOSE, elementHor);
+
+      // cv::morphologyEx(diff_and, diff_and, cv::MORPH_CLOSE, elementVer);
 
       vector<vector<cv::Point>> contours;
       vector<vector<cv::Point>> filtered_contours;
@@ -66,21 +71,25 @@ public:
                    cv::CHAIN_APPROX_SIMPLE);
 
       for (auto x : contours) {
-        if (cv::contourArea(x) > 100 and
-            cv::matchShapes(circleContour, x, 1, 0.0) < 0.05) {
+        auto bb = cv::boundingRect(x);
+        float extent = cv::contourArea(x) / (bb.width * bb.height + 1);
+        float ap = (float)bb.width / ((float)bb.height + 1);
+
+        if (cv::contourArea(x) > 30 && extent >= 0.5 && ap >= 0.8 and
+            ap <= 1.2) {
           filtered_contours.push_back(x);
         }
       }
-      // curr.copyTo(inputFrame);
-      // for (int i = 0; i < filtered_contours.size(); i++) {
-      //   cv::drawContours(inputFrame, filtered_contours, i, cv::Scalar(255),
-      //   10,
-      //                    cv::LINE_AA);
-      // }
+      curr.copyTo(inputFrame);
+      for (int i = 0; i < filtered_contours.size(); i++) {
+        auto bb = cv::boundingRect(filtered_contours[i]);
+        cv::rectangle(inputFrame, bb.tl(), bb.br(), cv::Scalar(255), 10);
+        // cv::drawContours(inputFrame, filtered_contours, i, cv::Scalar(255),
+        // 10, cv::LINE_AA);
+      }
 
-      cv::cvtColor(diff_and, inputFrame, cv::COLOR_GRAY2BGR);
-      writeData<0>(diff_and);
-      // writeData<1>(diff_and);
+      // cv::cvtColor(diff_and, inputFrame, cv::COLOR_GRAY2BGR);
+      writeData<0>(inputFrame);
     }
   }
 

@@ -1,4 +1,5 @@
 #include "camel_buffer.h"
+#include "file_reader.h"
 #include "frame_display.h"
 #include "frame_processor.h"
 #include "frame_reader.h"
@@ -25,13 +26,14 @@ using namespace cv;
 using namespace std;
 
 int main() {
-  const int height = 1080;
-  const int width = 1920;
+  const int height = 720;
+  const int width = 1280;
   const cv::Size captureSize(width, height);
 
-  auto frameReader1 = new FrameReader(0, "camera", captureSize);
+  // auto frameReader1 = new FrameReader(0, "camera", captureSize);
+  auto fileReader1 = new FileReader("../vk.mp4", captureSize);
 
-  auto frameProcessor1 = new FrameProcessor(captureSize, 3);
+  auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -43,11 +45,11 @@ int main() {
 
   auto o1 = Orchestrator();
 
-  o1.registerNode(frameReader1);
+  o1.registerNode(fileReader1);
   o1.registerNode(frameProcessor1);
   o1.registerNode(imguiImageNode, true);
 
-  frameReader1->attachPort<0, 0>(frameProcessor1);
+  fileReader1->attachPort<0, 0>(frameProcessor1);
   frameProcessor1->attachPort<0, 0>(imguiImageNode);
 
   auto isValid = o1.start();
