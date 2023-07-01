@@ -1,5 +1,6 @@
 #pragma once
 #include "atomicops.h"
+#include "contour_tree.h"
 #include "fps_counter.h"
 #include "frame_buffer.h"
 #include "node.h"
@@ -8,7 +9,6 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
-
 namespace frame_processor {
 using input_type = type_list_t<cv::Mat>;
 using output_type = type_list_t<cv::Mat>;
@@ -28,6 +28,46 @@ public:
     findContours(circleImage, contours, cv::RETR_EXTERNAL,
                  cv::CHAIN_APPROX_SIMPLE);
     circleContour = contours[0];
+    ctree = new ContourTree();
+  }
+
+  string type2str(int type) {
+    string r;
+
+    uchar depth = type & CV_MAT_DEPTH_MASK;
+    uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+    switch (depth) {
+    case CV_8U:
+      r = "8U";
+      break;
+    case CV_8S:
+      r = "8S";
+      break;
+    case CV_16U:
+      r = "16U";
+      break;
+    case CV_16S:
+      r = "16S";
+      break;
+    case CV_32S:
+      r = "32S";
+      break;
+    case CV_32F:
+      r = "32F";
+      break;
+    case CV_64F:
+      r = "64F";
+      break;
+    default:
+      r = "User";
+      break;
+    }
+
+    r += "C";
+    r += (chans + '0');
+
+    return r;
   }
 
   void process() {
@@ -44,7 +84,10 @@ public:
 
       cv::cvtColor(prev, gprev, cv::COLOR_BGR2GRAY);
       cv::cvtColor(curr, gcurr, cv::COLOR_BGR2GRAY);
-      cv::cvtColor(prev, gnext, cv::COLOR_BGR2GRAY);
+      cv::cvtColor(next, gnext, cv::COLOR_BGR2GRAY);
+
+      // cout << "colors: " << prev.datastart << " " << curr.datastart << "  "
+      //      << next.datastart << endl;
 
       cv::GaussianBlur(gprev, gprev, cv::Size(5, 5), 0);
 
@@ -58,10 +101,10 @@ public:
       threshold(diff1, diff1, 20, 255, cv::THRESH_BINARY);
       threshold(diff2, diff2, 20, 255, cv::THRESH_BINARY);
 
-      bitwise_and(diff1, diff2, diff_and);
-      cv::Mat elementHor(15, 1, CV_8U, cv::Scalar(1));
-      cv::Mat elementVer(1, 15, CV_8U, cv::Scalar(1));
-      // cv::morphologyEx(diff_and, diff_and, cv::MORPH_CLOSE, elementHor);
+      cv::bitwise_and(diff1, diff2, diff_and);
+      cv::Mat elementHor(5, 5, CV_8U, cv::Scalar(1));
+      //  cv::Mat elementVer(1, 15, CV_8U, cv::Scalar(1));
+      // cv::morphologyEx(diff_and, diff_and, cv::MORPH_DILATE, elementHor);
 
       // cv::morphologyEx(diff_and, diff_and, cv::MORPH_CLOSE, elementVer);
 
@@ -75,19 +118,21 @@ public:
         float extent = cv::contourArea(x) / (bb.width * bb.height + 1);
         float ap = (float)bb.width / ((float)bb.height + 1);
 
-        if (cv::contourArea(x) > 30 && extent >= 0.5 && ap >= 0.8 and
-            ap <= 1.2) {
+        if (cv::contourArea(x) > 30 && extent >= 0.5 && ap >= 0.9 and
+            ap <= 1.1) {
           filtered_contours.push_back(x);
         }
       }
+      auto tame = timeSinceEpochMillisec();
+      ctree->addContours(filtered_contours, tame);
       curr.copyTo(inputFrame);
-      for (int i = 0; i < filtered_contours.size(); i++) {
+      /*for (int i = 0; i < filtered_contours.size(); i++) {
         auto bb = cv::boundingRect(filtered_contours[i]);
         cv::rectangle(inputFrame, bb.tl(), bb.br(), cv::Scalar(255), 10);
         // cv::drawContours(inputFrame, filtered_contours, i, cv::Scalar(255),
         // 10, cv::LINE_AA);
-      }
-
+      }*/
+      ctree->drawTree(inputFrame);
       // cv::cvtColor(diff_and, inputFrame, cv::COLOR_GRAY2BGR);
       writeData<0>(inputFrame);
     }
@@ -98,4 +143,10 @@ private:
   FrameBuffer *fb;
   cv::Size imageSize;
   int gap;
+  ContourTree *ctree;
+  uint64_t timeSinceEpochMillisec() {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch())
+        .count();
+  }
 };

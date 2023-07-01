@@ -37,7 +37,7 @@ public:
       //   pool.
       auto frameToSend = _frame.clone();
       writeData<0>(frameToSend);
-      std::this_thread::sleep_for(std::chrono::milliseconds(15));
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
       // cv::waitKey(10);
     }
   }

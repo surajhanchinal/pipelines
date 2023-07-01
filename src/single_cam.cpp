@@ -31,7 +31,7 @@ int main() {
   const cv::Size captureSize(width, height);
 
   // auto frameReader1 = new FrameReader(0, "camera", captureSize);
-  auto fileReader1 = new FileReader("../vk.mp4", captureSize);
+  auto fileReader1 = new FileReader("../good_nets.mp4", captureSize);
 
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 
