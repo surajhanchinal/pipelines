@@ -98,7 +98,16 @@ public:
 
       auto frame = readData<0, cv::Mat>();
 
-      cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+      switch (frame.type()) {
+      case CV_8UC1:
+        cv::cvtColor(frame, frame, cv::COLOR_GRAY2RGB);
+        break;
+      default:
+        cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+        break;
+      }
+      // std::cout << frame.type() << " " << windowName << std::endl;
+      //  cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
       glTexImage2D(
           GL_TEXTURE_2D, // Type of texture
           0,             // Pyramid level (for mip-mapping) - 0 is the top level

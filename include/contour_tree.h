@@ -130,6 +130,15 @@ public:
         int newY = newM.m01 / newM.m00;
 
         auto dist = sqrt(pow(srcX - newX, 2) + pow(srcY - newY, 2));
+        if (dist <= 100) {
+          pq.push({-dist, i});
+        }
+      }
+      // Upto 3 indices.
+      std::vector<int> nearestCounterIndices;
+      while (!pq.empty() || nearestCounterIndices.size() < 3) {
+        nearestCounterIndices.push_back(pq.top().second);
+        pq.pop();
       }
     }
   }

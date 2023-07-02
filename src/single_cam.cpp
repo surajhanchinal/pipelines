@@ -31,7 +31,7 @@ int main() {
   const cv::Size captureSize(width, height);
 
   // auto frameReader1 = new FrameReader(0, "camera", captureSize);
-  auto fileReader1 = new FileReader("../good_nets.mp4", captureSize);
+  auto fileReader1 = new FileReader("../national_project_720.mp4", captureSize);
 
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 
@@ -42,15 +42,18 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
   auto imguiImageNode = new ImGuiImageNode("w1", captureSize);
+  auto imguiImageNode2 = new ImGuiImageNode("w2", captureSize);
 
   auto o1 = Orchestrator();
 
   o1.registerNode(fileReader1);
   o1.registerNode(frameProcessor1);
   o1.registerNode(imguiImageNode, true);
+  o1.registerNode(imguiImageNode2);
 
   fileReader1->attachPort<0, 0>(frameProcessor1);
   frameProcessor1->attachPort<0, 0>(imguiImageNode);
+  frameProcessor1->attachPort<1, 0>(imguiImageNode2);
 
   auto isValid = o1.start();
   return 0;
