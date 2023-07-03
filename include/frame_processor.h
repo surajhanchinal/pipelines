@@ -127,21 +127,29 @@ public:
           filtered_contours.push_back(x);
         }
       }
-      // auto tame = timeSinceEpochMillisec();
+      auto tame = timeSinceEpochMillisec();
       // ctree->addContours(filtered_contours, tame);
       curr.copyTo(inputFrame);
-      for (int i = 0; i < filtered_contours.size(); i++) {
+      /*for (int i = 0; i < filtered_contours.size(); i++) {
         auto bb = cv::boundingRect(filtered_contours[i]);
-        cv::rectangle(inputFrame, bb.tl(), bb.br(), colorPalette[i % 6], 4);
+        cv::rectangle(inputFrame, bb.tl(), bb.br(), colorPalette[3], 4);
         // cv::drawContours(inputFrame, filtered_contours, i, cv::Scalar(255),
         // 10, cv::LINE_AA);
-      }
-      // ctree->drawTree(inputFrame);
+      }*/
+
+      writeData<1>(diff_and);
+      // writeData<0>(inputFrame);
+      // std::cout << "New frame" << std::endl;
+      ctree->addContours2(
+          filtered_contours, tame,
+          [this](cv::Mat frame) { writeData<0>(frame); }, inputFrame);
+      writeData<0>(inputFrame);
+      //  ctree->drawTree(inputFrame);
 
       // cv::cvtColor(diff_and, inputFrame, cv::COLOR_GRAY2BGR);
       // curr.copyTo(inputFrame);
-      writeData<0>(inputFrame);
-      writeData<1>(diff_and);
+      // writeData<0>(inputFrame);
+      // writeData<1>(diff_and);
     }
   }
 
