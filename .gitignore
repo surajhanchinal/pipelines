@@ -20,8 +20,3 @@ libIMGUI.a
 *.mp4
 *.h264
 .vscode/*
-#!.vscode/settings.json
-#!.vscode/tasks.json
-#!.vscode/launch.json
-#!.vscode/extensions.json
-#!.vscode/*.code-snippets
