@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config_store.h"
 #include "opencv2/core/types.hpp"
 #include "opencv2/imgproc.hpp"
 
@@ -37,12 +38,7 @@ public:
 class ContourTree {
   std::vector<ContourGroup> groups;
   // time to live in milliseconds?
-  uint64_t ttl = 500;
-  // how far the new contour is from the source contour abs(srcCtr.x - newCtr.x)
-  // < deltaX deltaY.
-  int deltaX = 1000;
-  int deltaY = 1000;
-  double matchThreshold = 0.5;
+  uint64_t ttl = ConfigStore::contourGroupTimeToLive;
   int k = 0;
   std::vector<cv::Scalar> colorPalette = {
       cv::Scalar(255, 0, 0),   cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255),
@@ -80,7 +76,7 @@ public:
         int newY = newM.m01 / newM.m00;
 
         auto dist = sqrt(pow(srcX - newX, 2) + pow(srcY - newY, 2));
-        if (dist <= 40) {
+        if (dist <= ConfigStore::contourValidSearchRadius) {
           pq.push({-dist, i});
         }
       }
@@ -92,7 +88,7 @@ public:
         nearestContours.push_back(inputContours[pq.top().second]);
         pq.pop();
       }
-      double score = 0.5;
+      double score = ConfigStore::contourMatchThreshold;
       int idx = -1;
       for (auto c : nearestContourIndices) {
         int currScore = matchContour(g.getLatestContour(), inputContours[c]);
@@ -131,32 +127,6 @@ public:
       }
     }
   }
-  template <typename Func1>
-  void prettyDraw(std::vector<cv::Point> &sourceContour,
-                  std::vector<std::vector<cv::Point>> &nearestContours,
-                  Func1 func, cv::Mat frame) {
-    auto frame2 = frame.clone();
-    cv::drawContours(frame2,
-                     std::vector<std::vector<cv::Point>>(1, sourceContour), 0,
-                     colorPalette[0], 5);
-    auto srcCenter = contourCenter(sourceContour);
-    cv::circle(frame2, cv::Point(srcCenter.first, srcCenter.second), 100,
-               colorPalette[0], 5);
-    func(frame2.clone());
-    auto delay = std::chrono::milliseconds(125);
-    std::this_thread::sleep_for(delay);
-
-    for (auto c : nearestContours) {
-      cv::drawContours(frame2, std::vector<std::vector<cv::Point>>(1, c), -1,
-                       colorPalette[1], 5);
-      auto center = contourCenter(c);
-      cv::arrowedLine(frame2, cv::Point(srcCenter.first, srcCenter.second),
-                      cv::Point(center.first, center.second), colorPalette[1],
-                      5);
-      func(frame2.clone());
-      std::this_thread::sleep_for(delay);
-    }
-  }
 
   void cleanupGroups(uint64_t currTime) {
     std::vector<ContourGroup> newGroups;
@@ -177,9 +147,6 @@ public:
     cv::Moments newM = cv::moments(newCtr);
     int newX = newM.m10 / newM.m00;
     int newY = newM.m01 / newM.m00;
-    if (!(abs(srcX - newX) <= deltaX and abs(srcY - newY) <= deltaY)) {
-      return 10;
-    }
     // std::cout << "coords: " << srcX << " " << newX << " , " << srcY << " "
     //           << newY << std::endl;
     float srcArea = cv::contourArea(sourceCtr);
