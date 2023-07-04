@@ -2,6 +2,7 @@
 
 #include "fps_counter.h"
 #include "node.h"
+#include "types.h"
 #include <chrono>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/highgui.hpp>
@@ -11,7 +12,7 @@
 // Is a generator node, no input
 
 using input_type = type_list_t<>;
-using output_type = type_list_t<cv::Mat>;
+using output_type = type_list_t<TimedMat>;
 
 class FileReader : public Node<input_type, output_type> {
 public:
@@ -26,6 +27,7 @@ public:
     while (1) {
       fc.loop();
       cap->read(_frame);
+      auto now = std::chrono::system_clock::now();
       if (_frame.empty()) {
         return;
       }
@@ -36,7 +38,8 @@ public:
       //   stored. That allocation is what we want to prevent, using memory
       //   pool.
       auto frameToSend = _frame.clone();
-      writeData<0>(frameToSend);
+      TimedMat outputTimedMat = {.mat = frameToSend, .timestamp = now};
+      writeData<0>(outputTimedMat);
       std::this_thread::sleep_for(std::chrono::milliseconds(15));
       // cv::waitKey(10);
     }

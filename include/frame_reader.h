@@ -2,6 +2,8 @@
 
 #include "fps_counter.h"
 #include "node.h"
+#include "types.h"
+#include <chrono>
 #include <iostream>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/videoio.hpp>
@@ -34,14 +36,16 @@ public:
     while (1) {
       fc.loop();
       cap->read(_frame);
+      auto now = std::chrono::system_clock::now();
       // Should be very slow. Clone allocates new memory and writes to it. This
       // should be better done by implementing a memory pool of cv::Mats
       //  cv::Mat itself is a pointer to a chunk of memory where data is stored.
       //  That allocation is what we want to prevent, using memory pool.
       auto frameToSend = _frame.clone();
+      // TimedMat tm = {.mat = frameToSend, .timestamp = now};
       writeData<0>(frameToSend);
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(8));
       //  cv::waitKey(1);
     }
   }

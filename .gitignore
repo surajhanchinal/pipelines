@@ -12,6 +12,7 @@ _deps
 .cache
 build
 imgui.ini
+libIMGUI.a
 ##videos and images
 *.jpg
 *.png

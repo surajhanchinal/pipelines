@@ -3,14 +3,15 @@
 #include "fps_counter.h"
 #include "frame_buffer.h"
 #include "node.h"
+#include "types.h"
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
 namespace frame_processor {
-using input_type = type_list_t<cv::Mat>;
-using output_type = type_list_t<cv::Mat>;
+using input_type = type_list_t<TimedMat>;
+using output_type = type_list_t<TimedMat>;
 }; // namespace frame_processor
 
 class FrameProcessor
@@ -70,7 +71,9 @@ public:
     FpsCounter fc(60);
     while (true) {
       // fc.loop();
-      auto inputFrame = readData<0, cv::Mat>();
+      // auto inputFrame = readData<0, cv::Mat>();
+      auto inputTimedMat = readData<0, TimedMat>();
+      auto inputFrame = inputTimedMat.mat;
       fb->insertFrame(inputFrame);
       fb->getFrames(prev, curr, next);
 
@@ -117,7 +120,8 @@ public:
       // writeData<1>(diff_and);
 
       ctree->addContours2(filtered_contours, currTime, inputFrame);
-      writeData<0>(inputFrame);
+
+      writeData<0>(inputTimedMat);
     }
   }
 
