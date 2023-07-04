@@ -3,7 +3,6 @@ project(pipelines)
 find_package( OpenCV REQUIRED )
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
-set(CMAKE_FIND_DEBUG_MODE true)
 find_package(OpenGL REQUIRED)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

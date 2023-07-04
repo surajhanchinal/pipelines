@@ -2,6 +2,7 @@
 
 #include "fps_counter.h"
 #include "node.h"
+#include <iostream>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/videoio.hpp>
 
@@ -40,8 +41,8 @@ public:
       auto frameToSend = _frame.clone();
       writeData<0>(frameToSend);
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(8));
-      // cv::waitKey(1);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      //  cv::waitKey(1);
     }
   }
 

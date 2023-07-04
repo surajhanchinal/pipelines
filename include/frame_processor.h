@@ -1,5 +1,4 @@
 #pragma once
-#include "atomicops.h"
 #include "contour_tree.h"
 #include "fps_counter.h"
 #include "frame_buffer.h"
@@ -11,7 +10,7 @@
 #include <opencv2/imgproc.hpp>
 namespace frame_processor {
 using input_type = type_list_t<cv::Mat>;
-using output_type = type_list_t<cv::Mat, cv::Mat>;
+using output_type = type_list_t<cv::Mat>;
 }; // namespace frame_processor
 
 class FrameProcessor
@@ -115,7 +114,7 @@ public:
       auto currTime = timeSinceEpochMillisec();
       curr.copyTo(inputFrame);
 
-      writeData<1>(diff_and);
+      // writeData<1>(diff_and);
 
       ctree->addContours2(filtered_contours, currTime, inputFrame);
       writeData<0>(inputFrame);

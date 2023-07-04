@@ -98,14 +98,14 @@ public:
 
       auto frame = readData<0, cv::Mat>();
 
-      switch (frame.type()) {
+      /*switch (frame.type()) {
       case CV_8UC1:
         cv::cvtColor(frame, frame, cv::COLOR_GRAY2RGB);
         break;
       default:
         cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
         break;
-      }
+      }*/
       // std::cout << frame.type() << " " << windowName << std::endl;
       //  cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
       glTexImage2D(
@@ -115,7 +115,7 @@ public:
           frame.cols,    // Image width  i.e. 640 for Kinect in standard mode
           frame.rows,    // Image height i.e. 480 for Kinect in standard mode
           0,             // Border width in pixels (can either be 1 or 0)
-          GL_RGB, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
+          GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
           GL_UNSIGNED_BYTE, // Image data type
           frame.ptr());     // The actual image data itself
 
