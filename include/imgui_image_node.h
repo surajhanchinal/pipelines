@@ -99,11 +99,10 @@ public:
       // auto frame = readData<0, TimedMat>();
       auto frameTimedMat = readData<0, TimedMat>();
       auto frame = frameTimedMat.mat;
-      // std::cout << "hey:: " << frame.size << " " << std::endl;
-      //  auto now = std::chrono::system_clock::now();
+      auto now = std::chrono::system_clock::now();
 
-      // auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
-      //     now - frameTimedMat.timestamp);
+      auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
+          now - frameTimedMat.timestamp);
 
       // std::chrono::duration<double> delay = now - frameTimedMat.timestamp;
       /*switch (frame.type()) {
@@ -135,8 +134,8 @@ public:
         // ImGui::Text("pointer = %p", videotex);A
         auto io = ImGui::GetIO();
         ImGui::SameLine();
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS) ",
-                    1000.0f / io.Framerate, io.Framerate); //, delay.count());
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS) %li",
+                    1000.0f / io.Framerate, io.Framerate, delay.count());
 
         ImGui::Text("size = %d x %d", imageSize.width, imageSize.height);
         ImGui::Image((void *)(intptr_t)videotex,

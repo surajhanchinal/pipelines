@@ -11,7 +11,7 @@
 // Is a generator node, no input
 
 using input_type = type_list_t<>;
-using output_type = type_list_t<cv::Mat>;
+using output_type = type_list_t<TimedMat>;
 
 class FrameReader : public Node<input_type, output_type> {
 public:
@@ -35,15 +35,15 @@ public:
     FpsCounter fc(240);
     while (1) {
       fc.loop();
-      cap->read(_frame);
       auto now = std::chrono::system_clock::now();
+      cap->read(_frame);
       // Should be very slow. Clone allocates new memory and writes to it. This
       // should be better done by implementing a memory pool of cv::Mats
       //  cv::Mat itself is a pointer to a chunk of memory where data is stored.
       //  That allocation is what we want to prevent, using memory pool.
       auto frameToSend = _frame.clone();
-      // TimedMat tm = {.mat = frameToSend, .timestamp = now};
-      writeData<0>(frameToSend);
+      TimedMat tm = {.mat = frameToSend, .timestamp = now};
+      writeData<0>(tm);
 
       std::this_thread::sleep_for(std::chrono::milliseconds(8));
       //  cv::waitKey(1);

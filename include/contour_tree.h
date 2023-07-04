@@ -118,7 +118,7 @@ public:
     // to exist?
     cleanupGroups(iTime);
 
-    for (int i = 0; i < groups.size(); i++) {
+    /*for (int i = 0; i < groups.size(); i++) {
       // draw each group with it's own color
       cv::drawContours(inputFrame, groups[i].contours, -1, groups[i].color, 5);
 
@@ -131,7 +131,7 @@ public:
                           groups[i].color, 3);
         }
       }
-    }
+    }*/
   }
 
   void cleanupGroups(uint64_t currTime) {
