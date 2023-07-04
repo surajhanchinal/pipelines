@@ -41,13 +41,13 @@ class ContourTree {
   uint64_t ttl = ConfigStore::contourGroupTimeToLive;
   int k = 0;
   std::vector<cv::Scalar> colorPalette = {
-      cv::Scalar(255, 0, 0),   cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255),
-      cv::Scalar(0, 165, 255), cv::Scalar(0, 0, 0),   cv::Scalar(100, 0, 255)};
+      cv::Scalar(83, 200, 33),  cv::Scalar(255, 201, 40),
+      cv::Scalar(255, 148, 35), cv::Scalar(255, 72, 162),
+      cv::Scalar(122, 71, 255), cv::Scalar(42, 153, 235)};
 
 public:
-  template <typename Func1>
   void addContours2(std::vector<std::vector<cv::Point>> inputContours,
-                    uint64_t iTime, Func1 func1, cv::Mat inputFrame) {
+                    uint64_t iTime, cv::Mat inputFrame) {
     // We want to give preference to longer contour chains with the latest
     // insert times. Because vibes.
     std::sort(groups.begin(), groups.end(),
@@ -61,9 +61,7 @@ public:
     std::vector<bool> usedContours(inputContours.size(), 0);
 
     for (auto &g : groups) {
-      cv::Moments srcM = cv::moments(g.getLatestContour());
-      int srcX = srcM.m10 / srcM.m00;
-      int srcY = srcM.m01 / srcM.m00;
+      auto srcCenter = contourCenterPoint(g.getLatestContour());
       std::priority_queue<std::pair<double, int>> pq;
 
       // find the 3 closest contours;
@@ -71,21 +69,21 @@ public:
         if (usedContours[i] == 1) {
           continue;
         }
-        cv::Moments newM = cv::moments(inputContours[i]);
-        int newX = newM.m10 / newM.m00;
-        int newY = newM.m01 / newM.m00;
 
-        auto dist = sqrt(pow(srcX - newX, 2) + pow(srcY - newY, 2));
+        auto newCenter = contourCenterPoint(inputContours[i]);
+
+        auto dist = sqrt(pow(srcCenter.x - newCenter.x, 2) +
+                         pow(srcCenter.y - newCenter.y, 2));
         if (dist <= ConfigStore::contourValidSearchRadius) {
+          // Minus because we want to find closest contours, PQ by default
+          // orders in highest to lowest.
           pq.push({-dist, i});
         }
       }
       // Upto 3 indices.
       std::vector<int> nearestContourIndices;
-      std::vector<std::vector<cv::Point>> nearestContours;
       while (!pq.empty() && nearestContourIndices.size() < 3) {
         nearestContourIndices.push_back(pq.top().second);
-        nearestContours.push_back(inputContours[pq.top().second]);
         pq.pop();
       }
       double score = ConfigStore::contourMatchThreshold;
@@ -101,9 +99,9 @@ public:
         usedContours[idx] = 1;
         g.insertContour(inputContours[idx], iTime);
       }
-
-      // prettyDraw(g.getLatestContour(), nearestContours, func1, inputFrame);
     }
+    // Create new groups out of unused contours. Maybe they find their partner
+    // in the next frame. Hope is a good thing.
     for (int i = 0; i < inputContours.size(); i++) {
       if (usedContours[i] == 0) {
         groups.push_back(
@@ -114,15 +112,23 @@ public:
         }
       }
     }
+
+    // Purge groups who have been living for too long. Ask yourself, if they
+    // haven't found their partner withing a certain time, do they even deserve
+    // to exist?
     cleanupGroups(iTime);
+
     for (int i = 0; i < groups.size(); i++) {
+      // draw each group with it's own color
       cv::drawContours(inputFrame, groups[i].contours, -1, groups[i].color, 5);
+
+      // Draw lines between successive contours in a group, makes trajectory
+      // look super cool
       if (groups[i].contours.size() > 1) {
         for (int m = 0; m < groups[i].contours.size() - 1; m++) {
-          auto p1 = contourCenter(groups[i].contours[m]);
-          auto p2 = contourCenter(groups[i].contours[m + 1]);
-          cv::arrowedLine(inputFrame, cv::Point(p1.first, p1.second),
-                          cv::Point(p2.first, p2.second), colorPalette[0], 1);
+          cv::arrowedLine(inputFrame, contourCenterPoint(groups[i].contours[m]),
+                          contourCenterPoint(groups[i].contours[m + 1]),
+                          groups[i].color, 3);
         }
       }
     }
@@ -140,31 +146,13 @@ public:
 
   double matchContour(std::vector<cv::Point> sourceCtr,
                       std::vector<cv::Point> newCtr) {
-    cv::Moments srcM = cv::moments(sourceCtr);
-    int srcX = srcM.m10 / srcM.m00;
-    int srcY = srcM.m01 / srcM.m00;
-
-    cv::Moments newM = cv::moments(newCtr);
-    int newX = newM.m10 / newM.m00;
-    int newY = newM.m01 / newM.m00;
-    // std::cout << "coords: " << srcX << " " << newX << " , " << srcY << " "
-    //           << newY << std::endl;
-    float srcArea = cv::contourArea(sourceCtr);
-    float newArea = cv::contourArea(newCtr);
-    double areaRatio = srcArea / (newArea + 0.001);
-    /*if (areaRatio < 0.8 and areaRatio > 1.2) {
-      return 10;
-    }*/
-    auto srcBB = cv::boundingRect(sourceCtr);
-    auto newBB = cv::boundingRect(newCtr);
-    double score = cv::matchShapes(sourceCtr, newCtr, 1, 0.0);
-    return score;
+    return cv::matchShapes(sourceCtr, newCtr, 1, 0.0);
   }
 
-  std::pair<int, int> contourCenter(std::vector<cv::Point> &contour) {
+  cv::Point contourCenterPoint(std::vector<cv::Point> &contour) {
     cv::Moments M = cv::moments(contour);
     int X = M.m10 / M.m00;
     int Y = M.m01 / M.m00;
-    return std::pair(X, Y);
+    return cv::Point(X, Y);
   }
 };

@@ -21,13 +21,6 @@ public:
     imageSize = _imageSize;
     gap = _gap;
     fb = new FrameBuffer(imageSize.height, imageSize.width, gap);
-    cv::Mat circleImage = cv::Mat(imageSize.height, imageSize.width, CV_8UC1);
-    circle(circleImage, cv::Point(imageSize.width / 2, imageSize.height / 2),
-           100, cv::Scalar(255), -1, cv::LINE_AA);
-    vector<vector<cv::Point>> contours;
-    findContours(circleImage, contours, cv::RETR_EXTERNAL,
-                 cv::CHAIN_APPROX_SIMPLE);
-    circleContour = contours[0];
     ctree = new ContourTree();
   }
 
@@ -86,9 +79,6 @@ public:
       cv::cvtColor(curr, gcurr, cv::COLOR_BGR2GRAY);
       cv::cvtColor(next, gnext, cv::COLOR_BGR2GRAY);
 
-      // cout << "colors: " << prev.datastart << " " << curr.datastart << "  "
-      //      << next.datastart << endl;
-
       cv::GaussianBlur(gprev, gprev, cv::Size(5, 5), 0);
 
       cv::GaussianBlur(gcurr, gcurr, cv::Size(5, 5), 0);
@@ -106,11 +96,6 @@ public:
       threshold(diff2, diff2, 10, 255, cv::THRESH_BINARY);
 
       cv::bitwise_and(diff1, diff2, diff_and);
-      // cv::Mat elementHor(5, 5, CV_8U, cv::Scalar(1));
-      //   cv::Mat elementVer(1, 15, CV_8U, cv::Scalar(1));
-      //  cv::morphologyEx(diff_and, diff_and, cv::MORPH_DILATE, elementHor);
-
-      // cv::morphologyEx(diff_and, diff_and, cv::MORPH_CLOSE, elementVer);
 
       vector<vector<cv::Point>> contours;
       vector<vector<cv::Point>> filtered_contours;
@@ -127,29 +112,13 @@ public:
           filtered_contours.push_back(x);
         }
       }
-      auto tame = timeSinceEpochMillisec();
-      // ctree->addContours(filtered_contours, tame);
+      auto currTime = timeSinceEpochMillisec();
       curr.copyTo(inputFrame);
-      /*for (int i = 0; i < filtered_contours.size(); i++) {
-        auto bb = cv::boundingRect(filtered_contours[i]);
-        cv::rectangle(inputFrame, bb.tl(), bb.br(), colorPalette[3], 4);
-        // cv::drawContours(inputFrame, filtered_contours, i, cv::Scalar(255),
-        // 10, cv::LINE_AA);
-      }*/
 
       writeData<1>(diff_and);
-      // writeData<0>(inputFrame);
-      // std::cout << "New frame" << std::endl;
-      ctree->addContours2(
-          filtered_contours, tame,
-          [this](cv::Mat frame) { writeData<0>(frame); }, inputFrame);
-      writeData<0>(inputFrame);
-      //  ctree->drawTree(inputFrame);
 
-      // cv::cvtColor(diff_and, inputFrame, cv::COLOR_GRAY2BGR);
-      // curr.copyTo(inputFrame);
-      // writeData<0>(inputFrame);
-      // writeData<1>(diff_and);
+      ctree->addContours2(filtered_contours, currTime, inputFrame);
+      writeData<0>(inputFrame);
     }
   }
 
@@ -164,7 +133,4 @@ private:
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch())
         .count();
   }
-  std::vector<cv::Scalar> colorPalette = {
-      cv::Scalar(255, 0, 0),   cv::Scalar(0, 255, 0), cv::Scalar(0, 0, 255),
-      cv::Scalar(0, 165, 255), cv::Scalar(0, 0, 0),   cv::Scalar(100, 0, 255)};
 };
