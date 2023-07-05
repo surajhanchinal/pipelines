@@ -11,6 +11,7 @@
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #include <stdio.h>
 #include <string>
+using namespace std;
 
 class ImGuiImageNode : public Node<type_list_t<TimedMat>, type_list_t<>> {
 
@@ -65,6 +66,10 @@ public:
     // Set texture clamping method
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#ifdef SSOPTIMIZED
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+#endif
   }
 
   void process() {
@@ -103,18 +108,19 @@ public:
 
       auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
           now - frameTimedMat.timestamp);
-
-      // std::chrono::duration<double> delay = now - frameTimedMat.timestamp;
-      /*switch (frame.type()) {
-      case CV_8UC1:
-        cv::cvtColor(frame, frame, cv::COLOR_GRAY2RGB);
-        break;
-      default:
-        cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
-        break;
-      }*/
-      // std::cout << frame.type() << " " << windowName << std::endl;
-      //  cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+#ifdef SSOPTIMIZED
+      glTexImage2D(
+          GL_TEXTURE_2D, // Type of texture
+          0,             // Pyramid level (for mip-mapping) - 0 is the top level
+          GL_LUMINANCE,  // Internal colour format to convert to
+          frame.cols,    // Image width  i.e. 640 for Kinect in standard mode
+          frame.rows,    // Image height i.e. 480 for Kinect in standard mode
+          0,             // Border width in pixels (can either be 1 or 0)
+          GL_LUMINANCE,  // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR
+                         // etc.)
+          GL_UNSIGNED_BYTE, // Image data type
+          frame.ptr());     // The actual image data itself
+#else
       glTexImage2D(
           GL_TEXTURE_2D, // Type of texture
           0,             // Pyramid level (for mip-mapping) - 0 is the top level
@@ -125,6 +131,7 @@ public:
           GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
           GL_UNSIGNED_BYTE, // Image data type
           frame.ptr());     // The actual image data itself
+#endif
 
       {
 
@@ -140,6 +147,7 @@ public:
         ImGui::Text("size = %d x %d", imageSize.width, imageSize.height);
         ImGui::Image((void *)(intptr_t)videotex,
                      ImVec2(imageSize.width, imageSize.height));
+        render_conan_logo();
         ImGui::End();
       }
 
@@ -162,6 +170,41 @@ public:
 
     glfwDestroyWindow(window);
     glfwTerminate();
+  }
+
+  void render_conan_logo() {
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    float sz = 300.0f;
+    static ImVec4 col1 = ImVec4(68.0 / 255.0, 83.0 / 255.0, 89.0 / 255.0, 1.0f);
+    static ImVec4 col2 = ImVec4(40.0 / 255.0, 60.0 / 255.0, 80.0 / 255.0, 1.0f);
+    static ImVec4 col3 = ImVec4(50.0 / 255.0, 65.0 / 255.0, 82.0 / 255.0, 1.0f);
+    static ImVec4 col4 = ImVec4(20.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0f);
+    // const ImVec2 p = ImGui::GetCursorScreenPos();
+    const ImVec2 p = ImGui::GetWindowPos();
+    float x = p.x + 4.0f, y = p.y + 4.0f;
+    draw_list->AddQuadFilled(
+        ImVec2(x, y + 0.25 * sz), ImVec2(x + 0.5 * sz, y + 0.5 * sz),
+        ImVec2(x + sz, y + 0.25 * sz), ImVec2(x + 0.5 * sz, y), ImColor(col1));
+    draw_list->AddQuadFilled(ImVec2(x, y + 0.25 * sz),
+                             ImVec2(x + 0.5 * sz, y + 0.5 * sz),
+                             ImVec2(x + 0.5 * sz, y + 1.0 * sz),
+                             ImVec2(x, y + 0.75 * sz), ImColor(col2));
+    draw_list->AddQuadFilled(ImVec2(x + 0.5 * sz, y + 0.5 * sz),
+                             ImVec2(x + sz, y + 0.25 * sz),
+                             ImVec2(x + sz, y + 0.75 * sz),
+                             ImVec2(x + 0.5 * sz, y + 1.0 * sz), ImColor(col3));
+    draw_list->AddLine(ImVec2(x + 0.75 * sz, y + 0.375 * sz),
+                       ImVec2(x + 0.75 * sz, y + 0.875 * sz), ImColor(col4));
+    draw_list->AddBezierCubic(ImVec2(x + 0.72 * sz, y + 0.24 * sz),
+                              ImVec2(x + 0.68 * sz, y + 0.15 * sz),
+                              ImVec2(x + 0.48 * sz, y + 0.13 * sz),
+                              ImVec2(x + 0.39 * sz, y + 0.17 * sz),
+                              ImColor(col4), 10, 18);
+    draw_list->AddBezierCubic(ImVec2(x + 0.39 * sz, y + 0.17 * sz),
+                              ImVec2(x + 0.2 * sz, y + 0.25 * sz),
+                              ImVec2(x + 0.3 * sz, y + 0.35 * sz),
+                              ImVec2(x + 0.49 * sz, y + 0.38 * sz),
+                              ImColor(col4), 10, 18);
   }
 
 private:

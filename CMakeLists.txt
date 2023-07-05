@@ -32,6 +32,7 @@ target_sources(IMGUI PRIVATE ${IMGUI_DIR}/imgui_demo.cpp ${IMGUI_DIR}/imgui_draw
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
+
 add_executable(PipeTest src/test.cpp)
 target_link_libraries( PipeTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
 target_include_directories(PipeTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -42,3 +43,7 @@ add_executable(SingleTest src/single_cam.cpp)
 target_link_libraries( SingleTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
 
 target_include_directories(SingleTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+
+#target_compile_definitions(PipeTest PUBLIC SSOPTIMIZED)
+#target_compile_definitions(SingleTest PUBLIC SSOPTIMIZED)

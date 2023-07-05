@@ -68,18 +68,27 @@ public:
     cv::Mat gprev, gcurr, gnext;
     cv::Mat diff1, diff2;
     cv::Mat diff_and;
+    cv::Mat inputGray;
     FpsCounter fc(60);
     while (true) {
       // fc.loop();
       // auto inputFrame = readData<0, cv::Mat>();
       auto inputTimedMat = readData<0, TimedMat>();
       auto inputFrame = inputTimedMat.mat;
+
+#ifdef SSOPTIMIZED
+      cv::cvtColor(inputFrame, inputGray, cv::COLOR_BGR2GRAY);
+      fb->insertFrame(inputGray);
+      fb->getFrames(gprev, gcurr, gnext);
+#else
       fb->insertFrame(inputFrame);
       fb->getFrames(prev, curr, next);
 
       cv::cvtColor(prev, gprev, cv::COLOR_BGR2GRAY);
       cv::cvtColor(curr, gcurr, cv::COLOR_BGR2GRAY);
       cv::cvtColor(next, gnext, cv::COLOR_BGR2GRAY);
+
+#endif
 
       cv::GaussianBlur(gprev, gprev, cv::Size(5, 5), 0);
 
@@ -115,11 +124,19 @@ public:
         }
       }
       auto currTime = timeSinceEpochMillisec();
+#ifdef SSOPTIMIZED
+      inputFrame = gcurr.clone();
+#else
       curr.copyTo(inputFrame);
+#endif
       ctree->addContours2(filtered_contours, currTime, inputFrame);
-      // cv::cvtColor(diff_and, inputFrame, cv::COLOR_GRAY2BGR);
-
+#ifdef SSOPTIMIZED
+      TimedMat newTimedMat = {.mat = inputFrame,
+                              .timestamp = inputTimedMat.timestamp};
+      writeData<0>(newTimedMat);
+#else
       writeData<0>(inputTimedMat);
+#endif
     }
   }
 

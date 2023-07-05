@@ -45,8 +45,12 @@ public:
       TimedMat tm = {.mat = frameToSend, .timestamp = now};
       writeData<0>(tm);
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(8));
-      //  cv::waitKey(1);
+#ifdef SSOPTIMIZED
+      auto delay = 2;
+#else
+      auto delay = 8;
+#endif
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     }
   }
 

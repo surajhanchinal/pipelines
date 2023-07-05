@@ -40,7 +40,7 @@ public:
       auto frameToSend = _frame.clone();
       TimedMat outputTimedMat = {.mat = frameToSend, .timestamp = now};
       writeData<0>(outputTimedMat);
-      std::this_thread::sleep_for(std::chrono::milliseconds(15));
+      std::this_thread::sleep_for(std::chrono::milliseconds(3));
       // cv::waitKey(10);
     }
   }

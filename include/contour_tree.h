@@ -117,8 +117,8 @@ public:
     // haven't found their partner withing a certain time, do they even deserve
     // to exist?
     cleanupGroups(iTime);
-
-    for (int i = 0; i < groups.size(); i++) {
+#ifndef SSOPTIMIZED
+    /*for (int i = 0; i < groups.size(); i++) {
       // draw each group with it's own color
       // cv::drawContours(inputFrame, groups[i].contours, -1, groups[i].color,
       // 5);
@@ -132,7 +132,8 @@ public:
                           groups[i].color, 2);
         }
       }
-    }
+    }*/
+#endif
   }
 
   void cleanupGroups(uint64_t currTime) {
