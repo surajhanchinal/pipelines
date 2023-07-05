@@ -116,10 +116,8 @@ public:
       }
       auto currTime = timeSinceEpochMillisec();
       curr.copyTo(inputFrame);
-
-      // writeData<1>(diff_and);
-
       ctree->addContours2(filtered_contours, currTime, inputFrame);
+      // cv::cvtColor(diff_and, inputFrame, cv::COLOR_GRAY2BGR);
 
       writeData<0>(inputTimedMat);
     }

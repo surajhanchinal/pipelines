@@ -118,9 +118,10 @@ public:
     // to exist?
     cleanupGroups(iTime);
 
-    /*for (int i = 0; i < groups.size(); i++) {
+    for (int i = 0; i < groups.size(); i++) {
       // draw each group with it's own color
-      cv::drawContours(inputFrame, groups[i].contours, -1, groups[i].color, 5);
+      // cv::drawContours(inputFrame, groups[i].contours, -1, groups[i].color,
+      // 5);
 
       // Draw lines between successive contours in a group, makes trajectory
       // look super cool
@@ -128,10 +129,10 @@ public:
         for (int m = 0; m < groups[i].contours.size() - 1; m++) {
           cv::arrowedLine(inputFrame, contourCenterPoint(groups[i].contours[m]),
                           contourCenterPoint(groups[i].contours[m + 1]),
-                          groups[i].color, 3);
+                          groups[i].color, 2);
         }
       }
-    }*/
+    }
   }
 
   void cleanupGroups(uint64_t currTime) {
