@@ -17,6 +17,7 @@ public:
   NodeBase(){};
   virtual ~NodeBase(){};
   virtual void process() = 0;
+  virtual void init() = 0;
 };
 
 template <typename... Types> struct type_list_t {};
@@ -60,6 +61,9 @@ public:
   template <int I, int J, typename T> void attachPort(T *otherNode) {
     getOPort<I>()->setOtherPort(otherNode->template getIPort<J>());
   }
+
+public:
+  void init() {}
 };
 
 class ExampleFirstNode

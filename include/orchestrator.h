@@ -46,6 +46,11 @@ public:
       std::cout << "Computation graph is not valid" << std::endl;
       return false;
     }
+
+    if (mainNodeIdx != -1) {
+      nodes[mainNodeIdx]->init();
+    }
+
     std::vector<std::thread> threads;
     for (int i = 0; i < nodes.size(); i++) {
       if (i == mainNodeIdx) {

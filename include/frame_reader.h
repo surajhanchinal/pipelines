@@ -10,7 +10,7 @@
 
 // Is a generator node, no input
 
-using input_type = type_list_t<>;
+using input_type = type_list_t<bool>;
 using output_type = type_list_t<TimedMat>;
 
 class FrameReader : public Node<input_type, output_type> {
@@ -34,9 +34,11 @@ public:
   void process() {
     FpsCounter fc(240);
     while (1) {
-      fc.loop();
+      readData<0, bool>();
+      // fc.loop();
+      cap->grab();
       auto now = std::chrono::system_clock::now();
-      cap->read(_frame);
+      cap->retrieve(_frame);
       // Should be very slow. Clone allocates new memory and writes to it. This
       // should be better done by implementing a memory pool of cv::Mats
       //  cv::Mat itself is a pointer to a chunk of memory where data is stored.
@@ -45,12 +47,12 @@ public:
       TimedMat tm = {.mat = frameToSend, .timestamp = now};
       writeData<0>(tm);
 
-#ifdef SSOPTIMIZED
-      auto delay = 2;
-#else
-      auto delay = 8;
-#endif
-      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+      /*#ifdef SSOPTIMIZED
+            auto delay = 2;
+      #else
+            auto delay = 8;
+      #endif
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay));*/
     }
   }
 

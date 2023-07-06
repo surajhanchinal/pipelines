@@ -1,7 +1,9 @@
 #include "camel_buffer.h"
+#include "capture_signaler.h"
 #include "frame_display.h"
 #include "frame_processor.h"
 #include "frame_reader.h"
+#include "frame_syncer.h"
 #include "imgui.h"
 #include "imgui_image_node.h"
 #include "node.h"
@@ -30,6 +32,8 @@ int main() {
   const int width = 1280;
   const cv::Size captureSize(width, height);
 
+  auto captureSignaler = new CaptureSignaler();
+
   auto frameReader1 = new FrameReader(0, "camera", captureSize);
 
   auto frameReader2 = new FrameReader(2, "camera", captureSize);
@@ -37,6 +41,8 @@ int main() {
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 
   auto frameProcessor2 = new FrameProcessor(captureSize, 0);
+
+  auto frameSyncer = new FrameSyncer();
 
   // auto frameDisplay = new FrameDisplay("fr1");
 
@@ -51,7 +57,7 @@ int main() {
   auto image2Node = new ImGuiImageNode("w2", captureSize);
 
   auto o1 = Orchestrator();
-
+  o1.registerNode(captureSignaler);
   o1.registerNode(frameReader1);
   o1.registerNode(frameReader2);
   // o1.registerNode(frameDisplay, true);
@@ -59,13 +65,19 @@ int main() {
   o1.registerNode(frameProcessor2);
   o1.registerNode(imguiImageNode, true);
   o1.registerNode(image2Node);
+  o1.registerNode(frameSyncer);
 
   // frameReader1->attachPort<0, 0>(frameProcessor1);
+  captureSignaler->attachPort<0, 0>(frameReader1);
+  captureSignaler->attachPort<1, 0>(frameReader2);
 
   frameReader1->attachPort<0, 0>(frameProcessor1);
-  frameProcessor1->attachPort<0, 0>(imguiImageNode);
+  frameProcessor1->attachPort<0, 0>(frameSyncer);
   frameReader2->attachPort<0, 0>(frameProcessor2);
-  frameProcessor2->attachPort<0, 0>(image2Node);
+  frameProcessor2->attachPort<0, 1>(frameSyncer);
+
+  frameSyncer->attachPort<0, 0>(imguiImageNode);
+  frameSyncer->attachPort<1, 0>(image2Node);
 
   cout << "size:" << sizeof(cv::Mat) << endl;
 

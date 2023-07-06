@@ -39,7 +39,7 @@ public:
     // use of the threadlocal thingie
   }
 
-  void initImGui() {
+  void init() {
 
     glfwMakeContextCurrent(window);
     const char *glsl_version = "#version 130";
@@ -74,13 +74,15 @@ public:
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
 #endif
+    initCalled = true;
   }
 
   void process() {
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-    initImGui();
+    if (!initCalled) {
+      init();
+    }
 
     std::cout << "init done" << std::endl;
 
@@ -236,7 +238,7 @@ public:
         for (int i = 0; i < traj.size() - 1; i++) {
           draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
                              ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
-                             colorPalette[k % 6], 4);
+                             colorPalette[k % 6], 8);
         }
       }
       k++;
@@ -252,6 +254,7 @@ private:
   std::string windowName;
   GLFWwindow *window;
   cv::Size imageSize;
+  bool initCalled = false;
 
   ImVec2 contourCenterPoint(std::vector<cv::Point> &contour) {
     cv::Moments M = cv::moments(contour);
