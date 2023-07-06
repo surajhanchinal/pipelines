@@ -15,6 +15,9 @@ using namespace std;
 
 class ImGuiImageNode
     : public Node<type_list_t<TimedMatWithCTree>, type_list_t<>> {
+  std::vector<ImColor> colorPalette = {
+      ImColor(83, 200, 33),  ImColor(255, 201, 40), ImColor(255, 148, 35),
+      ImColor(255, 72, 162), ImColor(122, 71, 255), ImColor(42, 153, 235)};
 
 public:
   ImGuiImageNode(std::string _windowName, const cv::Size _imageSize) {
@@ -113,16 +116,28 @@ public:
       }
       cout << endl;*/
 
-      std::vector<std::vector<ImVec2>> polyLineGroupList;
+      vector<vector<vector<ImVec2>>> polyLineGroupList;
 
       for (auto g : (*cgl)) {
+        std::vector<std::vector<ImVec2>> polyLines;
         for (auto ctr : g) {
-          std::vector<ImVec2> polyLine;
+          std::vector<ImVec2> contour;
           for (auto pt : ctr) {
-            polyLine.push_back(ImVec2(pt.x, pt.y));
+            contour.push_back(ImVec2(pt.x, pt.y));
           }
-          polyLineGroupList.push_back(polyLine);
+          polyLines.push_back(contour);
         }
+        polyLineGroupList.push_back(polyLines);
+      }
+
+      vector<vector<ImVec2>> trajList;
+
+      for (auto &g : (*cgl)) {
+        vector<ImVec2> traj;
+        for (auto &ctr : g) {
+          traj.push_back(contourCenterPoint(ctr));
+        }
+        trajList.push_back(traj);
       }
 
       delete cgl;
@@ -168,9 +183,9 @@ public:
         auto cpos = ImGui::GetCursorScreenPos();
         ImGui::Image((void *)(intptr_t)videotex,
                      ImVec2(imageSize.width, imageSize.height));
-        // Draw using offset from where image begins. We use the cursor position
-        // before the image is rendered to get this offset
-        render_contours(cpos, polyLineGroupList);
+        // Draw using offset from where image begins. We use the cursor
+        // position before the image is rendered to get this offset
+        render_contours(cpos, polyLineGroupList, trajList);
         ImGui::End();
       }
 
@@ -195,24 +210,53 @@ public:
     glfwTerminate();
   }
 
-  void render_contours(ImVec2 &p, vector<vector<ImVec2>> &polyLines) {
+  void render_contours(ImVec2 &p,
+                       vector<vector<vector<ImVec2>>> &polyLineGroups,
+                       vector<vector<ImVec2>> &trajList) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
     // const ImVec2 p = ImGui::GetWindowPos();
-    for (auto &pl : polyLines) {
-      for (auto &pt : pl) {
-        pt.x = pt.x + p.x;
-        pt.y = pt.y + p.y;
+    /*for (auto &polyLines : polyLineGroups) {
+      for (auto &pl : polyLines) {
+        for (auto &pt : pl) {
+          pt.x = pt.x + p.x;
+          pt.y = pt.y + p.y;
+        }
+        draw_list->AddPolyline(pl.data(), pl.size(), colorPalette[k % 6],
+                               ImDrawFlags_Closed, 2);
       }
-      draw_list->AddPolyline(
-          pl.data(), pl.size(),
-          ImColor(76.0f / 256.0, 175.0f / 256.0, 80.0f / 256.0, 1.0f),
-          ImDrawFlags_Closed, 2);
+      k++;
+      if (k > 1000) {
+        k = 0;
+      }
+    }*/
+
+    // draw lines instead of contours;
+    for (auto &traj : trajList) {
+      if (traj.size() > 1) {
+        for (int i = 0; i < traj.size() - 1; i++) {
+          draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
+                             ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
+                             colorPalette[k % 6], 4);
+        }
+      }
+      k++;
+      if (k > 1000) {
+        k = 0;
+      }
     }
   }
 
 private:
+  int k = 0;
   GLuint videotex;
   std::string windowName;
   GLFWwindow *window;
   cv::Size imageSize;
+
+  ImVec2 contourCenterPoint(std::vector<cv::Point> &contour) {
+    cv::Moments M = cv::moments(contour);
+    int X = M.m10 / M.m00;
+    int Y = M.m01 / M.m00;
+    return ImVec2(X, Y);
+  }
 };
