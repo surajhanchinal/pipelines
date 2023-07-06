@@ -157,4 +157,11 @@ public:
     int Y = M.m01 / M.m00;
     return cv::Point(X, Y);
   }
+
+  void
+  getContourGroupList(std::vector<std::vector<std::vector<cv::Point>>> &cgl) {
+    for (auto g : groups) {
+      cgl.push_back(g.contours);
+    }
+  }
 };

@@ -28,7 +28,7 @@ public:
       return;
     nodes.push_back(_node);
     for (auto const &port : _node->outputs->ports) {
-      auto buf = new moodycamel::BlockingReaderWriterCircularBuffer(1000, 116);
+      auto buf = new moodycamel::BlockingReaderWriterCircularBuffer(1000, 130);
       bufs.push_back(buf);
       port->setNodeIdx(nodes.size() - 1);
       port->setBuffer(buf);

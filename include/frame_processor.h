@@ -5,13 +5,14 @@
 #include "node.h"
 #include "types.h"
 #include <iostream>
+#include <memory>
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
 namespace frame_processor {
 using input_type = type_list_t<TimedMat>;
-using output_type = type_list_t<TimedMat>;
+using output_type = type_list_t<TimedMatWithCTree>;
 }; // namespace frame_processor
 
 class FrameProcessor
@@ -130,12 +131,19 @@ public:
       curr.copyTo(inputFrame);
 #endif
       ctree->addContours2(filtered_contours, currTime, inputFrame);
+      vector<vector<vector<cv::Point>>> cgl;
+      ctree->getContourGroupList(cgl);
+      auto newVec = new vector(cgl);
 #ifdef SSOPTIMIZED
-      TimedMat newTimedMat = {.mat = inputFrame,
-                              .timestamp = inputTimedMat.timestamp};
+      TimedMatWithCTree newTimedMat = {.mat = inputFrame,
+                                       .timestamp = inputTimedMat.timestamp,
+                                       .contourGroupList = newVec};
       writeData<0>(newTimedMat);
 #else
-      writeData<0>(inputTimedMat);
+      TimedMatWithCTree newTimedMat = {.mat = inputFrame,
+                                       .timestamp = inputTimedMat.timestamp,
+                                       .contourGroupList = newVec};
+      writeData<0>(newTimedMat);
 #endif
     }
   }

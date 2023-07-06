@@ -13,7 +13,8 @@
 #include <string>
 using namespace std;
 
-class ImGuiImageNode : public Node<type_list_t<TimedMat>, type_list_t<>> {
+class ImGuiImageNode
+    : public Node<type_list_t<TimedMatWithCTree>, type_list_t<>> {
 
 public:
   ImGuiImageNode(std::string _windowName, const cv::Size _imageSize) {
@@ -102,9 +103,29 @@ public:
       // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
       // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
       // auto frame = readData<0, TimedMat>();
-      auto frameTimedMat = readData<0, TimedMat>();
+      auto frameTimedMat = readData<0, TimedMatWithCTree>();
       auto frame = frameTimedMat.mat;
+      std::vector<std::vector<std::vector<cv::Point>>> *cgl =
+          frameTimedMat.contourGroupList;
       auto now = std::chrono::system_clock::now();
+      /*for (int i = 0; i < cgl->size(); i++) {
+        cout << (*cgl)[i].size() << " ";
+      }
+      cout << endl;*/
+
+      std::vector<std::vector<ImVec2>> polyLineGroupList;
+
+      for (auto g : (*cgl)) {
+        for (auto ctr : g) {
+          std::vector<ImVec2> polyLine;
+          for (auto pt : ctr) {
+            polyLine.push_back(ImVec2(pt.x, pt.y));
+          }
+          polyLineGroupList.push_back(polyLine);
+        }
+      }
+
+      delete cgl;
 
       auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
           now - frameTimedMat.timestamp);
@@ -138,16 +159,18 @@ public:
         // Show video cam0
         ImGui::Begin("cam0");
         ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height + 80));
-        // ImGui::Text("pointer = %p", videotex);A
         auto io = ImGui::GetIO();
         ImGui::SameLine();
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS) %li",
                     1000.0f / io.Framerate, io.Framerate, delay.count());
 
         ImGui::Text("size = %d x %d", imageSize.width, imageSize.height);
+        auto cpos = ImGui::GetCursorScreenPos();
         ImGui::Image((void *)(intptr_t)videotex,
                      ImVec2(imageSize.width, imageSize.height));
-        render_conan_logo();
+        // Draw using offset from where image begins. We use the cursor position
+        // before the image is rendered to get this offset
+        render_contours(cpos, polyLineGroupList);
         ImGui::End();
       }
 
@@ -172,39 +195,19 @@ public:
     glfwTerminate();
   }
 
-  void render_conan_logo() {
+  void render_contours(ImVec2 &p, vector<vector<ImVec2>> &polyLines) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    float sz = 300.0f;
-    static ImVec4 col1 = ImVec4(68.0 / 255.0, 83.0 / 255.0, 89.0 / 255.0, 1.0f);
-    static ImVec4 col2 = ImVec4(40.0 / 255.0, 60.0 / 255.0, 80.0 / 255.0, 1.0f);
-    static ImVec4 col3 = ImVec4(50.0 / 255.0, 65.0 / 255.0, 82.0 / 255.0, 1.0f);
-    static ImVec4 col4 = ImVec4(20.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0f);
-    // const ImVec2 p = ImGui::GetCursorScreenPos();
-    const ImVec2 p = ImGui::GetWindowPos();
-    float x = p.x + 4.0f, y = p.y + 4.0f;
-    draw_list->AddQuadFilled(
-        ImVec2(x, y + 0.25 * sz), ImVec2(x + 0.5 * sz, y + 0.5 * sz),
-        ImVec2(x + sz, y + 0.25 * sz), ImVec2(x + 0.5 * sz, y), ImColor(col1));
-    draw_list->AddQuadFilled(ImVec2(x, y + 0.25 * sz),
-                             ImVec2(x + 0.5 * sz, y + 0.5 * sz),
-                             ImVec2(x + 0.5 * sz, y + 1.0 * sz),
-                             ImVec2(x, y + 0.75 * sz), ImColor(col2));
-    draw_list->AddQuadFilled(ImVec2(x + 0.5 * sz, y + 0.5 * sz),
-                             ImVec2(x + sz, y + 0.25 * sz),
-                             ImVec2(x + sz, y + 0.75 * sz),
-                             ImVec2(x + 0.5 * sz, y + 1.0 * sz), ImColor(col3));
-    draw_list->AddLine(ImVec2(x + 0.75 * sz, y + 0.375 * sz),
-                       ImVec2(x + 0.75 * sz, y + 0.875 * sz), ImColor(col4));
-    draw_list->AddBezierCubic(ImVec2(x + 0.72 * sz, y + 0.24 * sz),
-                              ImVec2(x + 0.68 * sz, y + 0.15 * sz),
-                              ImVec2(x + 0.48 * sz, y + 0.13 * sz),
-                              ImVec2(x + 0.39 * sz, y + 0.17 * sz),
-                              ImColor(col4), 10, 18);
-    draw_list->AddBezierCubic(ImVec2(x + 0.39 * sz, y + 0.17 * sz),
-                              ImVec2(x + 0.2 * sz, y + 0.25 * sz),
-                              ImVec2(x + 0.3 * sz, y + 0.35 * sz),
-                              ImVec2(x + 0.49 * sz, y + 0.38 * sz),
-                              ImColor(col4), 10, 18);
+    // const ImVec2 p = ImGui::GetWindowPos();
+    for (auto &pl : polyLines) {
+      for (auto &pt : pl) {
+        pt.x = pt.x + p.x;
+        pt.y = pt.y + p.y;
+      }
+      draw_list->AddPolyline(
+          pl.data(), pl.size(),
+          ImColor(76.0f / 256.0, 175.0f / 256.0, 80.0f / 256.0, 1.0f),
+          ImDrawFlags_Closed, 2);
+    }
   }
 
 private:

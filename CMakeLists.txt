@@ -45,5 +45,5 @@ target_link_libraries( SingleTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
 target_include_directories(SingleTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 
-#target_compile_definitions(PipeTest PUBLIC SSOPTIMIZED)
-#target_compile_definitions(SingleTest PUBLIC SSOPTIMIZED)
+target_compile_definitions(PipeTest PUBLIC SSOPTIMIZED)
+target_compile_definitions(SingleTest PUBLIC SSOPTIMIZED)
