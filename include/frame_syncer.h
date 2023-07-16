@@ -3,6 +3,7 @@
 #include "fps_counter.h"
 #include "node.h"
 #include "types.h"
+#include <chrono>
 #include <thread>
 namespace frame_syncer {
 using input_type = type_list_t<TimedMatWithCTree, TimedMatWithCTree>;

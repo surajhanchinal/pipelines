@@ -144,7 +144,7 @@ public:
         for (int i = 0; i < traj.size() - 1; i++) {
           draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
                              ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
-                             colorPalette[k % 6], 2);
+                             colorPalette[k % 6], 8);
         }
       }
       k++;

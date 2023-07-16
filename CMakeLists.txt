@@ -37,6 +37,9 @@ add_executable(PipeTest src/test.cpp)
 target_link_libraries( PipeTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
 target_include_directories(PipeTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+add_executable(MultiTest src/multi_file.cpp)
+target_link_libraries( MultiTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
+target_include_directories(MultiTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 add_executable(SingleTest src/single_cam.cpp)
 
@@ -47,3 +50,4 @@ target_include_directories(SingleTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 target_compile_definitions(PipeTest PUBLIC SSOPTIMIZED)
 target_compile_definitions(SingleTest PUBLIC SSOPTIMIZED)
+target_compile_definitions(MultiTest PUBLIC SSOPTIMIZED)

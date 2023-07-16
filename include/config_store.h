@@ -7,5 +7,5 @@ public:
   // Time to live in milliseconds. Vary this based on your framerate. Usually
   // for nice-looking videos, use around 10 frames worth, but for actual usage
   // use, 3-4x frame time.
-  static constexpr int contourGroupTimeToLive = 80;
+  static constexpr int contourGroupTimeToLive = 160;
 };

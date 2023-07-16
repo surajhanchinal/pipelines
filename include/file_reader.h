@@ -11,7 +11,7 @@
 
 // Is a generator node, no input
 
-using input_type = type_list_t<>;
+using input_type = type_list_t<bool>;
 using output_type = type_list_t<TimedMat>;
 
 class FileReader : public Node<input_type, output_type> {
@@ -25,6 +25,7 @@ public:
   void process() {
     FpsCounter fc(240);
     while (1) {
+      readData<0, bool>();
       fc.loop();
       cap->read(_frame);
       auto now = std::chrono::system_clock::now();
@@ -40,7 +41,7 @@ public:
       auto frameToSend = _frame.clone();
       TimedMat outputTimedMat = {.mat = frameToSend, .timestamp = now};
       writeData<0>(outputTimedMat);
-      std::this_thread::sleep_for(std::chrono::milliseconds(3));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(3));
     }
   }
 
