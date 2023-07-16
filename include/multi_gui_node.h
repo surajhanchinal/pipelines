@@ -144,7 +144,7 @@ public:
         for (int i = 0; i < traj.size() - 1; i++) {
           draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
                              ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
-                             colorPalette[k % 6], 8);
+                             colorPalette[k % 6], 2);
         }
       }
       k++;
@@ -291,7 +291,7 @@ private:
       auto io = ImGui::GetIO();
       ImGui::Text("Framerate: (%.1f FPS)", io.Framerate);
 
-      ImGui::BeginTable("Metricvs", 3);
+      ImGui::BeginTable("Metrics", 3);
       ImGui::TableSetupColumn("Cam 1 delay");
       ImGui::TableSetupColumn("Cam 2 delay");
       ImGui::TableSetupColumn("Cross cam delay");
