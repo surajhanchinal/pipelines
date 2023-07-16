@@ -5,7 +5,7 @@
 #include "frame_reader.h"
 #include "frame_syncer.h"
 #include "imgui.h"
-#include "imgui_image_node.h"
+#include "multi_gui_node.h"
 #include "node.h"
 #include "orchestrator.h"
 #include <GL/gl.h>
@@ -52,9 +52,10 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  auto imguiImageNode = new ImGuiImageNode("w1", captureSize);
+  // auto imguiImageNode = new ImGuiImageNode("w1", captureSize);
 
-  auto image2Node = new ImGuiImageNode("w2", captureSize);
+  // auto image2Node = new ImGuiImageNode("w2", captureSize);
+  auto multiGuiNode = new MultiGuiNode("w1", captureSize);
 
   auto o1 = Orchestrator();
   o1.registerNode(captureSignaler);
@@ -63,8 +64,8 @@ int main() {
   // o1.registerNode(frameDisplay, true);
   o1.registerNode(frameProcessor1);
   o1.registerNode(frameProcessor2);
-  o1.registerNode(imguiImageNode, true);
-  o1.registerNode(image2Node);
+  o1.registerNode(multiGuiNode, true);
+  // o1.registerNode(image2Node);
   o1.registerNode(frameSyncer);
 
   // frameReader1->attachPort<0, 0>(frameProcessor1);
@@ -76,8 +77,8 @@ int main() {
   frameReader2->attachPort<0, 0>(frameProcessor2);
   frameProcessor2->attachPort<0, 1>(frameSyncer);
 
-  frameSyncer->attachPort<0, 0>(imguiImageNode);
-  frameSyncer->attachPort<1, 0>(image2Node);
+  frameSyncer->attachPort<0, 0>(multiGuiNode);
+  frameSyncer->attachPort<1, 1>(multiGuiNode);
 
   cout << "size:" << sizeof(cv::Mat) << endl;
 

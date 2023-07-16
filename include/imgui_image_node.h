@@ -74,6 +74,7 @@ public:
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
 #endif
+    ImGui_ImplOpenGL3_CreateDeviceObjects();
     initCalled = true;
   }
 
