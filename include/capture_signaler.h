@@ -10,7 +10,7 @@ public:
     while (true) {
       writeData<0>(true);
       writeData<1>(true);
-      std::this_thread::sleep_for(std::chrono::microseconds(9800));
+      std::this_thread::sleep_for(std::chrono::microseconds(16500));
     }
   }
 };

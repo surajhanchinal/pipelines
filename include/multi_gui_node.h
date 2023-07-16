@@ -9,6 +9,7 @@
 #include "opencv2/imgproc.hpp"
 #include "types.h"
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
+#include <chrono>
 #include <stdio.h>
 #include <string>
 using namespace std;
@@ -94,6 +95,7 @@ public:
       auto frameTimedMat2 = readData<1, TimedMatWithCTree>();
       renderFrame(frameTimedMat1, tex1, w1);
       renderFrame(frameTimedMat2, tex2, w2);
+      renderMetricsWindow(frameTimedMat1.timestamp, frameTimedMat2.timestamp);
 
       // Rendering
       ImGui::Render();
@@ -259,19 +261,49 @@ private:
 
       // Show video cam0
       ImGui::Begin(windowName.c_str());
-      ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height + 80));
+      ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height));
       auto io = ImGui::GetIO();
-      ImGui::SameLine();
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS) %li",
-                  1000.0f / io.Framerate, io.Framerate, delay.count());
-
-      ImGui::Text("size = %d x %d", imageSize.width, imageSize.height);
       auto cpos = ImGui::GetCursorScreenPos();
       ImGui::Image((void *)(intptr_t)texID,
                    ImVec2(imageSize.width, imageSize.height));
       // Draw using offset from where image begins. We use the cursor
       // position before the image is rendered to get this offset
       render_contours(cpos, polyLineGroupList, trajList);
+      ImGui::End();
+    }
+  }
+
+  void
+  renderMetricsWindow(std::chrono::time_point<std::chrono::system_clock> f1Ts,
+                      std::chrono::time_point<std::chrono::system_clock> f2Ts) {
+    {
+
+      auto now = std::chrono::system_clock::now();
+      auto delay1 =
+          std::chrono::duration_cast<std::chrono::milliseconds>(now - f1Ts);
+      auto delay2 =
+          std::chrono::duration_cast<std::chrono::milliseconds>(now - f2Ts);
+
+      auto interDelay =
+          std::chrono::duration_cast<std::chrono::microseconds>(f1Ts - f2Ts);
+
+      ImGui::Begin("metrics", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+      auto io = ImGui::GetIO();
+      ImGui::Text("Framerate: (%.1f FPS)", io.Framerate);
+
+      ImGui::BeginTable("Metricvs", 3);
+      ImGui::TableSetupColumn("Cam 1 delay");
+      ImGui::TableSetupColumn("Cam 2 delay");
+      ImGui::TableSetupColumn("Cross cam delay");
+      ImGui::TableHeadersRow();
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("%li", delay1.count());
+      ImGui::TableNextColumn();
+      ImGui::Text("%li", delay2.count());
+      ImGui::TableNextColumn();
+      ImGui::Text("%li", interDelay.count());
+      ImGui::EndTable();
       ImGui::End();
     }
   }
