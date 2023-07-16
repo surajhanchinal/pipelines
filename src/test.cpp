@@ -1,6 +1,5 @@
 #include "camel_buffer.h"
 #include "capture_signaler.h"
-#include "frame_display.h"
 #include "frame_processor.h"
 #include "frame_reader.h"
 #include "frame_syncer.h"
@@ -44,31 +43,23 @@ int main() {
 
   auto frameSyncer = new FrameSyncer();
 
-  // auto frameDisplay = new FrameDisplay("fr1");
-
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  // auto imguiImageNode = new ImGuiImageNode("w1", captureSize);
-
-  // auto image2Node = new ImGuiImageNode("w2", captureSize);
   auto multiGuiNode = new MultiGuiNode("w1", captureSize);
 
   auto o1 = Orchestrator();
   o1.registerNode(captureSignaler);
   o1.registerNode(frameReader1);
   o1.registerNode(frameReader2);
-  // o1.registerNode(frameDisplay, true);
   o1.registerNode(frameProcessor1);
   o1.registerNode(frameProcessor2);
   o1.registerNode(multiGuiNode, true);
-  // o1.registerNode(image2Node);
   o1.registerNode(frameSyncer);
 
-  // frameReader1->attachPort<0, 0>(frameProcessor1);
   captureSignaler->attachPort<0, 0>(frameReader1);
   captureSignaler->attachPort<1, 0>(frameReader2);
 

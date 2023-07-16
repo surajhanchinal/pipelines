@@ -181,10 +181,6 @@ private:
     // Set texture clamping method
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-#ifdef SSOPTIMIZED
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
-#endif
   }
 
   void writeTexture(GLuint textureID, cv::Mat &frame) {
@@ -259,7 +255,6 @@ private:
     writeTexture(texID, frame);
     {
 
-      // Show video cam0
       ImGui::Begin(windowName.c_str());
       ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height));
       auto io = ImGui::GetIO();
