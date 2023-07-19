@@ -14,3 +14,13 @@ public:
     }
   }
 };
+
+class CaptureSignaler1 : public Node<type_list_t<>, type_list_t<bool>> {
+public:
+  void process() {
+    while (true) {
+      writeData<0>(true);
+      std::this_thread::sleep_for(std::chrono::microseconds(12000));
+    }
+  }
+};

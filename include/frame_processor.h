@@ -67,6 +67,7 @@ public:
   void process() {
     cv::Mat prev, curr, next;
     cv::Mat gprev, gcurr, gnext;
+    cv::Mat gprev_blur, gcurr_blur, gnext_blur;
     cv::Mat diff1, diff2;
     cv::Mat diff_and;
     cv::Mat inputGray;
@@ -91,14 +92,14 @@ public:
 
 #endif
 
-      cv::GaussianBlur(gprev, gprev, cv::Size(5, 5), 0);
+      cv::GaussianBlur(gprev, gprev_blur, cv::Size(5, 5), 0);
 
-      cv::GaussianBlur(gcurr, gcurr, cv::Size(5, 5), 0);
+      cv::GaussianBlur(gcurr, gcurr_blur, cv::Size(5, 5), 0);
 
-      cv::GaussianBlur(gnext, gnext, cv::Size(5, 5), 0);
+      cv::GaussianBlur(gnext, gnext_blur, cv::Size(5, 5), 0);
 
-      cv::absdiff(gprev, gcurr, diff1);
-      cv::absdiff(gcurr, gnext, diff2);
+      cv::absdiff(gprev_blur, gcurr_blur, diff1);
+      cv::absdiff(gcurr_blur, gnext_blur, diff2);
 
       cv::GaussianBlur(diff1, diff1, cv::Size(11, 11), 0);
 

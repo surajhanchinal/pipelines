@@ -218,7 +218,7 @@ public:
                        vector<vector<ImVec2>> &trajList) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
     // const ImVec2 p = ImGui::GetWindowPos();
-    /*for (auto &polyLines : polyLineGroups) {
+    for (auto &polyLines : polyLineGroups) {
       for (auto &pl : polyLines) {
         for (auto &pt : pl) {
           pt.x = pt.x + p.x;
@@ -231,7 +231,7 @@ public:
       if (k > 1000) {
         k = 0;
       }
-    }*/
+    }
 
     // draw lines instead of contours;
     for (auto &traj : trajList) {
@@ -239,7 +239,7 @@ public:
         for (int i = 0; i < traj.size() - 1; i++) {
           draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
                              ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
-                             colorPalette[k % 6], 8);
+                             colorPalette[k % 6], 1);
         }
       }
       k++;

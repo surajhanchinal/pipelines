@@ -12,6 +12,7 @@
 #include <chrono>
 #include <stdio.h>
 #include <string>
+#include <utility>
 using namespace std;
 
 class MultiGuiNode
@@ -81,6 +82,9 @@ public:
     std::string w1 = "cam1";
     std::string w2 = "cam2";
 
+    vector<vector<ImVec2>> actualTrajList1;
+    vector<vector<ImVec2>> actualTrajList2;
+
     while (!glfwWindowShouldClose(window)) {
       ImGui::SetCurrentContext(g_pcImGuiTLSContext);
       glfwPollEvents();
@@ -93,9 +97,103 @@ public:
 
       auto frameTimedMat1 = readData<0, TimedMatWithCTree>();
       auto frameTimedMat2 = readData<1, TimedMatWithCTree>();
-      renderFrame(frameTimedMat1, tex1, w1);
-      renderFrame(frameTimedMat2, tex2, w2);
+
+      vector<vector<ImVec2>> trajList1;
+      vector<vector<ImVec2>> trajList2;
+      vector<vector<vector<ImVec2>>> polyLineGroupList1;
+      vector<vector<vector<ImVec2>>> polyLineGroupList2;
+      renderFrame(frameTimedMat1, tex1, w1, polyLineGroupList1, trajList1);
+      renderFrame(frameTimedMat2, tex2, w2, polyLineGroupList2, trajList2);
       renderMetricsWindow(frameTimedMat1.timestamp, frameTimedMat2.timestamp);
+
+      /*vector<pair<double, pair<int, int>>> match_costs;
+      for (int i = 0; i < trajList1.size(); i++) {
+        if (trajList1[i].size() < 6) {
+          continue;
+        }
+        auto &t1 = trajList1[i];
+
+        double ocost = 0.5;
+        int miniIdx = -1;
+
+        vector<pair<int, vector<double>>> seqCosts;
+        for (int j = 0; j < trajList2.size(); j++) {
+          if (trajList2[j].size() < 6) {
+            continue;
+          }
+          auto &t2 = trajList2[j];
+          bool valid = true;
+          bool sign = false;
+          bool start = true;
+          int prev = 300;
+          double cost = 0;
+          for (int z = 0; z < 6; z++) {
+            auto &p1 = t1[t1.size() - 1 - z];
+            auto &p2 = t2[t2.size() - 1 - z];
+
+            auto xdiff = abs(p1.x - p2.x);
+            if (start) {
+              start = false;
+              sign = (p1.x - p2.x) > 0;
+            }
+            if (xdiff > prev || ((p1.x - p2.x) > 0) != sign) {
+              valid = false;
+            } else {
+              prev = xdiff;
+            }
+            cost += abs(p1.y - p2.y) / imageSize.height;
+          }
+          cost = cost / 4;
+          if (cost < ocost) {
+            ocost = cost;
+            miniIdx = j;
+          }
+        }
+
+        if (miniIdx != -1) {
+          match_costs.push_back({ocost, {i, miniIdx}});
+        }
+      }
+      double mini = 121312;
+      int miniIdx = -1;
+
+      for (int i = 0; i < match_costs.size(); i++) {
+        if (match_costs[i].first < mini) {
+          miniIdx = i;
+          mini = match_costs[i].first;
+        }
+      }
+
+      if (miniIdx != -1) {
+        auto &mc = match_costs[miniIdx];
+        vector<ImVec2> ntl1, ntl2;
+        auto &t1 = trajList1[mc.second.first];
+        auto &t2 = trajList2[mc.second.second];
+        for (int i = 0; i < 4; i++) {
+          ntl1.push_back(t1[t1.size() - 1 - i]);
+
+          ntl2.push_back(t2[t2.size() - 1 - i]);
+        }
+        // actualTrajList1.push_back(ntl1);
+        // actualTrajList2.push_back(ntl2);
+        //  actualTrajList1 = {trajList1[mc.second.first]};
+        //   actualTrajList2 = {trajList2[mc.second.second]};
+        actualTrajList1.push_back(trajList1[mc.second.first]);
+
+        actualTrajList2.push_back(trajList2[mc.second.second]);
+      }
+
+      {
+
+        ImGui::Begin("actual");
+        ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height));
+        auto io = ImGui::GetIO();
+        auto cpos = ImGui::GetCursorScreenPos();
+        // Draw using offset from where image begins. We use the cursor
+        // position before the image is rendered to get this offset
+        render_combined_contours(cpos, actualTrajList1, actualTrajList2);
+        ImGui::End();
+      }*/
 
       // Rendering
       ImGui::Render();
@@ -123,7 +221,7 @@ public:
                        vector<vector<ImVec2>> &trajList) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
     // const ImVec2 p = ImGui::GetWindowPos();
-    /*for (auto &polyLines : polyLineGroups) {
+    for (auto &polyLines : polyLineGroups) {
       for (auto &pl : polyLines) {
         for (auto &pt : pl) {
           pt.x = pt.x + p.x;
@@ -136,7 +234,7 @@ public:
       if (k > 1000) {
         k = 0;
       }
-    }*/
+    }
 
     // draw lines instead of contours;
     for (auto &traj : trajList) {
@@ -144,13 +242,40 @@ public:
         for (int i = 0; i < traj.size() - 1; i++) {
           draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
                              ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
-                             colorPalette[k % 6], 8);
+                             colorPalette[k % 6], 1);
         }
       }
       k++;
       if (k > 1000) {
         k = 0;
       }
+    }
+  }
+
+  void render_combined_contours(ImVec2 &p, vector<vector<ImVec2>> &trajList1,
+                                vector<vector<ImVec2>> &trajList2) {
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    int k = 0;
+    for (auto &traj : trajList1) {
+      if (traj.size() > 1) {
+        for (int i = 0; i < traj.size() - 1; i++) {
+          draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
+                             ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
+                             colorPalette[k % 6], 2);
+        }
+      }
+      k++;
+    }
+    k = 0;
+    for (auto &traj : trajList2) {
+      if (traj.size() > 1) {
+        for (int i = 0; i < traj.size() - 1; i++) {
+          draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
+                             ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
+                             colorPalette[k % 6], 2);
+        }
+      }
+      k++;
     }
   }
 
@@ -240,15 +365,15 @@ private:
   }
 
   void renderFrame(TimedMatWithCTree frameTimedMat, GLuint texID,
-                   std::string &windowName) {
+                   std::string &windowName,
+                   vector<vector<vector<ImVec2>>> &polyLineGroupList,
+                   vector<vector<ImVec2>> &trajList) {
     auto frame = frameTimedMat.mat;
 
     auto now = std::chrono::system_clock::now();
     auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
         now - frameTimedMat.timestamp);
 
-    vector<vector<vector<ImVec2>>> polyLineGroupList;
-    vector<vector<ImVec2>> trajList;
     extractAndCleanupTrajectories(frameTimedMat.contourGroupList,
                                   polyLineGroupList, trajList);
 

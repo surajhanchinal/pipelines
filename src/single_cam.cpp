@@ -1,4 +1,5 @@
 #include "camel_buffer.h"
+#include "capture_signaler.h"
 #include "file_reader.h"
 #include "frame_display.h"
 #include "frame_processor.h"
@@ -29,10 +30,10 @@ int main() {
   const int width = 1280;
   const cv::Size captureSize(width, height);
 
-  // auto frameReader1 = new FrameReader(0, "camera", captureSize);
-  auto fileReader1 = new FileReader("../left_bkp.mp4", captureSize);
+  auto fileReader1 = new FileReader("../national_project_720.mp4", captureSize);
 
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
+  auto captureSignaler = new CaptureSignaler1();
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -41,18 +42,16 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
   auto imguiImageNode = new ImGuiImageNode("w1", captureSize);
-  // auto imguiImageNode2 = new ImGuiImageNode("w2", captureSize);
 
   auto o1 = Orchestrator();
-
+  o1.registerNode(captureSignaler);
   o1.registerNode(fileReader1);
   o1.registerNode(frameProcessor1);
   o1.registerNode(imguiImageNode, true);
-  // o1.registerNode(imguiImageNode2);
 
+  captureSignaler->attachPort<0, 0>(fileReader1);
   fileReader1->attachPort<0, 0>(frameProcessor1);
   frameProcessor1->attachPort<0, 0>(imguiImageNode);
-  // frameProcessor1->attachPort<1, 0>(imguiImageNode2);
 
   auto isValid = o1.start();
   return 0;
