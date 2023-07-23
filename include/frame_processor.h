@@ -74,24 +74,12 @@ public:
     cv::Mat inputGray;
     FpsCounter fc(60);
     while (true) {
-      // fc.loop();
-      // auto inputFrame = readData<0, cv::Mat>();
       auto inputTimedMat = readData<0, TimedMat>();
       auto inputFrame = inputTimedMat.mat;
 
-#ifdef SSOPTIMIZED
       cv::cvtColor(inputFrame, inputGray, cv::COLOR_BGR2GRAY);
       fb->insertFrame(inputGray);
       fb->getFrames(gprev, gcurr, gnext);
-#else
-      fb->insertFrame(inputFrame);
-      fb->getFrames(prev, curr, next);
-
-      cv::cvtColor(prev, gprev, cv::COLOR_BGR2GRAY);
-      cv::cvtColor(curr, gcurr, cv::COLOR_BGR2GRAY);
-      cv::cvtColor(next, gnext, cv::COLOR_BGR2GRAY);
-
-#endif
 
       cv::GaussianBlur(gprev, gprev_blur, cv::Size(5, 5), 0);
 
@@ -130,28 +118,17 @@ public:
           filtered_contours.push_back(x);
         }
       }
-#ifdef SSOPTIMIZED
       inputFrame = inputGray.clone();
       // inputFrame = diff_and.clone();
-#else
-      curr.copyTo(inputFrame);
-#endif
       ctree->addContours2(filtered_contours, inputTimedMat.timestamp,
                           inputFrame);
       vector<vector<vector<cv::Point>>> cgl;
       ctree->getContourGroupList(cgl);
       auto newVec = new vector(cgl);
-#ifdef SSOPTIMIZED
       TimedMatWithCTree newTimedMat = {.mat = inputFrame,
                                        .timestamp = inputTimedMat.timestamp,
                                        .contourGroupList = newVec};
       writeData<0>(newTimedMat);
-#else
-      TimedMatWithCTree newTimedMat = {.mat = inputFrame,
-                                       .timestamp = inputTimedMat.timestamp,
-                                       .contourGroupList = newVec};
-      writeData<0>(newTimedMat);
-#endif
     }
   }
 

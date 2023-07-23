@@ -46,13 +46,6 @@ public:
       auto frameToSend = _frame.clone();
       TimedMat tm = {.mat = frameToSend, .timestamp = now};
       writeData<0>(tm);
-
-      /*#ifdef SSOPTIMIZED
-            auto delay = 2;
-      #else
-            auto delay = 8;
-      #endif
-            std::this_thread::sleep_for(std::chrono::milliseconds(delay));*/
     }
   }
 

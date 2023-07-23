@@ -15,11 +15,7 @@ public:
     this->gap = gap;
     this->height = height;
     this->width = width;
-#ifdef SSOPTIMIZED
     auto format = CV_8UC1;
-#else
-    auto format = CV_8UC3;
-#endif
     for (int i = 0; i < gap + 2; i++) {
       prevFrames.push_back(cv::Mat(height, width, format));
     }

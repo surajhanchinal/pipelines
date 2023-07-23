@@ -70,10 +70,6 @@ public:
     // Set texture clamping method
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-#ifdef SSOPTIMIZED
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
-#endif
     ImGui_ImplOpenGL3_CreateDeviceObjects();
     initCalled = true;
   }
@@ -102,22 +98,11 @@ public:
       glBindTexture(GL_TEXTURE_2D,
                     videotex); // Allocate GPU memory for handle (Texture ID)
 
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-      // Set texture clamping method
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-      // auto frame = readData<0, TimedMat>();
       auto frameTimedMat = readData<0, TimedMatWithCTree>();
       auto frame = frameTimedMat.mat;
       std::vector<std::vector<std::vector<cv::Point>>> *cgl =
           frameTimedMat.contourGroupList;
       auto now = std::chrono::system_clock::now();
-      /*for (int i = 0; i < cgl->size(); i++) {
-        cout << (*cgl)[i].size() << " ";
-      }
-      cout << endl;*/
 
       vector<vector<vector<ImVec2>>> polyLineGroupList;
 
@@ -147,7 +132,6 @@ public:
 
       auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
           now - frameTimedMat.timestamp);
-#ifdef SSOPTIMIZED
       glTexImage2D(
           GL_TEXTURE_2D, // Type of texture
           0,             // Pyramid level (for mip-mapping) - 0 is the top level
@@ -159,18 +143,6 @@ public:
                          // etc.)
           GL_UNSIGNED_BYTE, // Image data type
           frame.ptr());     // The actual image data itself
-#else
-      glTexImage2D(
-          GL_TEXTURE_2D, // Type of texture
-          0,             // Pyramid level (for mip-mapping) - 0 is the top level
-          GL_RGB,        // Internal colour format to convert to
-          frame.cols,    // Image width  i.e. 640 for Kinect in standard mode
-          frame.rows,    // Image height i.e. 480 for Kinect in standard mode
-          0,             // Border width in pixels (can either be 1 or 0)
-          GL_BGR, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
-          GL_UNSIGNED_BYTE, // Image data type
-          frame.ptr());     // The actual image data itself
-#endif
 
       {
 
