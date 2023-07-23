@@ -2,8 +2,11 @@ import cv2
 import glob
 import numpy as np
 
-def calibrate_camera(images_folder, camera_name):
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+ignore_list = []
+
+
+def calibrate_camera(images_folder, camera_name,ignore_list=[]):
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_COUNT, 10, 1e-5)
     CHECKERBOARD = (8, 11)
     images = glob.glob(images_folder + "/*.jpg")
     counter = 0
@@ -16,6 +19,9 @@ def calibrate_camera(images_folder, camera_name):
     imgPoints = []
 
     for path in images:
+        for ign in ignore_list:
+            if(ign == path):
+                continue
         counter2 = counter2 + 1
         img = cv2.imread(path)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -30,13 +36,17 @@ def calibrate_camera(images_folder, camera_name):
         )
 
         if ret:
-            counter = counter + 1
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
-            objPoints.append(objp)
-            imgPoints.append(corners2)
             img = cv2.drawChessboardCorners(img, CHECKERBOARD, corners2, ret)
             cv2.imshow("img", img)
-            cv2.waitKey(1000)
+            pressed = cv2.waitKey(0) & 0xFF
+            if(pressed == ord('y')):
+                counter = counter + 1
+                objPoints.append(objp)
+                imgPoints.append(corners2)
+            else:
+                ignore_list.append(path)
+                print("bad image: ",path)
         else:
             print("Chessboard corners not found in image: ", path)
 
@@ -64,7 +74,10 @@ def calibrate_camera(images_folder, camera_name):
         print("ROI: ", roi)
 
         # Save the calibration parameters to a file
-        np.savez(camera_name + "_intrinsic", mtx=mtx, dist=dist, newCameraMatrix=newCameraMatrix)
+        cv_file = cv2.FileStorage(camera_name+'_params.xml', cv2.FILE_STORAGE_WRITE)
+        cv_file.write('cameraMatrix',mtx)
+        cv_file.write('distCoeffs',dist)
+        cv_file.release()
     else:
         print("Camera calibration failed. Not enough good images.")
 
