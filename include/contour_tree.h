@@ -4,6 +4,7 @@
 #include "opencv2/core/types.hpp"
 #include "opencv2/imgproc.hpp"
 
+#include "types.h"
 #include <algorithm>
 #include <chrono>
 #include <complex>
@@ -12,11 +13,6 @@
 #include <queue>
 #include <thread>
 #include <vector>
-
-struct TimedContour {
-  std::vector<cv::Point> contour;
-  std::chrono::time_point<std::chrono::system_clock> timestamp;
-};
 
 class ContourGroup {
 public:

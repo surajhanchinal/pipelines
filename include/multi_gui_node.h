@@ -16,9 +16,7 @@
 #include <utility>
 using namespace std;
 
-class MultiGuiNode
-    : public Node<type_list_t<TimedMatWithCTree, TimedMatWithCTree>,
-                  type_list_t<>> {
+class MultiGuiNode : public Node<type_list_t<CameraPairData>, type_list_t<>> {
   std::vector<ImColor> colorPalette = {
       ImColor(83, 200, 33),  ImColor(255, 201, 40), ImColor(255, 148, 35),
       ImColor(255, 72, 162), ImColor(122, 71, 255), ImColor(42, 153, 235)};
@@ -96,8 +94,11 @@ public:
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      auto frameTimedMat1 = readData<0, TimedMatWithCTree>();
-      auto frameTimedMat2 = readData<1, TimedMatWithCTree>();
+      auto cameraPairData = readData<0, CameraPairData>();
+
+      auto frameTimedMat1 = cameraPairData.leftTMCT;
+      auto frameTimedMat2 = cameraPairData.rightTMCT;
+      auto trajectories = cameraPairData.trajectories;
 
       vector<vector<ImVec2>> trajList1;
       vector<vector<ImVec2>> trajList2;
@@ -107,83 +108,6 @@ public:
       renderFrame(frameTimedMat2, tex2, w2, polyLineGroupList2, trajList2);
       renderMetricsWindow(frameTimedMat1.timestamp, frameTimedMat2.timestamp);
 
-      /*vector<pair<double, pair<int, int>>> match_costs;
-      for (int i = 0; i < trajList1.size(); i++) {
-        if (trajList1[i].size() < 6) {
-          continue;
-        }
-        auto &t1 = trajList1[i];
-
-        double ocost = 0.5;
-        int miniIdx = -1;
-
-        vector<pair<int, vector<double>>> seqCosts;
-        for (int j = 0; j < trajList2.size(); j++) {
-          if (trajList2[j].size() < 6) {
-            continue;
-          }
-          auto &t2 = trajList2[j];
-          bool valid = true;
-          bool sign = false;
-          bool start = true;
-          int prev = 300;
-          double cost = 0;
-          for (int z = 0; z < 6; z++) {
-            auto &p1 = t1[t1.size() - 1 - z];
-            auto &p2 = t2[t2.size() - 1 - z];
-
-            auto xdiff = abs(p1.x - p2.x);
-            if (start) {
-              start = false;
-              sign = (p1.x - p2.x) > 0;
-            }
-            if (xdiff > prev || ((p1.x - p2.x) > 0) != sign) {
-              valid = false;
-            } else {
-              prev = xdiff;
-            }
-            cost += abs(p1.y - p2.y) / imageSize.height;
-          }
-          cost = cost / 4;
-          if (cost < ocost) {
-            ocost = cost;
-            miniIdx = j;
-          }
-        }
-
-        if (miniIdx != -1) {
-          match_costs.push_back({ocost, {i, miniIdx}});
-        }
-      }
-      double mini = 121312;
-      int miniIdx = -1;
-
-      for (int i = 0; i < match_costs.size(); i++) {
-        if (match_costs[i].first < mini) {
-          miniIdx = i;
-          mini = match_costs[i].first;
-        }
-      }
-
-      if (miniIdx != -1) {
-        auto &mc = match_costs[miniIdx];
-        vector<ImVec2> ntl1, ntl2;
-        auto &t1 = trajList1[mc.second.first];
-        auto &t2 = trajList2[mc.second.second];
-        for (int i = 0; i < 4; i++) {
-          ntl1.push_back(t1[t1.size() - 1 - i]);
-
-          ntl2.push_back(t2[t2.size() - 1 - i]);
-        }
-        // actualTrajList1.push_back(ntl1);
-        // actualTrajList2.push_back(ntl2);
-        //  actualTrajList1 = {trajList1[mc.second.first]};
-        //   actualTrajList2 = {trajList2[mc.second.second]};
-        actualTrajList1.push_back(trajList1[mc.second.first]);
-
-        actualTrajList2.push_back(trajList2[mc.second.second]);
-      }
-
       {
 
         ImGui::Begin("actual");
@@ -192,9 +116,11 @@ public:
         auto cpos = ImGui::GetCursorScreenPos();
         // Draw using offset from where image begins. We use the cursor
         // position before the image is rendered to get this offset
-        render_combined_contours(cpos, actualTrajList1, actualTrajList2);
+        render_combined_contours(cpos, *trajectories);
         ImGui::End();
-      }*/
+      }
+
+      delete trajectories;
 
       // Rendering
       ImGui::Render();
@@ -253,30 +179,26 @@ public:
     }
   }
 
-  void render_combined_contours(ImVec2 &p, vector<vector<ImVec2>> &trajList1,
-                                vector<vector<ImVec2>> &trajList2) {
+  void
+  render_combined_contours(ImVec2 &p,
+                           vector<vector<AlignedTimedContours>> &trajectories) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    int k = 0;
-    for (auto &traj : trajList1) {
-      if (traj.size() > 1) {
-        for (int i = 0; i < traj.size() - 1; i++) {
-          draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
-                             ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
-                             colorPalette[k % 6], 2);
+    for (auto const &trajectory : trajectories) {
+      for (auto const &atctr : trajectory) {
+        vector<ImVec2> leftPolyLine;
+        vector<ImVec2> rightPolyLine;
+        for (auto const &pt : atctr.leftContour.contour) {
+          leftPolyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
         }
-      }
-      k++;
-    }
-    k = 0;
-    for (auto &traj : trajList2) {
-      if (traj.size() > 1) {
-        for (int i = 0; i < traj.size() - 1; i++) {
-          draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
-                             ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
-                             colorPalette[k % 6], 2);
+        draw_list->AddPolyline(leftPolyLine.data(), leftPolyLine.size(),
+                               colorPalette[1], ImDrawFlags_Closed, 2);
+        for (auto const &pt : atctr.rightContour.contour) {
+          rightPolyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
         }
+
+        draw_list->AddPolyline(rightPolyLine.data(), rightPolyLine.size(),
+                               colorPalette[2], ImDrawFlags_Closed, 2);
       }
-      k++;
     }
   }
 

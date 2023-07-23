@@ -1,18 +1,34 @@
 #pragma once
 
+#include "contour_tree.h"
 #include "fps_counter.h"
 #include "node.h"
 #include "types.h"
 #include <chrono>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/persistence.hpp>
 #include <thread>
 namespace frame_syncer {
 using input_type = type_list_t<TimedMatWithCTree, TimedMatWithCTree>;
-using output_type = type_list_t<TimedMatWithCTree, TimedMatWithCTree>;
+using output_type = type_list_t<CameraPairData>;
 }; // namespace frame_syncer
+
+using namespace std;
 
 class FrameSyncer
     : public Node<frame_syncer::input_type, frame_syncer::output_type> {
 public:
+  FrameSyncer() {
+    cv::FileStorage fs("../scripts/stereoParams.xml", cv::FileStorage::READ);
+    fs["K1"] >> K1;
+    fs["K2"] >> K2;
+    fs["D1"] >> D1;
+    fs["D2"] >> D2;
+    fs["R1"] >> R1;
+    fs["R2"] >> R2;
+    fs["P1"] >> P1;
+    fs["P2"] >> P2;
+  }
   void process() {
     FpsCounter fc(240, "FS");
     while (true) {
@@ -27,8 +43,125 @@ public:
       if (abs(delay.count()) > 4) {
         std::cout << "delay happen, what do: " << delay.count() << std::endl;
       }
-      writeData<0>(dt1);
-      writeData<1>(dt2);
+      vector<vector<AlignedTimedContours>> alignedTrajectories;
+      alignGroups(dt1.contourGroupList, dt2.contourGroupList,
+                  alignedTrajectories);
+
+      auto vecPtr = new vector(alignedTrajectories);
+      CameraPairData dt = {
+          .leftTMCT = dt1, .rightTMCT = dt2, .trajectories = vecPtr};
+      writeData<0>(dt);
     }
   }
+
+  void alignGroups(vector<vector<TimedContour>> *leftGroups,
+                   vector<vector<TimedContour>> *rightGroups,
+                   vector<vector<AlignedTimedContours>> &alignedTrajectories) {
+    auto wLeftGroups = *leftGroups;
+    auto wRightGroups = *rightGroups;
+    for (int i = 0; i < wLeftGroups.size(); i++) {
+      if (wLeftGroups[i].size() < 4) {
+        continue;
+      }
+      for (int j = 0; j < wRightGroups.size(); j++) {
+        if (wRightGroups[j].size() < 4) {
+          continue;
+        }
+        vector<TimedContour> &leftGroup = wLeftGroups[i];
+        vector<TimedContour> &rightGroup = wRightGroups[j];
+
+        // Align a pair of trajectories.
+        alignTrajectory(leftGroup, rightGroup, alignedTrajectories);
+      }
+    }
+  }
+
+  void
+  alignTrajectory(vector<TimedContour> &leftTrajectory,
+                  vector<TimedContour> &rightTrajectory,
+                  vector<vector<AlignedTimedContours>> &alignedTrajectories) {
+    int leftIdx = leftTrajectory.size() - 1;
+    int rightIdx = rightTrajectory.size() - 1;
+    vector<pair<int, int>> alignedIndices;
+    while (leftIdx >= 0 && rightIdx >= 0) {
+      TimedContour &left = leftTrajectory[leftIdx];
+      TimedContour &right = rightTrajectory[rightIdx];
+      bool alignedInTime = areAlignedInTime(left, right);
+      // bool alignedInTime = false;
+      bool alignedInY = areAlignedInY(left, right);
+      auto offset_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                              left.timestamp - right.timestamp)
+                              .count();
+
+      if (!alignedInTime || !alignedInY) {
+        // The latest contours are not aligned, we will not consider this
+        // trajectory further;
+
+        if (alignedInTime) {
+          // They belong to the same frame but not together. Sad! Ignore both
+          leftIdx--;
+          rightIdx--;
+        } else {
+          auto offset_in_ms =
+              std::chrono::duration_cast<std::chrono::milliseconds>(
+                  left.timestamp - right.timestamp)
+                  .count();
+          // offset more than zero means that left is on a newer node than
+          // right. Make left go back because we can't make right go forward.
+          // Because reverse iteration and vice versa.
+          if (offset_in_ms > 0) {
+            leftIdx--;
+          } else {
+            rightIdx--;
+          }
+        }
+      } else if (alignedInTime && alignedInY) {
+        // They are aligned in both time and space. True love
+        alignedIndices.push_back({leftIdx, rightIdx});
+        leftIdx--;
+        rightIdx--;
+      }
+    }
+
+    if (alignedIndices.size() >= 4) {
+      vector<AlignedTimedContours> trajectory;
+      for (int i = alignedIndices.size() - 1; i >= 0; i--) {
+        int li = alignedIndices[i].first;
+        int ri = alignedIndices[i].second;
+        trajectory.push_back({.leftContour = leftTrajectory[li],
+                              .rightContour = rightTrajectory[ri]});
+      }
+      alignedTrajectories.push_back(trajectory);
+    }
+  }
+
+  bool areAlignedInTime(TimedContour &left, TimedContour &right) {
+    auto offset_in_ms =
+        abs(std::chrono::duration_cast<std::chrono::milliseconds>(
+                left.timestamp - right.timestamp)
+                .count());
+    return offset_in_ms <= ConfigStore::maxFrameOffset;
+  }
+
+  bool areAlignedInY(TimedContour &left, TimedContour &right) {
+    auto leftCenter = contourCenterPoint(left.contour);
+    auto rightCenter = contourCenterPoint(right.contour);
+    vector<cv::Point2f> lefts = {leftCenter};
+    vector<cv::Point2f> unLC;
+    vector<cv::Point2f> rights = {rightCenter};
+    vector<cv::Point2f> unRC;
+    cv::undistortPoints(lefts, unLC, K1, D1, R1, P1);
+    cv::undistortPoints(rights, unRC, K2, D2, R2, P2);
+    return abs(unLC[0].y - unRC[0].y) < 30;
+  }
+
+  cv::Point contourCenterPoint(std::vector<cv::Point> &contour) {
+
+    cv::Moments M = cv::moments(contour);
+    int X = M.m10 / M.m00;
+    int Y = M.m01 / M.m00;
+    return cv::Point(X, Y);
+  }
+
+  cv::Mat K1, K2, D1, D2, R1, R2, P1, P2;
 };

@@ -69,7 +69,6 @@ int main() {
   frameProcessor2->attachPort<0, 1>(frameSyncer);
 
   frameSyncer->attachPort<0, 0>(multiGuiNode);
-  frameSyncer->attachPort<1, 1>(multiGuiNode);
 
   cout << "size:" << sizeof(cv::Mat) << endl;
 
