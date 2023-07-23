@@ -35,7 +35,7 @@ public:
     FpsCounter fc(240);
     while (1) {
       readData<0, bool>();
-      // fc.loop();
+      fc.loop();
       cap->grab();
       auto now = std::chrono::system_clock::now();
       cap->retrieve(_frame);
