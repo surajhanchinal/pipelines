@@ -74,7 +74,6 @@ def calibrate_camera(images_folder, camera_name,ignore_list=[]):
         print("ROI: ", roi)
 
         # Save the calibration parameters to a file
-        #np.savez(camera_name + "_intrinsic", mtx=mtx, dist=dist, newCameraMatrix=newCameraMatrix)
         cv_file = cv2.FileStorage(camera_name+'_params.xml', cv2.FILE_STORAGE_WRITE)
         cv_file.write('cameraMatrix',mtx)
         cv_file.write('distCoeffs',dist)
@@ -82,17 +81,11 @@ def calibrate_camera(images_folder, camera_name,ignore_list=[]):
     else:
         print("Camera calibration failed. Not enough good images.")
 
-left_ignore_list = []
-right_ignore_list = []
-
 if __name__ == "__main__":
     # Calibrate the left camera
     left_images_folder = "./images/calibration/left"
-    calibrate_camera(left_images_folder, "left",left_ignore_list)
+    calibrate_camera(left_images_folder, "left")
 
     # Calibrate the right camera
     right_images_folder = "./images/calibration/right"
-    calibrate_camera(right_images_folder, "right",right_ignore_list)
-
-
-    print(ignore_list)
+    calibrate_camera(right_images_folder, "right")

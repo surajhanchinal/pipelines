@@ -28,7 +28,7 @@ def rotationMatrixToEulerAngles(R) :
 
 scale_factor = 0.7
 
-imgs = [6,7,21,22,28,29,30,33,46,50,51,52,53,54,55,56,57,58,59,60]
+
 
 objPoints = []
 imgPointsLeft = []
@@ -37,7 +37,6 @@ imgPointsRight = []
 ignore_list = [18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,84]
 
 while True:
-    print(counter2)
     leftName = './images/calibration/left/' + str(counter2) + '.jpg'
     rightName = './images/calibration/right/' + str(counter2) + '.jpg'
     skip = False
@@ -46,7 +45,7 @@ while True:
             skip = True
             break
     if skip:
-        print("skipping: ",counter2)
+
         counter2 = counter2 + 1
         continue
     if not os.path.exists(leftName) or not os.path.exists(rightName):
@@ -74,7 +73,6 @@ while True:
         #if(True):
         #if(pressed == ord('y')):
         if True:
-            print("taking:",counter2)
             counter =counter + 1
             objPoints.append(objp)
             imgPointsLeft.append(corners2Left)
@@ -106,20 +104,12 @@ criteria_stereo= (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 1000, 0.00
 
 initR = np.identity(3).astype(np.float64)
 initT = np.array([[820],[0],[0]],dtype=np.float64)
-print(initR.shape)
-print(initT.shape)
-print(grayLeft.shape[::-1])
+
 
 #retStereo, newCameraMatrixL, distL, newCameraMatrixR, distR, rot, trans, essentialMatrix, fundamentalMatrix = cv2.stereoCalibrate(objPoints, imgPointsLeft, imgPointsRight, newCameraMatrixL, distL, newCameraMatrixR, distR, grayLeft.shape[::-1], criteria_stereo, flags)
-ttp = cv2.stereoCalibrateExtended(objPoints, imgPointsLeft, imgPointsRight,newCameraMatrixL,distL,newCameraMatrixR,distR,grayLeft.shape[::-1],initR,initT,flags=flags)
-print(len(ttp))
+
 retStereo, newCameraMatrixL, distL, newCameraMatrixR, distR, rot, trans, essentialMatrix, fundamentalMatrix,rvecs,tvecs,perViewErrors = cv2.stereoCalibrateExtended(objPoints, imgPointsLeft, imgPointsRight,newCameraMatrixL,distL,newCameraMatrixR,distR,grayLeft.shape[::-1],initR,initT,flags=flags)
-print("Stereo Calibration Error",retStereo)
 
-print("Camera translation: ",trans)
-
-print("Camera rotation: ",rot)
-print("Camera rotation angles: ",rotationMatrixToEulerAngles(rot))
 
 
 rectifyScale= 1
