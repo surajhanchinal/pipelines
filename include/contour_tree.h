@@ -12,10 +12,15 @@
 #include <queue>
 #include <thread>
 #include <vector>
+
+struct TimedContour {
+  std::vector<cv::Point> contour;
+  std::chrono::time_point<std::chrono::system_clock> timestamp;
+};
+
 class ContourGroup {
 public:
-  std::vector<std::vector<cv::Point>> contours;
-  std::chrono::time_point<std::chrono::system_clock> insertTime;
+  std::vector<TimedContour> contours;
   cv::Scalar color;
 
   ContourGroup(std::vector<cv::Point> contour,
@@ -27,17 +32,14 @@ public:
 
   void insertContour(std::vector<cv::Point> contour,
                      std::chrono::time_point<std::chrono::system_clock> _time) {
-    contours.push_back(contour);
-    insertTime = _time;
+    contours.push_back({.contour = contour, .timestamp = _time});
   }
 
-  std::chrono::time_point<std::chrono::system_clock> getInsertTime() {
-    return insertTime;
+  std::chrono::time_point<std::chrono::system_clock> getInsertTime() const {
+    return contours[contours.size() - 1].timestamp;
   }
 
-  std::vector<cv::Point> &getLatestContour() {
-    return contours[contours.size() - 1];
-  }
+  TimedContour &getLatestContour() { return contours[contours.size() - 1]; }
 };
 
 class ContourTree {
@@ -61,13 +63,13 @@ public:
                 if (g1.contours.size() != g2.contours.size()) {
                   return g1.contours.size() > g2.contours.size();
                 } else {
-                  return g1.insertTime > g2.insertTime;
+                  return g1.getInsertTime() > g2.getInsertTime();
                 }
               });
     std::vector<bool> usedContours(inputContours.size(), 0);
 
     for (auto &g : groups) {
-      auto srcCenter = contourCenterPoint(g.getLatestContour());
+      auto srcCenter = contourCenterPoint(g.getLatestContour().contour);
       std::priority_queue<std::pair<double, int>> pq;
 
       // find the 3 closest contours;
@@ -95,7 +97,8 @@ public:
       double score = ConfigStore::contourMatchThreshold;
       int idx = -1;
       for (auto c : nearestContourIndices) {
-        int currScore = matchContour(g.getLatestContour(), inputContours[c]);
+        int currScore =
+            matchContour(g.getLatestContour().contour, inputContours[c]);
         if (currScore < score) {
           score = currScore;
           idx = c;
@@ -130,7 +133,7 @@ public:
     std::vector<ContourGroup> newGroups;
     for (int i = 0; i < groups.size(); i++) {
       auto delay = abs(std::chrono::duration_cast<std::chrono::milliseconds>(
-                           currTime - groups[i].insertTime)
+                           currTime - groups[i].getInsertTime())
                            .count());
       if (delay <= ttl) {
         newGroups.push_back(groups[i]);
@@ -151,8 +154,7 @@ public:
     return cv::Point(X, Y);
   }
 
-  void
-  getContourGroupList(std::vector<std::vector<std::vector<cv::Point>>> &cgl) {
+  void getContourGroupList(std::vector<std::vector<TimedContour>> &cgl) {
     for (auto g : groups) {
       cgl.push_back(g.contours);
     }

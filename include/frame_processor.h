@@ -118,11 +118,11 @@ public:
           filtered_contours.push_back(x);
         }
       }
-      inputFrame = inputGray.clone();
+      inputFrame = inputGray;
       // inputFrame = diff_and.clone();
       ctree->addContours2(filtered_contours, inputTimedMat.timestamp,
                           inputFrame);
-      vector<vector<vector<cv::Point>>> cgl;
+      vector<vector<TimedContour>> cgl;
       ctree->getContourGroupList(cgl);
       auto newVec = new vector(cgl);
       TimedMatWithCTree newTimedMat = {.mat = inputFrame,

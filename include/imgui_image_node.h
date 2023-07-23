@@ -1,5 +1,6 @@
 #pragma once
 
+#include "contour_tree.h"
 #include "imconfig.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -100,7 +101,7 @@ public:
 
       auto frameTimedMat = readData<0, TimedMatWithCTree>();
       auto frame = frameTimedMat.mat;
-      std::vector<std::vector<std::vector<cv::Point>>> *cgl =
+      std::vector<std::vector<TimedContour>> *cgl =
           frameTimedMat.contourGroupList;
       auto now = std::chrono::system_clock::now();
 
@@ -110,7 +111,7 @@ public:
         std::vector<std::vector<ImVec2>> polyLines;
         for (auto ctr : g) {
           std::vector<ImVec2> contour;
-          for (auto pt : ctr) {
+          for (auto pt : ctr.contour) {
             contour.push_back(ImVec2(pt.x, pt.y));
           }
           polyLines.push_back(contour);
@@ -123,7 +124,7 @@ public:
       for (auto &g : (*cgl)) {
         vector<ImVec2> traj;
         for (auto &ctr : g) {
-          traj.push_back(contourCenterPoint(ctr));
+          traj.push_back(contourCenterPoint(ctr.contour));
         }
         trajList.push_back(traj);
       }
