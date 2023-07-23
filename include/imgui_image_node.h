@@ -246,7 +246,7 @@ public:
       if (k > 1000) {
         k = 0;
       }
-    }*/
+    }
   }
 
 private:

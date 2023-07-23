@@ -20,7 +20,7 @@ public:
   void process() {
     while (true) {
       writeData<0>(true);
-      std::this_thread::sleep_for(std::chrono::microseconds(30000));
+      std::this_thread::sleep_for(std::chrono::microseconds(12000));
     }
   }
 };
