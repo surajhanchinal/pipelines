@@ -1,4 +1,5 @@
 #pragma once
+#include "config_store.h"
 #include "contour_tree.h"
 #include "fps_counter.h"
 #include "frame_buffer.h"
@@ -105,8 +106,10 @@ public:
 
       cv::GaussianBlur(diff2, diff2, cv::Size(11, 11), 0);
 
-      threshold(diff1, diff1, 10, 255, cv::THRESH_BINARY);
-      threshold(diff2, diff2, 10, 255, cv::THRESH_BINARY);
+      threshold(diff1, diff1, ConfigStore::contourMatchThreshold, 255,
+                cv::THRESH_BINARY);
+      threshold(diff2, diff2, ConfigStore::contourMatchThreshold, 255,
+                cv::THRESH_BINARY);
 
       cv::bitwise_and(diff1, diff2, diff_and);
 
@@ -120,8 +123,10 @@ public:
         float extent = cv::contourArea(x) / (bb.width * bb.height + 1);
         float ap = (float)bb.width / ((float)bb.height + 1);
 
-        if (cv::contourArea(x) > 30 && extent >= 0.5 && ap >= 0.8 and
-            ap <= 1.2) {
+        if (cv::contourArea(x) > ConfigStore::minContourArea &&
+            extent >= ConfigStore::minExtent &&
+            ap >= ConfigStore::minAspectRatio and
+            ap <= ConfigStore::maxAspectRatio) {
           filtered_contours.push_back(x);
         }
       }
