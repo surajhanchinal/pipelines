@@ -38,7 +38,6 @@ def calibrate_camera(images_folder, camera_name,ignore_list=[]):
         if ret:
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
             img = cv2.drawChessboardCorners(img, CHECKERBOARD, corners2, ret)
-            #print(camera_name+":img:"+str(path))
             cv2.imshow("img", img)
             pressed = cv2.waitKey(0) & 0xFF
             if(pressed == ord('y')):

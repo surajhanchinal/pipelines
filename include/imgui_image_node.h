@@ -234,7 +234,7 @@ public:
     }
 
     // draw lines instead of contours;
-    /*for (auto &traj : trajList) {
+    for (auto &traj : trajList) {
       if (traj.size() > 1) {
         for (int i = 0; i < traj.size() - 1; i++) {
           draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),

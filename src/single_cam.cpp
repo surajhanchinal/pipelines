@@ -30,7 +30,7 @@ int main() {
   const int width = 1280;
   const cv::Size captureSize(width, height);
 
-  auto fileReader1 = new FileReader("../left.mp4", captureSize);
+  auto fileReader1 = new FileReader("../national_project_720.mp4", captureSize);
 
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
   auto captureSignaler = new CaptureSignaler1();
