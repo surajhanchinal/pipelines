@@ -7,7 +7,7 @@ public:
   static constexpr double minAspectRatio = 0.8;
   static constexpr double maxAspectRatio = 1.2;
   static constexpr double minExtent = 0.5;
-  static constexpr double binaryThreshold = 10;
+  static constexpr int binaryThreshold = 10;
 
   // Contour tree params
   static const int contourValidSearchRadius = 100;

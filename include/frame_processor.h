@@ -106,9 +106,9 @@ public:
 
       cv::GaussianBlur(diff2, diff2, cv::Size(11, 11), 0);
 
-      threshold(diff1, diff1, ConfigStore::contourMatchThreshold, 255,
+      threshold(diff1, diff1, ConfigStore::binaryThreshold, 255,
                 cv::THRESH_BINARY);
-      threshold(diff2, diff2, ConfigStore::contourMatchThreshold, 255,
+      threshold(diff2, diff2, ConfigStore::binaryThreshold, 255,
                 cv::THRESH_BINARY);
 
       cv::bitwise_and(diff1, diff2, diff_and);
@@ -130,14 +130,14 @@ public:
           filtered_contours.push_back(x);
         }
       }
-      auto currTime = timeSinceEpochMillisec();
 #ifdef SSOPTIMIZED
       inputFrame = inputGray.clone();
       // inputFrame = diff_and.clone();
 #else
       curr.copyTo(inputFrame);
 #endif
-      ctree->addContours2(filtered_contours, currTime, inputFrame);
+      ctree->addContours2(filtered_contours, inputTimedMat.timestamp,
+                          inputFrame);
       vector<vector<vector<cv::Point>>> cgl;
       ctree->getContourGroupList(cgl);
       auto newVec = new vector(cgl);
@@ -161,9 +161,4 @@ private:
   cv::Size imageSize;
   int gap;
   ContourTree *ctree;
-  uint64_t timeSinceEpochMillisec() {
-    using namespace std::chrono;
-    return duration_cast<milliseconds>(system_clock::now().time_since_epoch())
-        .count();
-  }
 };

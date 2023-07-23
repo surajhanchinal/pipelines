@@ -5,6 +5,7 @@
 #include "opencv2/imgproc.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <complex>
 #include <cstdint>
 #include <iostream>
@@ -14,21 +15,25 @@
 class ContourGroup {
 public:
   std::vector<std::vector<cv::Point>> contours;
-  uint64_t insertTime;
+  std::chrono::time_point<std::chrono::system_clock> insertTime;
   cv::Scalar color;
 
-  ContourGroup(std::vector<cv::Point> contour, uint64_t _time,
+  ContourGroup(std::vector<cv::Point> contour,
+               std::chrono::time_point<std::chrono::system_clock> _time,
                cv::Scalar _color) {
     insertContour(contour, _time);
     color = _color;
   }
 
-  void insertContour(std::vector<cv::Point> contour, uint64_t _time) {
+  void insertContour(std::vector<cv::Point> contour,
+                     std::chrono::time_point<std::chrono::system_clock> _time) {
     contours.push_back(contour);
     insertTime = _time;
   }
 
-  uint64_t getInsertTime() { return insertTime; }
+  std::chrono::time_point<std::chrono::system_clock> getInsertTime() {
+    return insertTime;
+  }
 
   std::vector<cv::Point> &getLatestContour() {
     return contours[contours.size() - 1];
@@ -47,7 +52,8 @@ class ContourTree {
 
 public:
   void addContours2(std::vector<std::vector<cv::Point>> inputContours,
-                    uint64_t iTime, cv::Mat inputFrame) {
+                    std::chrono::time_point<std::chrono::system_clock> iTime,
+                    cv::Mat inputFrame) {
     // We want to give preference to longer contour chains with the latest
     // insert times. Because vibes.
     std::sort(groups.begin(), groups.end(),
@@ -136,10 +142,14 @@ public:
 #endif
   }
 
-  void cleanupGroups(uint64_t currTime) {
+  void
+  cleanupGroups(std::chrono::time_point<std::chrono::system_clock> currTime) {
     std::vector<ContourGroup> newGroups;
     for (int i = 0; i < groups.size(); i++) {
-      if (currTime - groups[i].insertTime <= ttl) {
+      auto delay = abs(std::chrono::duration_cast<std::chrono::milliseconds>(
+                           currTime - groups[i].insertTime)
+                           .count());
+      if (delay <= ttl) {
         newGroups.push_back(groups[i]);
       }
     }
