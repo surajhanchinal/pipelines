@@ -127,8 +127,8 @@ public:
       }
       auto currTime = timeSinceEpochMillisec();
 #ifdef SSOPTIMIZED
-      inputFrame = inputGray.clone();
-      // inputFrame = diff_and.clone();
+      //inputFrame = inputGray.clone();
+       inputFrame = diff_and;
 #else
       curr.copyTo(inputFrame);
 #endif

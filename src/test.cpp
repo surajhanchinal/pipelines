@@ -27,15 +27,15 @@ using namespace std;
 
 int main() {
 
-  const int height = 720;
-  const int width = 1280;
+  const int height = 1080;
+  const int width = 1920;
   const cv::Size captureSize(width, height);
 
   auto captureSignaler = new CaptureSignaler();
 
-  auto frameReader1 = new FrameReader(0, "camera", captureSize);
+  auto frameReader1 = new FrameReader(2, "camera", captureSize);
 
-  auto frameReader2 = new FrameReader(2, "camera", captureSize);
+  auto frameReader2 = new FrameReader(4, "camera", captureSize);
 
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 

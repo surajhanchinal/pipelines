@@ -112,8 +112,8 @@ while(True):
     up_points = (1066,600)
     frame1 = cv2.resize(frame1, up_points, interpolation= cv2.INTER_LINEAR)
     frame2 = cv2.resize(frame2, up_points, interpolation= cv2.INTER_LINEAR)
-    cv2.imshow('frame1',frame1)
-    cv2.imshow('frame2',frame2)
+    cv2.imshow('left',frame1)
+    cv2.imshow('right',frame2)
     pressed = cv2.waitKey(1) & 0xFF
     if pressed == ord('s'):
         state = 'START' 

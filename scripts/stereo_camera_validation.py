@@ -2,38 +2,65 @@ import cv2
 import numpy as np
 import os
 
-cv_file = cv2.FileStorage('stereoMap.xml', cv2.FILE_STORAGE_READ)
-stereoMapL_x = cv_file.getNode('stereoMapL_x').mat()
-stereoMapL_y = cv_file.getNode('stereoMapL_y').mat()
-stereoMapR_x = cv_file.getNode('stereoMapR_x').mat()
-stereoMapR_y = cv_file.getNode('stereoMapR_y').mat()
-cv_file.release()
+cv_file = cv2.FileStorage('stereoParams.xml',cv2.FILE_STORAGE_READ)
+
+K1 = cv_file.getNode("K1").mat()
+D1 = cv_file.getNode("D1").mat()
+K2 = cv_file.getNode("K2").mat()
+D2 = cv_file.getNode("D2").mat()
+R1 = cv_file.getNode("R1").mat()
+R2 = cv_file.getNode("R2").mat()
+P1 = cv_file.getNode("P1").mat()
+P2 = cv_file.getNode("P2").mat()
+F = cv_file.getNode("F").mat()
 
 counter2 = 1
+counter = 0
+
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+CHECKERBOARD = (8, 11)
+objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
+objp[0, :, :2] = np.mgrid[0 : CHECKERBOARD[0], 0 : CHECKERBOARD[1]].T.reshape(-1, 2)
+objp = objp * 45
+
 
 while True:
     leftName = './images/validation/left/' + str(counter2) + '.jpg'
     rightName = './images/validation/right/' + str(counter2) + '.jpg'
-    counter2 += 1
+    counter2 = counter2 + 1
+    if not os.path.exists(leftName) or not os.path.exists(rightName):
+        break 
+    imgLeft = cv2.imread(leftName)
+    imgRight = cv2.imread(rightName)
+    grayLeft = cv2.cvtColor(imgLeft,cv2.COLOR_BGR2GRAY) 
+    grayRight = cv2.cvtColor(imgRight,cv2.COLOR_BGR2GRAY)
 
-    if not (os.path.exists(leftName) and os.path.exists(rightName)):
-        break
+    retLeft, cornersLeft = cv2.findChessboardCorners(grayLeft, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
+    retRight, cornersRight = cv2.findChessboardCorners(grayRight, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
 
-    left_image = cv2.imread(leftName, 0)
-    right_image = cv2.imread(rightName, 0)
+    if retLeft and retRight:
+        counter =counter + 1
+        
+        #objPoints.append(objp)
 
-    left_rectified = cv2.remap(left_image, stereoMapL_x, stereoMapL_y, cv2.INTER_LANCZOS4)
-    right_rectified = cv2.remap(right_image, stereoMapR_x, stereoMapR_y, cv2.INTER_LANCZOS4)
+        corners2Left = cv2.cornerSubPix(grayLeft, cornersLeft, (11,11),(-1,-1), criteria)
+        
+        #imgPointsLeft.append(corners2Left)
 
-    window_size = 10
-    min_disparity = 16
-    num_disparities = 112 - min_disparity
-    stereo = cv2.StereoSGBM_create(minDisparity=min_disparity, numDisparities=num_disparities, blockSize=window_size)
+        corners2Right = cv2.cornerSubPix(grayRight, cornersRight, (11,11),(-1,-1), criteria)
+        
+        #imgPointsRight.append(corners2Right)
 
-    disparity = stereo.compute(left_rectified, right_rectified)
-
-    disparity_normalized = (disparity - min_disparity) / num_disparities
-
-    cv2.imshow('Disparity Map', disparity_normalized)
-    cv2.waitKey(3000) 
-    cv2.destroyAllWindows()
+        imgLeft = cv2.drawChessboardCorners(imgLeft, CHECKERBOARD, corners2Left, retLeft)
+        imgRight = cv2.drawChessboardCorners(imgRight, CHECKERBOARD, corners2Right, retRight)
+        ilen = len(objp)
+        error = 0
+        for i in range(len(objp[0])):
+            pt1 = cv2.undistortPoints(corners2Left[i][0],K1,D1,None,R1,P1)
+            pt2 = cv2.undistortPoints(corners2Right[i][0],K2,D2,None,R2,P2)
+            error = abs(pt1[0][0][1]-pt2[0][0][1]) + error
+        error = error/len(objp[0])
+        print(counter2-1,error)
+        cv2.imshow('imgLeft',imgLeft)
+        cv2.imshow('imgRight',imgRight)
+        cv2.waitKey(3000)
