@@ -47,6 +47,7 @@ public:
       TimedMat tm = {.mat = frameToSend, .timestamp = now};
       writeData<0>(tm);
     }
+    cout << "ending framereader" << endl;
   }
 
   ~FrameReader() { cap->release(); }

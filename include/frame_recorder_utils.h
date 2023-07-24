@@ -29,6 +29,7 @@ public:
       writeData<0>(dt1);
       writeData<1>(dt2);
     }
+    cout << "stopping lightsyncer" << endl;
   };
 };
 
@@ -37,7 +38,8 @@ class GstVideoWriter : public Node<type_list_t<TimedMat>, type_list_t<>> {
 public:
   GstVideoWriter(std::string _cameraName, const cv::Size _imageSize) {
     ostringstream line;
-    line << "appsrc ! queue ! videoconvert ! nvh264enc ! h264parse ! mp4mux ! "
+    line << "appsrc ! queue ! videoconvert ! nvh264enc bitrate=8000 ! "
+            "h264parse ! mp4mux ! "
             "filesink "
             "location=/home/hyperion/";
     line << _cameraName;
