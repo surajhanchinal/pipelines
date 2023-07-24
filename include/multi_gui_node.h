@@ -33,7 +33,7 @@ public:
 
     window = glfwCreateWindow(imageSize.width, imageSize.height,
                               windowName.c_str(), nullptr, nullptr);
-
+    glfwMaximizeWindow(window);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(0); // Disable  vsync
 
@@ -315,7 +315,7 @@ private:
           std::chrono::duration_cast<std::chrono::milliseconds>(now - f2Ts);
 
       auto interDelay =
-          std::chrono::duration_cast<std::chrono::microseconds>(f1Ts - f2Ts);
+          std::chrono::duration_cast<std::chrono::milliseconds>(f1Ts - f2Ts);
 
       ImGui::Begin("metrics", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
       auto io = ImGui::GetIO();
