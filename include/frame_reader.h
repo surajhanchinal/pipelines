@@ -33,7 +33,7 @@ public:
 
   void process() {
     FpsCounter fc(240);
-    while (1) {
+    while (*running) {
       readData<0, bool>();
       fc.loop();
       cap->grab();

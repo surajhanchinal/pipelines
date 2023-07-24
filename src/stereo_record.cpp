@@ -23,11 +23,6 @@
 using namespace cv;
 using namespace std;
 
-void sig_handle(int) {
-  cout << "sigint called" << endl;
-  common_data::running = false;
-}
-
 int main() {
 
   const int height = 720;
@@ -66,8 +61,6 @@ int main() {
   frameSyncer->attachPort<0, 0>(leftWriter);
 
   frameSyncer->attachPort<1, 0>(rightWriter);
-
-  signal(SIGINT, sig_handle);
 
   o1.start();
 

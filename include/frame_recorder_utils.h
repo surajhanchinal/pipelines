@@ -14,7 +14,7 @@ class LightFrameSyncer : public Node<type_list_t<TimedMat, TimedMat>,
                                      type_list_t<TimedMat, TimedMat>> {
 public:
   void process() {
-    while (true) {
+    while (*running) {
       auto dt1 = readData<0, TimedMat>();
       auto dt2 = readData<1, TimedMat>();
 
@@ -51,7 +51,7 @@ public:
     FpsCounter fc(240, "writer");
 
     cout << "isOpen: " << writer->isOpened();
-    while (common_data::running) {
+    while (*running) {
       fc.loop();
       auto timedMat = readData<0, TimedMat>();
       writer->write(timedMat.mat);

@@ -31,7 +31,7 @@ public:
   }
   void process() {
     FpsCounter fc(240, "FS");
-    while (true) {
+    while (*running) {
       fc.loop();
       auto dt1 = readData<0, TimedMatWithCTree>();
       auto dt2 = readData<1, TimedMatWithCTree>();

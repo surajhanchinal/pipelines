@@ -24,7 +24,7 @@ public:
 
   void process() {
     FpsCounter fc(240);
-    while (1) {
+    while (*running) {
       readData<0, bool>();
       fc.loop();
       cap->read(_frame);
@@ -42,6 +42,7 @@ public:
       TimedMat outputTimedMat = {.mat = frameToSend, .timestamp = now};
       writeData<0>(outputTimedMat);
     }
+    cout << "ending filereader" << endl;
   }
 
   ~FileReader() { cap->release(); }

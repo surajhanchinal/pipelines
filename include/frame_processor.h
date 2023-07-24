@@ -73,7 +73,7 @@ public:
     cv::Mat diff_and;
     cv::Mat inputGray;
     FpsCounter fc(60);
-    while (true) {
+    while (*running) {
       auto inputTimedMat = readData<0, TimedMat>();
       auto inputFrame = inputTimedMat.mat;
 
@@ -130,6 +130,7 @@ public:
                                        .contourGroupList = newVec};
       writeData<0>(newTimedMat);
     }
+    cout << "ending frame processor" << endl;
   }
 
 private:

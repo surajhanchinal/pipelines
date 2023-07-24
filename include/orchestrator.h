@@ -2,19 +2,32 @@
 
 #include "buffer.h"
 #include "camel_buffer.h"
+#include "common_data.h"
 #include "node.h"
+#include <atomic>
+#include <chrono>
 #include <iostream>
 #include <queue>
+#include <signal.h>
 #include <thread>
 #include <vector>
+
+void sig_handle(int) {
+  std::cout << "orchestrator sigint" << std::endl;
+  common_data::running = false;
+}
 
 class Orchestrator {
 private:
   std::vector<NodeBase *> nodes;
   std::vector<moodycamel::BlockingReaderWriterCircularBuffer *> bufs;
   int mainNodeIdx = -1;
+  std::vector<std::atomic<bool>> thread_loop_signals;
+  std::vector<int> bfs_order;
 
 public:
+  Orchestrator() { signal(SIGINT, sig_handle); }
+
   void registerNode(NodeBase *_node, bool runOnMain = false) {
     bool found = false;
     for (auto const &node : nodes) {
@@ -50,6 +63,12 @@ public:
     if (mainNodeIdx != -1) {
       nodes[mainNodeIdx]->init();
     }
+    thread_loop_signals = std::vector<std::atomic<bool>>(nodes.size());
+    for (int i = 0; i < nodes.size(); i++) {
+      auto &t = thread_loop_signals.at(i);
+      t = true;
+      nodes[i]->setThreadSignal(&thread_loop_signals[i]);
+    }
 
     std::vector<std::thread> threads;
     for (int i = 0; i < nodes.size(); i++) {
@@ -58,6 +77,9 @@ public:
       }
       threads.push_back(std::thread(&NodeBase::process, nodes[i]));
     }
+
+    threads.push_back(
+        std::thread(&Orchestrator::close_threads_on_sigint, this));
 
     if (mainNodeIdx != -1) {
       nodes[mainNodeIdx]->process();
@@ -69,12 +91,25 @@ public:
     return true;
   }
 
+  void close_threads_on_sigint() {
+    std::cout << "starting signal thread" << std::endl;
+    while (common_data::running) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    }
+    std::cout << "closing threads" << std::endl;
+    // Sigint called close the other threads in order;
+    for (int i = bfs_order.size() - 1; i >= 0; i--) {
+      thread_loop_signals[i] = false;
+      std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    }
+  }
+
   bool validateGraph() {
     std::vector<bool> visited(nodes.size(), 0);
-    std::queue<NodeBase *> qq;
+    std::queue<std::pair<NodeBase *, int>> qq;
     for (int i = 0; i < nodes.size(); i++) {
       if (nodes[i]->inputs->ports.size() == 0) {
-        qq.push(nodes[i]);
+        qq.push({nodes[i], i});
         visited[i] = true;
       }
     }
@@ -86,7 +121,8 @@ public:
     }
 
     while (!qq.empty()) {
-      auto node = qq.front();
+      auto node = qq.front().first;
+      bfs_order.push_back(qq.front().second);
       qq.pop();
       // validate input nodes
       for (auto const &port : node->inputs->ports) {
@@ -107,7 +143,7 @@ public:
           if (!visited[newNodeIdx]) {
 
             visited[newNodeIdx] = true;
-            qq.push(nodes[newNodeIdx]);
+            qq.push({nodes[newNodeIdx], newNodeIdx});
           }
         }
       }

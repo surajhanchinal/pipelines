@@ -86,7 +86,7 @@ public:
 
     std::cout << " process:  " << g_pcImGuiTLSContext << std::endl;
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window) && *running) {
       ImGui::SetCurrentContext(g_pcImGuiTLSContext);
       glfwPollEvents();
 
@@ -177,6 +177,8 @@ public:
 
       glfwSwapBuffers(window);
     }
+
+    cout << "ending imgui_image_node" << endl;
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

@@ -14,10 +14,12 @@ class NodeBase {
 public:
   PortSet *inputs;
   PortSet *outputs;
+  std::atomic<bool> *running = nullptr;
   NodeBase(){};
   virtual ~NodeBase(){};
   virtual void process() = 0;
   virtual void init() = 0;
+  void setThreadSignal(std::atomic<bool> *signal) { running = signal; }
 };
 
 template <typename... Types> struct type_list_t {};

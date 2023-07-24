@@ -84,7 +84,7 @@ public:
     vector<vector<ImVec2>> actualTrajList1;
     vector<vector<ImVec2>> actualTrajList2;
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window) && *running) {
       ImGui::SetCurrentContext(g_pcImGuiTLSContext);
       glfwPollEvents();
 
