@@ -99,8 +99,8 @@ public:
     std::cout << "closing threads" << std::endl;
     // Sigint called close the other threads in order;
     for (int i = bfs_order.size() - 1; i >= 0; i--) {
-      thread_loop_signals[i] = false;
-      std::this_thread::sleep_for(std::chrono::milliseconds(3));
+      thread_loop_signals[bfs_order[i]] = false;
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
     }
   }
 

@@ -84,7 +84,7 @@ public:
     vector<vector<ImVec2>> actualTrajList1;
     vector<vector<ImVec2>> actualTrajList2;
 
-    while (!glfwWindowShouldClose(window) && *running) {
+    while (*running && !glfwWindowShouldClose(window)) {
       ImGui::SetCurrentContext(g_pcImGuiTLSContext);
       glfwPollEvents();
 
@@ -134,6 +134,7 @@ public:
 
       glfwSwapBuffers(window);
     }
+    std::cout << "Closing the gui node" << std::endl;
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

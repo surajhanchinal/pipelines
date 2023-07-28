@@ -52,6 +52,7 @@ public:
           .leftTMCT = dt1, .rightTMCT = dt2, .trajectories = vecPtr};
       writeData<0>(dt);
     }
+    std::cout << "Closing heavy frame syncer" << std::endl;
   }
 
   void alignGroups(vector<vector<TimedContour>> *leftGroups,
