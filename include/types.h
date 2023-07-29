@@ -1,5 +1,6 @@
 #pragma once
 
+#include "imgui.h"
 #include "opencv2/core/mat.hpp"
 #include <chrono>
 #include <opencv2/core/types.hpp>
@@ -12,9 +13,18 @@ struct TimedContour {
   std::chrono::time_point<std::chrono::system_clock> timestamp;
 };
 
-struct AlignedTimedContours {
-  TimedContour leftContour;
-  TimedContour rightContour;
+struct SingleTrajectory {
+  vector<TimedContour> tc;
+  int id;
+};
+
+struct AlignedTimedContour {
+  TimedContour lt;
+  TimedContour rt;
+  ImVec2 leftCenter;
+  ImVec2 rightCenter;
+  double y_avg;
+  std::chrono::time_point<std::chrono::system_clock> t_avg;
 };
 
 struct TimedMat {
@@ -25,11 +35,17 @@ struct TimedMat {
 struct TimedMatWithCTree {
   cv::Mat mat;
   std::chrono::time_point<std::chrono::system_clock> timestamp;
-  std::vector<std::vector<TimedContour>> *contourGroupList;
+  std::vector<SingleTrajectory> *contourGroupList;
+};
+
+struct CombinedTrajectory {
+  SingleTrajectory lt;
+  SingleTrajectory rt;
+  vector<AlignedTimedContour> atc;
 };
 
 struct CameraPairData {
   TimedMatWithCTree leftTMCT;
   TimedMatWithCTree rightTMCT;
-  vector<vector<AlignedTimedContours>> *trajectories;
+  vector<CombinedTrajectory> *trajectories;
 };

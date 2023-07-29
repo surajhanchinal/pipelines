@@ -17,13 +17,12 @@
 class ContourGroup {
 public:
   std::vector<TimedContour> contours;
-  cv::Scalar color;
+  int id;
 
   ContourGroup(std::vector<cv::Point> contour,
                std::chrono::time_point<std::chrono::system_clock> _time,
-               cv::Scalar _color) {
+               int id) {
     insertContour(contour, _time);
-    color = _color;
   }
 
   void insertContour(std::vector<cv::Point> contour,
@@ -109,12 +108,7 @@ public:
     // in the next frame. Hope is a good thing.
     for (int i = 0; i < inputContours.size(); i++) {
       if (usedContours[i] == 0) {
-        groups.push_back(
-            ContourGroup(inputContours[i], iTime, colorPalette[k % 6]));
-        k++;
-        if (k > 100) {
-          k = 0;
-        }
+        groups.push_back(ContourGroup(inputContours[i], iTime, ++k));
       }
     }
 
@@ -150,9 +144,11 @@ public:
     return cv::Point(X, Y);
   }
 
-  void getContourGroupList(std::vector<std::vector<TimedContour>> &cgl) {
-    for (auto g : groups) {
-      cgl.push_back(g.contours);
+  void getContourGroupList(std::vector<SingleTrajectory> &cgl) {
+    // auto cgl2 = new vector<SingleTrajectory>
+    for (auto const &g : groups) {
+      SingleTrajectory st = {.tc = g.contours, .id = g.id};
+      cgl.push_back(st);
     }
   }
 };

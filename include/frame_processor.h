@@ -122,7 +122,7 @@ public:
       // inputFrame = diff_and.clone();
       ctree->addContours2(filtered_contours, inputTimedMat.timestamp,
                           inputFrame);
-      vector<vector<TimedContour>> cgl;
+      vector<SingleTrajectory> cgl;
       ctree->getContourGroupList(cgl);
       auto newVec = new vector(cgl);
       TimedMatWithCTree newTimedMat = {.mat = inputFrame,

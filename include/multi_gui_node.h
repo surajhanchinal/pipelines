@@ -180,20 +180,19 @@ public:
     }
   }
 
-  void
-  render_combined_contours(ImVec2 &p,
-                           vector<vector<AlignedTimedContours>> &trajectories) {
+  void render_combined_contours(ImVec2 &p,
+                                vector<CombinedTrajectory> &trajectories) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
     for (auto const &trajectory : trajectories) {
-      for (auto const &atctr : trajectory) {
+      for (auto const &atctr : trajectory.atc) {
         vector<ImVec2> leftPolyLine;
         vector<ImVec2> rightPolyLine;
-        for (auto const &pt : atctr.leftContour.contour) {
+        for (auto const &pt : atctr.lt.contour) {
           leftPolyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
         }
         draw_list->AddPolyline(leftPolyLine.data(), leftPolyLine.size(),
                                colorPalette[1], ImDrawFlags_Closed, 2);
-        for (auto const &pt : atctr.rightContour.contour) {
+        for (auto const &pt : atctr.rt.contour) {
           rightPolyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
         }
 
@@ -249,14 +248,14 @@ private:
   }
 
   void extractAndCleanupTrajectories(
-      std::vector<std::vector<TimedContour>> *cgl,
+      std::vector<SingleTrajectory> *cgl,
       vector<vector<vector<ImVec2>>> &polyLineGroupList,
       vector<vector<ImVec2>> &trajList) {
-    for (auto g : (*cgl)) {
+    for (auto &g : (*cgl)) {
       std::vector<std::vector<ImVec2>> polyLines;
-      for (auto ctr : g) {
+      for (auto &ctr : g.tc) {
         std::vector<ImVec2> contour;
-        for (auto pt : ctr.contour) {
+        for (auto &pt : ctr.contour) {
           contour.push_back(ImVec2(pt.x, pt.y));
         }
         polyLines.push_back(contour);
@@ -266,7 +265,7 @@ private:
 
     for (auto &g : (*cgl)) {
       vector<ImVec2> traj;
-      for (auto &ctr : g) {
+      for (auto &ctr : g.tc) {
         traj.push_back(contourCenterPoint(ctr.contour));
       }
       trajList.push_back(traj);

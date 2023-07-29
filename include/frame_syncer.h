@@ -43,7 +43,7 @@ public:
       if (abs(delay.count()) > 4) {
         std::cout << "delay happen, what do: " << delay.count() << std::endl;
       }
-      vector<vector<AlignedTimedContours>> alignedTrajectories;
+      vector<CombinedTrajectory> alignedTrajectories;
       alignGroups(dt1.contourGroupList, dt2.contourGroupList,
                   alignedTrajectories);
 
@@ -55,21 +55,21 @@ public:
     std::cout << "Closing heavy frame syncer" << std::endl;
   }
 
-  void alignGroups(vector<vector<TimedContour>> *leftGroups,
-                   vector<vector<TimedContour>> *rightGroups,
-                   vector<vector<AlignedTimedContours>> &alignedTrajectories) {
+  void alignGroups(vector<SingleTrajectory> *leftGroups,
+                   vector<SingleTrajectory> *rightGroups,
+                   vector<CombinedTrajectory> &alignedTrajectories) {
     auto wLeftGroups = *leftGroups;
     auto wRightGroups = *rightGroups;
     for (int i = 0; i < wLeftGroups.size(); i++) {
-      if (wLeftGroups[i].size() < 4) {
+      if (wLeftGroups[i].tc.size() < 4) {
         continue;
       }
       for (int j = 0; j < wRightGroups.size(); j++) {
-        if (wRightGroups[j].size() < 4) {
+        if (wRightGroups[j].tc.size() < 4) {
           continue;
         }
-        vector<TimedContour> &leftGroup = wLeftGroups[i];
-        vector<TimedContour> &rightGroup = wRightGroups[j];
+        SingleTrajectory &leftGroup = wLeftGroups[i];
+        SingleTrajectory &rightGroup = wRightGroups[j];
 
         // Align a pair of trajectories.
         alignTrajectory(leftGroup, rightGroup, alignedTrajectories);
@@ -77,16 +77,15 @@ public:
     }
   }
 
-  void
-  alignTrajectory(vector<TimedContour> &leftTrajectory,
-                  vector<TimedContour> &rightTrajectory,
-                  vector<vector<AlignedTimedContours>> &alignedTrajectories) {
-    int leftIdx = leftTrajectory.size() - 1;
-    int rightIdx = rightTrajectory.size() - 1;
+  void alignTrajectory(SingleTrajectory &leftTrajectory,
+                       SingleTrajectory &rightTrajectory,
+                       vector<CombinedTrajectory> &alignedTrajectories) {
+    int leftIdx = leftTrajectory.tc.size() - 1;
+    int rightIdx = rightTrajectory.tc.size() - 1;
     vector<pair<int, int>> alignedIndices;
     while (leftIdx >= 0 && rightIdx >= 0) {
-      TimedContour &left = leftTrajectory[leftIdx];
-      TimedContour &right = rightTrajectory[rightIdx];
+      TimedContour &left = leftTrajectory.tc[leftIdx];
+      TimedContour &right = rightTrajectory.tc[rightIdx];
       bool alignedInTime = areAlignedInTime(left, right);
       // bool alignedInTime = false;
       bool alignedInY = areAlignedInY(left, right);
@@ -125,14 +124,33 @@ public:
     }
 
     if (alignedIndices.size() >= 4) {
-      vector<AlignedTimedContours> trajectory;
+      vector<AlignedTimedContour> alignedTrajectory;
       for (int i = alignedIndices.size() - 1; i >= 0; i--) {
         int li = alignedIndices[i].first;
         int ri = alignedIndices[i].second;
-        trajectory.push_back({.leftContour = leftTrajectory[li],
-                              .rightContour = rightTrajectory[ri]});
+
+        auto &ltc = leftTrajectory.tc[li];
+        auto &rtc = rightTrajectory.tc[ri];
+        auto leftctr = contourCenterVec2(ltc.contour);
+        auto rightctr = contourCenterVec2(rtc.contour);
+        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(
+            ltc.timestamp - rtc.timestamp);
+        auto diff_2 = diff / 2;
+        auto t_avg = rtc.timestamp + diff_2;
+
+        AlignedTimedContour alignedTimedContour = {
+            .lt = ltc,
+            .rt = rtc,
+            .leftCenter = leftctr,
+            .rightCenter = rightctr,
+            .y_avg = (leftctr.y + rightctr.y) / 2.0,
+            .t_avg = t_avg,
+        };
+        alignedTrajectory.push_back(alignedTimedContour);
       }
-      alignedTrajectories.push_back(trajectory);
+      alignedTrajectories.push_back({.lt = leftTrajectory,
+                                     .rt = rightTrajectory,
+                                     .atc = alignedTrajectory});
     }
   }
 
@@ -162,6 +180,13 @@ public:
     int X = M.m10 / M.m00;
     int Y = M.m01 / M.m00;
     return cv::Point(X, Y);
+  }
+
+  ImVec2 contourCenterVec2(vector<cv::Point> &contour) {
+    cv::Moments M = cv::moments(contour);
+    int X = M.m10 / M.m00;
+    int Y = M.m01 / M.m00;
+    return ImVec2(X, Y);
   }
 
   cv::Mat K1, K2, D1, D2, R1, R2, P1, P2;

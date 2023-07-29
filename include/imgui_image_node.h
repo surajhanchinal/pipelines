@@ -101,17 +101,16 @@ public:
 
       auto frameTimedMat = readData<0, TimedMatWithCTree>();
       auto frame = frameTimedMat.mat;
-      std::vector<std::vector<TimedContour>> *cgl =
-          frameTimedMat.contourGroupList;
+      std::vector<SingleTrajectory> *cgl = frameTimedMat.contourGroupList;
       auto now = std::chrono::system_clock::now();
 
       vector<vector<vector<ImVec2>>> polyLineGroupList;
 
-      for (auto g : (*cgl)) {
+      for (auto &g : (*cgl)) {
         std::vector<std::vector<ImVec2>> polyLines;
-        for (auto ctr : g) {
+        for (auto &ctr : g.tc) {
           std::vector<ImVec2> contour;
-          for (auto pt : ctr.contour) {
+          for (auto &pt : ctr.contour) {
             contour.push_back(ImVec2(pt.x, pt.y));
           }
           polyLines.push_back(contour);
@@ -123,7 +122,7 @@ public:
 
       for (auto &g : (*cgl)) {
         vector<ImVec2> traj;
-        for (auto &ctr : g) {
+        for (auto &ctr : g.tc) {
           traj.push_back(contourCenterPoint(ctr.contour));
         }
         trajList.push_back(traj);
