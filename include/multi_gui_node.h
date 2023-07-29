@@ -100,12 +100,8 @@ public:
       auto frameTimedMat2 = cameraPairData.rightTMCT;
       auto trajectories = cameraPairData.trajectories;
 
-      vector<vector<ImVec2>> trajList1;
-      vector<vector<ImVec2>> trajList2;
-      vector<vector<vector<ImVec2>>> polyLineGroupList1;
-      vector<vector<vector<ImVec2>>> polyLineGroupList2;
-      renderFrame(frameTimedMat1, tex1, w1, polyLineGroupList1, trajList1);
-      renderFrame(frameTimedMat2, tex2, w2, polyLineGroupList2, trajList2);
+      renderFrame(frameTimedMat1, tex1, w1);
+      renderFrame(frameTimedMat2, tex2, w2);
       renderMetricsWindow(frameTimedMat1.timestamp, frameTimedMat2.timestamp);
 
       {
@@ -144,38 +140,30 @@ public:
     glfwTerminate();
   }
 
-  void render_contours(ImVec2 &p,
-                       vector<vector<vector<ImVec2>>> &polyLineGroups,
-                       vector<vector<ImVec2>> &trajList) {
+  void render_contours2(ImVec2 &p, vector<SingleTrajectory> *trajectories) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    // const ImVec2 p = ImGui::GetWindowPos();
-    for (auto &polyLines : polyLineGroups) {
-      for (auto &pl : polyLines) {
-        for (auto &pt : pl) {
-          pt.x = pt.x + p.x;
-          pt.y = pt.y + p.y;
+    for (const auto &traj : *trajectories) {
+      for (auto const &ctr : traj.tc) {
+        vector<ImVec2> polyLine;
+        for (auto const &pt : ctr.contour) {
+          polyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
         }
-        draw_list->AddPolyline(pl.data(), pl.size(), colorPalette[k % 6],
-                               ImDrawFlags_Closed, 2);
-      }
-      k++;
-      if (k > 1000) {
-        k = 0;
+        draw_list->AddPolyline(polyLine.data(), polyLine.size(),
+                               colorPalette[traj.id % 6], ImDrawFlags_Closed,
+                               2);
       }
     }
-
-    // draw lines instead of contours;
-    for (auto &traj : trajList) {
-      if (traj.size() > 1) {
-        for (int i = 0; i < traj.size() - 1; i++) {
-          draw_list->AddLine(ImVec2(p.x + traj[i].x, p.y + traj[i].y),
-                             ImVec2(p.x + traj[i + 1].x, p.y + traj[i + 1].y),
-                             colorPalette[k % 6], 1);
-        }
+    for (auto &traj : *trajectories) {
+      if (traj.tc.size() <= 1) {
+        continue;
       }
-      k++;
-      if (k > 1000) {
-        k = 0;
+      for (int i = 0; i < traj.tc.size() - 1; i++) {
+        auto ctr1 = contourCenterPoint(traj.tc[i].contour);
+        auto ctr2 = contourCenterPoint(traj.tc[i + 1].contour);
+
+        draw_list->AddLine(ImVec2(p.x + ctr1.x, p.y + ctr1.y),
+                           ImVec2(p.x + ctr2.x, p.y + ctr2.y),
+                           colorPalette[traj.id % 6], 1);
       }
     }
   }
@@ -191,13 +179,15 @@ public:
           leftPolyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
         }
         draw_list->AddPolyline(leftPolyLine.data(), leftPolyLine.size(),
-                               colorPalette[1], ImDrawFlags_Closed, 2);
+                               colorPalette[trajectory.lt.id % 6],
+                               ImDrawFlags_Closed, 2);
         for (auto const &pt : atctr.rt.contour) {
           rightPolyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
         }
 
         draw_list->AddPolyline(rightPolyLine.data(), rightPolyLine.size(),
-                               colorPalette[2], ImDrawFlags_Closed, 2);
+                               colorPalette[trajectory.rt.id % 6],
+                               ImDrawFlags_Closed, 2);
       }
     }
   }
@@ -247,49 +237,16 @@ private:
         frame.ptr());     // The actual image data itself
   }
 
-  void extractAndCleanupTrajectories(
-      std::vector<SingleTrajectory> *cgl,
-      vector<vector<vector<ImVec2>>> &polyLineGroupList,
-      vector<vector<ImVec2>> &trajList) {
-    for (auto &g : (*cgl)) {
-      std::vector<std::vector<ImVec2>> polyLines;
-      for (auto &ctr : g.tc) {
-        std::vector<ImVec2> contour;
-        for (auto &pt : ctr.contour) {
-          contour.push_back(ImVec2(pt.x, pt.y));
-        }
-        polyLines.push_back(contour);
-      }
-      polyLineGroupList.push_back(polyLines);
-    }
-
-    for (auto &g : (*cgl)) {
-      vector<ImVec2> traj;
-      for (auto &ctr : g.tc) {
-        traj.push_back(contourCenterPoint(ctr.contour));
-      }
-      trajList.push_back(traj);
-    }
-
-    delete cgl;
-  }
-
   void renderFrame(TimedMatWithCTree frameTimedMat, GLuint texID,
-                   std::string &windowName,
-                   vector<vector<vector<ImVec2>>> &polyLineGroupList,
-                   vector<vector<ImVec2>> &trajList) {
+                   std::string &windowName) {
     auto frame = frameTimedMat.mat;
 
     auto now = std::chrono::system_clock::now();
     auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
         now - frameTimedMat.timestamp);
 
-    extractAndCleanupTrajectories(frameTimedMat.contourGroupList,
-                                  polyLineGroupList, trajList);
-
     writeTexture(texID, frame);
     {
-
       ImGui::Begin(windowName.c_str());
       ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height));
       auto io = ImGui::GetIO();
@@ -298,7 +255,8 @@ private:
                    ImVec2(imageSize.width, imageSize.height));
       // Draw using offset from where image begins. We use the cursor
       // position before the image is rendered to get this offset
-      render_contours(cpos, polyLineGroupList, trajList);
+      render_contours2(cpos, frameTimedMat.contourGroupList);
+      delete frameTimedMat.contourGroupList;
       ImGui::End();
     }
   }

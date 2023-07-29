@@ -43,11 +43,12 @@ public:
       if (abs(delay.count()) > 4) {
         std::cout << "delay happen, what do: " << delay.count() << std::endl;
       }
+
       vector<CombinedTrajectory> alignedTrajectories;
       alignGroups(dt1.contourGroupList, dt2.contourGroupList,
                   alignedTrajectories);
-
       auto vecPtr = new vector(alignedTrajectories);
+
       CameraPairData dt = {
           .leftTMCT = dt1, .rightTMCT = dt2, .trajectories = vecPtr};
       writeData<0>(dt);

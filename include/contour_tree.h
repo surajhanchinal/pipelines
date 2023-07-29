@@ -21,7 +21,8 @@ public:
 
   ContourGroup(std::vector<cv::Point> contour,
                std::chrono::time_point<std::chrono::system_clock> _time,
-               int id) {
+               int _id) {
+    id = _id;
     insertContour(contour, _time);
   }
 
@@ -108,7 +109,8 @@ public:
     // in the next frame. Hope is a good thing.
     for (int i = 0; i < inputContours.size(); i++) {
       if (usedContours[i] == 0) {
-        groups.push_back(ContourGroup(inputContours[i], iTime, ++k));
+        groups.push_back(ContourGroup(inputContours[i], iTime, k));
+        k++;
       }
     }
 
