@@ -132,8 +132,8 @@ public:
 
         auto &ltc = leftTrajectory.tc[li];
         auto &rtc = rightTrajectory.tc[ri];
-        auto leftctr = contourCenterVec2(ltc.contour);
-        auto rightctr = contourCenterVec2(rtc.contour);
+        ImVec2 leftctr, rightctr;
+        alignedCenter(ltc, rtc, leftctr, rightctr);
         auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(
             ltc.timestamp - rtc.timestamp);
         auto diff_2 = diff / 2;
@@ -164,6 +164,14 @@ public:
   }
 
   bool areAlignedInY(TimedContour &left, TimedContour &right) {
+    ImVec2 leftctr, rightctr;
+    alignedCenter(left, right, leftctr, rightctr);
+
+    return abs(leftctr.y - rightctr.y) < 65;
+  }
+
+  void alignedCenter(TimedContour &left, TimedContour &right, ImVec2 &leftctr,
+                     ImVec2 &rightctr) {
     auto leftCenter = contourCenterPoint(left.contour);
     auto rightCenter = contourCenterPoint(right.contour);
     vector<cv::Point2f> lefts = {leftCenter};
@@ -172,7 +180,10 @@ public:
     vector<cv::Point2f> unRC;
     cv::undistortPoints(lefts, unLC, K1, D1, R1, P1);
     cv::undistortPoints(rights, unRC, K2, D2, R2, P2);
-    return abs(unLC[0].y - unRC[0].y) < 30;
+    leftctr.x = unLC[0].x;
+    leftctr.y = unLC[0].y;
+    rightctr.x = unRC[0].x;
+    rightctr.y = unRC[0].y;
   }
 
   cv::Point contourCenterPoint(std::vector<cv::Point> &contour) {
