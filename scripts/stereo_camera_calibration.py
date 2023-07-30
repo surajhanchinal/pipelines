@@ -34,7 +34,7 @@ objPoints = []
 imgPointsLeft = []
 imgPointsRight = []
 
-ignore_list = [18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,84]
+ignore_list = []
 
 while True:
     leftName = './images/calibration/left/' + str(counter2) + '.jpg'
@@ -69,10 +69,9 @@ while True:
         imgRightSmol = cv2.resize(imgRight,up_points,interpolation= cv2.INTER_LINEAR)
         cv2.imshow('imgLeft',imgLeftSmol)
         cv2.imshow('imgRight',imgRightSmol)
-        pressed = cv2.waitKey(1) & 0xFF
+        pressed = cv2.waitKey(0) & 0xFF
         #if(True):
-        #if(pressed == ord('y')):
-        if True:
+        if(pressed == ord('y')):
             counter =counter + 1
             objPoints.append(objp)
             imgPointsLeft.append(corners2Left)
@@ -110,7 +109,9 @@ initT = np.array([[820],[0],[0]],dtype=np.float64)
 
 retStereo, newCameraMatrixL, distL, newCameraMatrixR, distR, rot, trans, essentialMatrix, fundamentalMatrix,rvecs,tvecs,perViewErrors = cv2.stereoCalibrateExtended(objPoints, imgPointsLeft, imgPointsRight,newCameraMatrixL,distL,newCameraMatrixR,distR,grayLeft.shape[::-1],initR,initT,flags=flags)
 
-
+print(retStereo)
+print(rot)
+print(trans)
 
 rectifyScale= 1
 rectL, rectR, projMatrixL, projMatrixR, Q, roi_L, roi_R= cv2.stereoRectify(newCameraMatrixL, distL, newCameraMatrixR, distR, grayLeft.shape[::-1], rot, trans)

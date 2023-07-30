@@ -57,8 +57,8 @@ except:
 
 
 
-camera1 = cv2.VideoCapture(2,cv2.CAP_V4L2)
-camera2 = cv2.VideoCapture(4,cv2.CAP_V4L2)
+camera1 = cv2.VideoCapture(0,cv2.CAP_V4L2)
+camera2 = cv2.VideoCapture(2,cv2.CAP_V4L2)
 
 # Setting Motion Codecs
 camera1.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('m','j','p','g'))

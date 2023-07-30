@@ -46,7 +46,7 @@ def calibrate_camera(images_folder, camera_name,ignore_list=[]):
                 imgPoints.append(corners2)
             else:
                 ignore_list.append(path)
-                print("bad image: ",path)
+              print("bad image: ",path)
         else:
             print("Chessboard corners not found in image: ", path)
 
