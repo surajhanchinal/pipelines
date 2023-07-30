@@ -51,7 +51,7 @@ public:
       alignGroups(dt1.contourGroupList, dt2.contourGroupList,
                   alignedTrajectories);
 
-      for (auto &traj : alignedTrajectories) {
+      /*for (auto &traj : alignedTrajectories) {
         auto obvSize = traj.atc.size();
         Eigen::MatrixXf A(obvSize, 3);
         Eigen::MatrixXf b(obvSize, 1);
@@ -67,17 +67,18 @@ public:
           A(i, 1) = time_elapsed;
           A(i, 2) = (time_elapsed * time_elapsed) / 2;
           b(i) = cm.y;
-          /*cout << "(" << abs(cm.leftCenter.x - cm.rightCenter.x) << " , "
+          cout << "(" << abs(cm.leftCenter.x - cm.rightCenter.x) << " , "
                << abs(cm.leftCenter.y - cm.rightCenter.y) << " , "
-               << time_elapsed << ") , ";*/
+               << time_elapsed << ") , ";
         }
         Eigen::MatrixXf soln =
             (A.transpose() * A).ldlt().solve(A.transpose() * b);
-        /*cout << "G: " << (A.transpose() * A).ldlt().solve(A.transpose() * b)
-             << endl;*/
-        /*cout << "left: " << traj.lt.id << " right: " << traj.rt.id
-             << " L: " << traj.atc.size() << " G: " << soln(2) << endl;*/
-      }
+        cout << "G: " << (A.transpose() * A).ldlt().solve(A.transpose() * b)
+             << endl;
+        cout << "left: " << traj.lt.id << " right: " << traj.rt.id
+             << " L: " << traj.atc.size() << " G: " << soln(2) << endl;
+      }*/
+
       auto vecPtr = new vector(alignedTrajectories);
 
       CameraPairData dt = {
@@ -85,6 +86,50 @@ public:
       writeData<0>(dt);
     }
     std::cout << "Closing heavy frame syncer" << std::endl;
+  }
+
+  void solveAssumingGravity(vector<AlignedTimedContour> &atc, double &x0,
+                            double &y0, double &z0, double &vx, double &vy,
+                            double &vz) {
+    auto obvSize = atc.size();
+    Eigen::MatrixXf A(obvSize, 2);
+    Eigen::MatrixXf b(obvSize, 1);
+    auto t0 = atc[0].t_avg;
+    for (int i = 0; i < atc.size(); i++) {
+      auto &cm = atc[i];
+      auto time_elapsed =
+          std::chrono::duration_cast<std::chrono::microseconds>(cm.t_avg - t0)
+              .count() /
+          (1000.0 * 1000.0);
+      A(i, 0) = 1;
+      A(i, 1) = time_elapsed;
+    }
+    // Solve for X params
+    for (int i = 0; i < atc.size(); i++) {
+      auto &cm = atc[i];
+      b(i) = cm.x;
+    }
+    Eigen::MatrixXf solnX = (A.transpose() * A).ldlt().solve(A.transpose() * b);
+    x0 = solnX(0);
+    vx = solnX(1);
+
+    // Solve for X params
+    for (int i = 0; i < atc.size(); i++) {
+      auto &cm = atc[i];
+      b(i) = cm.y - 9.8 * A(i, 1) * A(i, 1) / 2.0;
+    }
+    Eigen::MatrixXf solnY = (A.transpose() * A).ldlt().solve(A.transpose() * b);
+    y0 = solnY(0);
+    vy = solnY(1);
+
+    // Solve for Z params
+    for (int i = 0; i < atc.size(); i++) {
+      auto &cm = atc[i];
+      b(i) = cm.z;
+    }
+    Eigen::MatrixXf solnZ = (A.transpose() * A).ldlt().solve(A.transpose() * b);
+    z0 = solnZ(0);
+    vz = solnZ(1);
   }
 
   void alignGroups(vector<SingleTrajectory> *leftGroups,
@@ -187,11 +232,21 @@ public:
             .t_avg = ltc.timestamp,
         };
         alignedTrajectory.push_back(alignedTimedContour);
-        cout << x << " " << height << " " << depth << endl;
+        // cout << x << " " << height << " " << depth << endl;
       }
-      alignedTrajectories.push_back({.lt = leftTrajectory,
-                                     .rt = rightTrajectory,
-                                     .atc = alignedTrajectory});
+      double x0, y0, z0, vx, vy, vz;
+      solveAssumingGravity(alignedTrajectory, x0, y0, z0, vx, vy, vz);
+      alignedTrajectories.push_back({
+          .lt = leftTrajectory,
+          .rt = rightTrajectory,
+          .atc = alignedTrajectory,
+          .x0 = x0,
+          .y0 = y0,
+          .z0 = z0,
+          .vx = vx,
+          .vy = vy,
+          .vz = vz,
+      });
     }
   }
 

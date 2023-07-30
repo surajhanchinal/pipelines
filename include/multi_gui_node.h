@@ -181,6 +181,11 @@ public:
     }*/
   }
 
+  void getScreenYZ(ImVec2 &p, double y, double z, double &sx, double &sy) {
+    sx = (z / 10) * windowSize.x + p.x;
+    sy = ((y + 0.5) / 2.2) * windowSize.y + p.y;
+  }
+
   void render_yz(ImVec2 &p, vector<CombinedTrajectory> &trajectories) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
     for (const auto &traj : trajectories) {
@@ -190,6 +195,26 @@ public:
         auto xratio = windowSize.x / imageSize.width;
         auto yratio = windowSize.y / imageSize.height;
         draw_list->AddCircle(ImVec2(p.x + x, p.y + y), 10, colorPalette[0]);
+      }
+      for (int i = -30; i < 30; i++) {
+        double y0 = traj.y0;
+        double vy = traj.vy;
+        double z0 = traj.z0;
+        double vz = traj.vz;
+        double newy1 = y0 + 0.0165 * i * vy + 4.9 * 0.0165 * 0.0165 * i * i;
+        double newz1 = z0 + 0.0165 * i * vz;
+        double sx1, sy1;
+        getScreenYZ(p, newy1, newz1, sx1, sy1);
+        // draw_list->AddCircle(ImVec2(sx1, sy1), 10, colorPalette[3]);
+
+        double newy2 = y0 + (0.0165 * (i + 1.0) * vy) +
+                       (4.9 * 0.0165 * 0.0165 * (i + 1.0) * (i + 1.0));
+        double newz2 = z0 + (0.0165 * (i + 1.0) * vz);
+        double sx2, sy2;
+        getScreenYZ(p, newy2, newz2, sx2, sy2);
+
+        draw_list->AddLine(ImVec2(sx2, sy2), ImVec2(sx1, sy1), colorPalette[4],
+                           2);
       }
     }
   }
