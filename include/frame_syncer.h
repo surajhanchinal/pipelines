@@ -5,6 +5,7 @@
 #include "node.h"
 #include "types.h"
 #include <chrono>
+#include <eigen3/Eigen/Dense>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core/persistence.hpp>
 #include <thread>
@@ -32,7 +33,7 @@ public:
   void process() {
     FpsCounter fc(240, "FS");
     while (*running) {
-      fc.loop();
+      // fc.loop();
       auto dt1 = readData<0, TimedMatWithCTree>();
       auto dt2 = readData<1, TimedMatWithCTree>();
 
@@ -47,6 +48,37 @@ public:
       vector<CombinedTrajectory> alignedTrajectories;
       alignGroups(dt1.contourGroupList, dt2.contourGroupList,
                   alignedTrajectories);
+
+      for (auto &traj : alignedTrajectories) {
+        auto obvSize = traj.atc.size();
+        Eigen::MatrixXf A(obvSize, 3);
+        Eigen::MatrixXf b(obvSize, 1);
+        auto t0 = traj.atc[0].t_avg;
+        for (int i = 0; i < traj.atc.size(); i++) {
+          auto &cm = traj.atc[i];
+          auto disparity = abs(cm.leftCenter.x - cm.rightCenter.x + 0.001);
+          auto depth = (1180 * 0.82) / disparity;
+          auto height = ((cm.y_avg - 360) * depth) / 1180.0;
+          auto time_elapsed =
+              std::chrono::duration_cast<std::chrono::microseconds>(cm.t_avg -
+                                                                    t0)
+                  .count() /
+              (1000.0 * 1000.0);
+          A(i, 0) = 1;
+          A(i, 1) = time_elapsed;
+          A(i, 2) = (time_elapsed * time_elapsed) / 2;
+          b(i) = height;
+          /*cout << "(" << abs(cm.leftCenter.x - cm.rightCenter.x) << " , "
+               << abs(cm.leftCenter.y - cm.rightCenter.y) << " , "
+               << time_elapsed << ") , ";*/
+        }
+        Eigen::MatrixXf soln =
+            (A.transpose() * A).ldlt().solve(A.transpose() * b);
+        /*cout << "G: " << (A.transpose() * A).ldlt().solve(A.transpose() * b)
+             << endl;*/
+        cout << "left: " << traj.lt.id << " right: " << traj.rt.id
+             << " G: " << soln(2) << endl;
+      }
       auto vecPtr = new vector(alignedTrajectories);
 
       CameraPairData dt = {
@@ -167,7 +199,7 @@ public:
     ImVec2 leftctr, rightctr;
     alignedCenter(left, right, leftctr, rightctr);
 
-    return abs(leftctr.y - rightctr.y) < 65;
+    return abs(leftctr.y - rightctr.y) < 30;
   }
 
   void alignedCenter(TimedContour &left, TimedContour &right, ImVec2 &leftctr,

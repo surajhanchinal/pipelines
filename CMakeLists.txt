@@ -4,6 +4,7 @@ find_package( OpenCV REQUIRED )
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
@@ -34,18 +35,18 @@ include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 
 add_executable(PipeTest src/test.cpp)
-target_link_libraries( PipeTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
+target_link_libraries( PipeTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW Eigen3::Eigen)
 target_include_directories(PipeTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 add_executable(MultiTest src/multi_file.cpp)
-target_link_libraries( MultiTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
+target_link_libraries( MultiTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW Eigen3::Eigen)
 target_include_directories(MultiTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 add_executable(SingleTest src/single_cam.cpp)
-target_link_libraries( SingleTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
+target_link_libraries( SingleTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW Eigen3::Eigen)
 target_include_directories(SingleTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 
 add_executable(RecorderTest src/stereo_record.cpp)
-target_link_libraries( RecorderTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW)
+target_link_libraries( RecorderTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW Eigen3::Eigen)
 target_include_directories(RecorderTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
