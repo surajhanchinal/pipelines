@@ -32,11 +32,13 @@ public:
   }
   void process() {
     FpsCounter fc(240, "FS");
+    // std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     while (*running) {
       // fc.loop();
       auto dt1 = readData<0, TimedMatWithCTree>();
       auto dt2 = readData<1, TimedMatWithCTree>();
 
+      // std::this_thread::sleep_for(std::chrono::microseconds(16500));
       auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
           dt1.timestamp - dt2.timestamp);
 
@@ -56,9 +58,6 @@ public:
         auto t0 = traj.atc[0].t_avg;
         for (int i = 0; i < traj.atc.size(); i++) {
           auto &cm = traj.atc[i];
-          auto disparity = abs(cm.leftCenter.x - cm.rightCenter.x + 0.001);
-          auto depth = (1180 * 0.82) / disparity;
-          auto height = ((cm.y_avg - 360) * depth) / 1180.0;
           auto time_elapsed =
               std::chrono::duration_cast<std::chrono::microseconds>(cm.t_avg -
                                                                     t0)
@@ -67,7 +66,7 @@ public:
           A(i, 0) = 1;
           A(i, 1) = time_elapsed;
           A(i, 2) = (time_elapsed * time_elapsed) / 2;
-          b(i) = height;
+          b(i) = cm.y;
           /*cout << "(" << abs(cm.leftCenter.x - cm.rightCenter.x) << " , "
                << abs(cm.leftCenter.y - cm.rightCenter.y) << " , "
                << time_elapsed << ") , ";*/
@@ -76,8 +75,8 @@ public:
             (A.transpose() * A).ldlt().solve(A.transpose() * b);
         /*cout << "G: " << (A.transpose() * A).ldlt().solve(A.transpose() * b)
              << endl;*/
-        cout << "left: " << traj.lt.id << " right: " << traj.rt.id
-             << " G: " << soln(2) << endl;
+        /*cout << "left: " << traj.lt.id << " right: " << traj.rt.id
+             << " L: " << traj.atc.size() << " G: " << soln(2) << endl;*/
       }
       auto vecPtr = new vector(alignedTrajectories);
 
@@ -171,15 +170,24 @@ public:
         auto diff_2 = diff / 2;
         auto t_avg = rtc.timestamp + diff_2;
 
+        auto disparity = (rightctr.x - leftctr.x + 0.001);
+        auto depth = (1084.5238 * 0.823378) / disparity;
+        auto height = ((leftctr.y - 364.5288) * depth) / 1093.4296;
+        auto x =
+            (((leftctr.x + rightctr.x - 661.7751 - 621.3420) / 2.0) * depth) /
+            1084.5238;
         AlignedTimedContour alignedTimedContour = {
             .lt = ltc,
             .rt = rtc,
             .leftCenter = leftctr,
             .rightCenter = rightctr,
-            .y_avg = (leftctr.y + rightctr.y) / 2.0,
-            .t_avg = t_avg,
+            .x = x,
+            .y = height,
+            .z = depth,
+            .t_avg = ltc.timestamp,
         };
         alignedTrajectory.push_back(alignedTimedContour);
+        cout << x << " " << height << " " << depth << endl;
       }
       alignedTrajectories.push_back({.lt = leftTrajectory,
                                      .rt = rightTrajectory,
@@ -199,7 +207,7 @@ public:
     ImVec2 leftctr, rightctr;
     alignedCenter(left, right, leftctr, rightctr);
 
-    return abs(leftctr.y - rightctr.y) < 30;
+    return abs(leftctr.y - rightctr.y) < 4;
   }
 
   void alignedCenter(TimedContour &left, TimedContour &right, ImVec2 &leftctr,

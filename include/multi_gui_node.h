@@ -100,21 +100,34 @@ public:
       auto frameTimedMat2 = cameraPairData.rightTMCT;
       auto trajectories = cameraPairData.trajectories;
 
+      screenSize = ImGui::GetIO().DisplaySize;
+
+      // auto windowHeight = screenSize.y / 2.0;
+      // ratio = windowHeight / imageSize.height;
+      auto windowWidth = screenSize.x / 2.5;
+      ratio = windowWidth / imageSize.width;
+
+      windowSize = ImVec2(ratio * imageSize.width, ratio * imageSize.height);
+
+      // cout << windowSize.x << " " << windowSize.y << endl;
+
+      // windowSize = ImVec2(1280, 720);
+      // ratio = 1;
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+      ImGui::SetNextWindowPos(ImVec2(0, 0));
       renderFrame(frameTimedMat1, tex1, w1);
+      ImGui::SetNextWindowPos(ImVec2(0, windowSize.y));
       renderFrame(frameTimedMat2, tex2, w2);
+      ImGui::SetNextWindowPos(ImVec2(windowSize.x, 0));
       renderMetricsWindow(frameTimedMat1.timestamp, frameTimedMat2.timestamp);
 
-      {
+      ImGui::SetNextWindowPos(ImVec2(windowSize.x, windowSize.y));
+      renderYZFrame(*trajectories);
 
-        ImGui::Begin("actual");
-        ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height));
-        auto io = ImGui::GetIO();
-        auto cpos = ImGui::GetCursorScreenPos();
-        // Draw using offset from where image begins. We use the cursor
-        // position before the image is rendered to get this offset
-        render_combined_contours(cpos, *trajectories);
-        ImGui::End();
-      }
+      ImGui::SetNextWindowPos(ImVec2(windowSize.x * 2.0, 0));
+      renderXZFrame(*trajectories);
+
+      ImGui::PopStyleVar();
 
       delete trajectories;
 
@@ -146,14 +159,14 @@ public:
       for (auto const &ctr : traj.tc) {
         vector<ImVec2> polyLine;
         for (auto const &pt : ctr.contour) {
-          polyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
+          polyLine.push_back(ImVec2(p.x + pt.x * ratio, p.y + pt.y * ratio));
         }
         draw_list->AddPolyline(polyLine.data(), polyLine.size(),
                                colorPalette[traj.id % 6], ImDrawFlags_Closed,
                                2);
       }
     }
-    for (auto &traj : *trajectories) {
+    /*for (auto &traj : *trajectories) {
       if (traj.tc.size() <= 1) {
         continue;
       }
@@ -161,11 +174,62 @@ public:
         auto ctr1 = contourCenterPoint(traj.tc[i].contour);
         auto ctr2 = contourCenterPoint(traj.tc[i + 1].contour);
 
-        draw_list->AddLine(ImVec2(p.x + ctr1.x, p.y + ctr1.y),
-                           ImVec2(p.x + ctr2.x, p.y + ctr2.y),
+        draw_list->AddLine(ImVec2(p.x + ctr1.x*ratio, p.y + ctr1.y*ratio),
+                           ImVec2(p.x + ctr2.x*ratio, p.y + ctr2.y*ratio),
                            colorPalette[traj.id % 6], 1);
       }
+    }*/
+  }
+
+  void render_yz(ImVec2 &p, vector<CombinedTrajectory> &trajectories) {
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    for (const auto &traj : trajectories) {
+      for (const auto &pt : traj.atc) {
+        auto x = (pt.z / 10) * windowSize.x;
+        auto y = ((pt.y + 0.5) / 2.2) * windowSize.y;
+        auto xratio = windowSize.x / imageSize.width;
+        auto yratio = windowSize.y / imageSize.height;
+        draw_list->AddCircle(ImVec2(p.x + x, p.y + y), 10, colorPalette[0]);
+      }
     }
+  }
+
+  void render_xz(ImVec2 &p, vector<CombinedTrajectory> &trajectories) {
+    auto height = 2 * windowSize.y;
+    auto width = screenSize.x - 2 * windowSize.x;
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    for (const auto &traj : trajectories) {
+      for (const auto &pt : traj.atc) {
+        auto y = height - (pt.z / 10) * height;
+        auto x = (pt.x / 8.0) * (width / 2.0) + width / 2.0;
+        draw_list->AddCircle(ImVec2(p.x + x, p.y + y), 10, colorPalette[0]);
+      }
+    }
+  }
+
+  void renderYZFrame(vector<CombinedTrajectory> &trajectories) {
+    ImGui::Begin("yz", nullptr, ImGuiWindowFlags_NoDecoration);
+    ImGui::SetWindowSize(windowSize);
+    auto cpos = ImGui::GetCursorScreenPos();
+    // Draw using offset from where image begins. We use the cursor
+    // position before the image is rendered to get this offset
+    // render_combined_contours(cpos, *trajectories);
+    render_yz(cpos, trajectories);
+    ImGui::End();
+  }
+
+  void renderXZFrame(vector<CombinedTrajectory> &trajectories) {
+    auto height = 2 * windowSize.y;
+    auto width = screenSize.x - 2 * windowSize.x;
+
+    ImGui::Begin("xz", nullptr, ImGuiWindowFlags_NoDecoration);
+    ImGui::SetWindowSize(ImVec2(width, height));
+    auto cpos = ImGui::GetCursorScreenPos();
+    // Draw using offset from where image begins. We use the cursor
+    // position before the image is rendered to get this offset
+    // render_combined_contours(cpos, *trajectories);
+    render_xz(cpos, trajectories);
+    ImGui::End();
   }
 
   void render_combined_contours(ImVec2 &p,
@@ -176,13 +240,15 @@ public:
         vector<ImVec2> leftPolyLine;
         vector<ImVec2> rightPolyLine;
         for (auto const &pt : atctr.lt.contour) {
-          leftPolyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
+          leftPolyLine.push_back(
+              ImVec2(p.x + pt.x * ratio, p.y + pt.y * ratio));
         }
         draw_list->AddPolyline(leftPolyLine.data(), leftPolyLine.size(),
                                colorPalette[trajectory.lt.id % 6],
                                ImDrawFlags_Closed, 2);
         for (auto const &pt : atctr.rt.contour) {
-          rightPolyLine.push_back(ImVec2(p.x + pt.x, p.y + pt.y));
+          rightPolyLine.push_back(
+              ImVec2(p.x + pt.x * ratio, p.y + pt.y * ratio));
         }
 
         draw_list->AddPolyline(rightPolyLine.data(), rightPolyLine.size(),
@@ -199,6 +265,9 @@ private:
   GLFWwindow *window;
   cv::Size imageSize;
   bool initCalled = false;
+  ImVec2 windowSize;
+  float ratio;
+  ImVec2 screenSize;
 
   ImVec2 contourCenterPoint(std::vector<cv::Point> &contour) {
     cv::Moments M = cv::moments(contour);
@@ -247,12 +316,11 @@ private:
 
     writeTexture(texID, frame);
     {
-      ImGui::Begin(windowName.c_str());
-      ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height));
+      ImGui::Begin(windowName.c_str(), nullptr, ImGuiWindowFlags_NoDecoration);
+      ImGui::SetWindowSize(windowSize);
       auto io = ImGui::GetIO();
       auto cpos = ImGui::GetCursorScreenPos();
-      ImGui::Image((void *)(intptr_t)texID,
-                   ImVec2(imageSize.width, imageSize.height));
+      ImGui::Image((void *)(intptr_t)texID, windowSize);
       // Draw using offset from where image begins. We use the cursor
       // position before the image is rendered to get this offset
       render_contours2(cpos, frameTimedMat.contourGroupList);
@@ -275,7 +343,8 @@ private:
       auto interDelay =
           std::chrono::duration_cast<std::chrono::milliseconds>(f1Ts - f2Ts);
 
-      ImGui::Begin("metrics", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+      ImGui::Begin("metrics", nullptr, ImGuiWindowFlags_NoDecoration);
+      ImGui::SetWindowSize(windowSize);
       auto io = ImGui::GetIO();
       ImGui::Text("Framerate: (%.1f FPS)", io.Framerate);
 

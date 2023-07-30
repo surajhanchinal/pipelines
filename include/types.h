@@ -23,7 +23,9 @@ struct AlignedTimedContour {
   TimedContour rt;
   ImVec2 leftCenter;
   ImVec2 rightCenter;
-  double y_avg;
+  double x;
+  double y;
+  double z;
   std::chrono::time_point<std::chrono::system_clock> t_avg;
 };
 

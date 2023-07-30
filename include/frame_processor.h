@@ -119,7 +119,8 @@ public:
         }
       }
       inputFrame = inputGray;
-      // inputFrame = diff_and.clone();
+      // inputFrame = gcurr.clone();
+      //  inputFrame = diff_and.clone();
       ctree->addContours2(filtered_contours, inputTimedMat.timestamp,
                           inputFrame);
       vector<SingleTrajectory> cgl;

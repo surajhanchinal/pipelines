@@ -10,7 +10,7 @@ public:
   static constexpr int binaryThreshold = 10;
 
   // Contour tree params
-  static const int contourValidSearchRadius = 80;
+  static const int contourValidSearchRadius = 100;
   static constexpr double contourMatchThreshold = 0.5;
   // Time to live in milliseconds. Vary this based on your framerate. Usually
   // for nice-looking videos, use around 10 frames worth, but for actual usage
