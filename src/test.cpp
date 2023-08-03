@@ -33,9 +33,9 @@ int main() {
 
   auto captureSignaler = new CaptureSignaler();
 
-  auto frameReader1 = new FrameReader(0, "camera", captureSize);
+  auto frameReader1 = new FrameReader(2, "camera", captureSize);
 
-  auto frameReader2 = new FrameReader(2, "camera", captureSize);
+  auto frameReader2 = new FrameReader(4, "camera", captureSize);
 
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 
@@ -52,13 +52,13 @@ int main() {
   auto multiGuiNode = new MultiGuiNode("w1", captureSize);
 
   auto o1 = Orchestrator();
-  o1.registerNode(captureSignaler);
   o1.registerNode(frameReader1);
   o1.registerNode(frameReader2);
   o1.registerNode(frameProcessor1);
   o1.registerNode(frameProcessor2);
-  o1.registerNode(multiGuiNode, true);
   o1.registerNode(frameSyncer);
+  o1.registerNode(captureSignaler);
+  o1.registerNode(multiGuiNode, true);
 
   captureSignaler->attachPort<0, 0>(frameReader1);
   captureSignaler->attachPort<1, 0>(frameReader2);

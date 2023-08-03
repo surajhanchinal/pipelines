@@ -80,6 +80,15 @@ public:
 
     threads.push_back(
         std::thread(&Orchestrator::close_threads_on_sigint, this));
+    int ti = 0;
+    for (auto &t : threads) {
+      cpu_set_t cpuset;
+      CPU_ZERO(&cpuset);
+      CPU_SET(ti, &cpuset);
+      int rc =
+          pthread_setaffinity_np(t.native_handle(), sizeof(cpu_set_t), &cpuset);
+      ti++;
+    }
 
     if (mainNodeIdx != -1) {
       nodes[mainNodeIdx]->process();

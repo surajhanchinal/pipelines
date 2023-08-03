@@ -34,7 +34,6 @@ public:
     FpsCounter fc(240, "FS");
     // std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     while (*running) {
-      // fc.loop();
       auto dt1 = readData<0, TimedMatWithCTree>();
       auto dt2 = readData<1, TimedMatWithCTree>();
 
@@ -262,7 +261,7 @@ public:
     ImVec2 leftctr, rightctr;
     alignedCenter(left, right, leftctr, rightctr);
 
-    return abs(leftctr.y - rightctr.y) < 4;
+    return abs(leftctr.y - rightctr.y) < 20;
   }
 
   void alignedCenter(TimedContour &left, TimedContour &right, ImVec2 &leftctr,

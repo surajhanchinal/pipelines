@@ -73,6 +73,7 @@ public:
     cv::Mat diff_and;
     cv::Mat inputGray;
     FpsCounter fc(60);
+    pthread_setname_np(pthread_self(), "Processor");
     while (*running) {
       auto inputTimedMat = readData<0, TimedMat>();
       auto inputFrame = inputTimedMat.mat;
@@ -81,18 +82,18 @@ public:
       fb->insertFrame(inputGray);
       fb->getFrames(gprev, gcurr, gnext);
 
-      cv::GaussianBlur(gprev, gprev_blur, cv::Size(5, 5), 0);
+      // cv::GaussianBlur(gprev, gprev_blur, cv::Size(5, 5), 0);
 
-      cv::GaussianBlur(gcurr, gcurr_blur, cv::Size(5, 5), 0);
+      // cv::GaussianBlur(gcurr, gcurr_blur, cv::Size(5, 5), 0);
 
-      cv::GaussianBlur(gnext, gnext_blur, cv::Size(5, 5), 0);
+      cv::GaussianBlur(gnext, gnext, cv::Size(5, 5), 0);
 
-      cv::absdiff(gprev_blur, gcurr_blur, diff1);
-      cv::absdiff(gcurr_blur, gnext_blur, diff2);
+      cv::absdiff(gprev, gcurr, diff1);
+      cv::absdiff(gcurr, gnext, diff2);
 
-      cv::GaussianBlur(diff1, diff1, cv::Size(11, 11), 0);
+      cv::GaussianBlur(diff1, diff1, cv::Size(5, 5), 0);
 
-      cv::GaussianBlur(diff2, diff2, cv::Size(11, 11), 0);
+      cv::GaussianBlur(diff2, diff2, cv::Size(5, 5), 0);
 
       threshold(diff1, diff1, ConfigStore::binaryThreshold, 255,
                 cv::THRESH_BINARY);
@@ -120,7 +121,7 @@ public:
       }
       inputFrame = inputGray;
       // inputFrame = gcurr.clone();
-      //  inputFrame = diff_and.clone();
+      //  inputFrame = diff_and;
       ctree->addContours2(filtered_contours, inputTimedMat.timestamp,
                           inputFrame);
       vector<SingleTrajectory> cgl;

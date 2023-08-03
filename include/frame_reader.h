@@ -32,6 +32,7 @@ public:
   }
 
   void process() {
+    pthread_setname_np(pthread_self(),"FrameReader");
     FpsCounter fc(240);
     while (*running) {
       readData<0, bool>();
