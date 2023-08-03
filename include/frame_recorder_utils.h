@@ -38,7 +38,7 @@ class GstVideoWriter : public Node<type_list_t<TimedMat>, type_list_t<>> {
 public:
   GstVideoWriter(std::string _cameraName, const cv::Size _imageSize) {
     ostringstream line;
-    line << "appsrc ! queue ! videoconvert ! nvh264enc bitrate=8000 ! "
+    line << "appsrc ! queue ! videoconvert ! vaapih264enc bitrate=8000 ! "
             "h264parse ! mp4mux ! "
             "filesink "
             "location=/home/hyperion/";
