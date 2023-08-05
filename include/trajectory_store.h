@@ -207,6 +207,14 @@ public:
 
   void render_yz(ImVec2 &p) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
+
+    double xp1, xp2, yp1, yp2;
+    getScreenYZ(p, groundHeight, 0, xp1, yp1);
+
+    getScreenYZ(p, groundHeight, 30, xp2, yp2);
+
+    draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
+
     for (auto const &[_, traj] : trajectories) {
       int trainingCount = trainingPointCount(traj.alignedContours.size());
       for (int ii = 0; ii < traj.alignedContours.size(); ii++) {
@@ -259,6 +267,16 @@ public:
 
   void render_xz(ImVec2 &p) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
+
+    // Render center line
+
+    double xp1, xp2, yp1, yp2;
+    getScreenXZ(p, 0, 0, xp1, yp1);
+
+    getScreenXZ(p, 0, 30, xp2, yp2);
+
+    draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
+
     for (const auto &[_, traj] : trajectories) {
       int trainingCount = trainingPointCount(traj.alignedContours.size());
       for (int ii = 0; ii < traj.alignedContours.size(); ii++) {
