@@ -5,6 +5,7 @@
 #include "opencv2/imgproc.hpp"
 
 #include "types.h"
+#include "utils.h"
 #include <algorithm>
 #include <chrono>
 #include <complex>
@@ -31,7 +32,7 @@ public:
     contours.push_back({.contour = contour, .timestamp = _time});
   }
 
-  std::chrono::time_point<std::chrono::system_clock> getInsertTime() const {
+  std::chrono::time_point<std::chrono::system_clock> &getInsertTime() {
     return contours[contours.size() - 1].timestamp;
   }
 
@@ -55,7 +56,7 @@ public:
     // We want to give preference to longer contour chains with the latest
     // insert times. Because vibes.
     std::sort(groups.begin(), groups.end(),
-              [](const ContourGroup &g1, const ContourGroup &g2) -> bool {
+              [](ContourGroup &g1, ContourGroup &g2) -> bool {
                 if (g1.contours.size() != g2.contours.size()) {
                   return g1.contours.size() > g2.contours.size();
                 } else {
@@ -124,9 +125,7 @@ public:
   cleanupGroups(std::chrono::time_point<std::chrono::system_clock> currTime) {
     std::vector<ContourGroup> newGroups;
     for (int i = 0; i < groups.size(); i++) {
-      auto delay = abs(std::chrono::duration_cast<std::chrono::milliseconds>(
-                           currTime - groups[i].getInsertTime())
-                           .count());
+      auto delay = scaledDelayInMs(currTime, groups[i].getInsertTime());
       if (delay <= ttl) {
         newGroups.push_back(groups[i]);
       }

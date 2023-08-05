@@ -18,11 +18,10 @@ public:
       auto dt1 = readData<0, TimedMat>();
       auto dt2 = readData<1, TimedMat>();
 
-      auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
-          dt1.timestamp - dt2.timestamp);
+      auto delay = scaledDelayInMs(
+          dt1.timestamp ,dt2.timestamp);
 
-      int iters = (abs(delay.count()) / 10) - 1;
-      if (abs(delay.count()) > 4) {
+      if (abs(delay) > 4) {
         // std::cout << "delay happen, what do: " << delay.count() << std::endl;
       }
 

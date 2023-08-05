@@ -4,6 +4,7 @@
 #include "fps_counter.h"
 #include "node.h"
 #include "types.h"
+#include "utils.h"
 #include <chrono>
 #include <eigen3/Eigen/Dense>
 #include <opencv2/calib3d.hpp>
@@ -38,12 +39,10 @@ public:
       auto dt2 = readData<1, TimedMatWithCTree>();
 
       // std::this_thread::sleep_for(std::chrono::microseconds(16500));
-      auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
-          dt1.timestamp - dt2.timestamp);
+      auto delay = scaledDelayInMs(dt1.timestamp, dt2.timestamp);
 
-      int iters = (abs(delay.count()) / 10) - 1;
-      if (abs(delay.count()) > 4) {
-        std::cout << "delay happen, what do: " << delay.count() << std::endl;
+      if (delay > 4) {
+        std::cout << "delay happen, what do: " << delay << std::endl;
       }
 
       vector<CombinedTrajectory> alignedTrajectories;
@@ -93,9 +92,7 @@ public:
       bool alignedInTime = areAlignedInTime(left, right);
       // bool alignedInTime = false;
       bool alignedInY = areAlignedInY(left, right);
-      auto offset_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                              left.timestamp - right.timestamp)
-                              .count();
+      auto offset_in_ms = scaledDelayInMs(left.timestamp, right.timestamp);
 
       if (!alignedInTime || !alignedInY) {
         // The latest contours are not aligned, we will not consider this
@@ -106,10 +103,7 @@ public:
           leftIdx--;
           rightIdx--;
         } else {
-          auto offset_in_ms =
-              std::chrono::duration_cast<std::chrono::milliseconds>(
-                  left.timestamp - right.timestamp)
-                  .count();
+          auto offset_in_ms = scaledDelayInMs(left.timestamp, right.timestamp);
           // offset more than zero means that left is on a newer node than
           // right. Make left go back because we can't make right go forward.
           // Because reverse iteration and vice versa.
@@ -176,10 +170,7 @@ public:
   }
 
   bool areAlignedInTime(TimedContour &left, TimedContour &right) {
-    auto offset_in_ms =
-        abs(std::chrono::duration_cast<std::chrono::milliseconds>(
-                left.timestamp - right.timestamp)
-                .count());
+    auto offset_in_ms = abs(scaledDelayInMs(left.timestamp, right.timestamp));
     return offset_in_ms <= ConfigStore::maxFrameOffset;
   }
 

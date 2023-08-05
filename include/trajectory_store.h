@@ -80,8 +80,8 @@ private:
     for (int i = 0; i < atc.size(); i++) {
       auto &cm = atc[i];
       auto time_elapsed =
-          std::chrono::duration_cast<std::chrono::microseconds>(cm.t_avg - t0)
-              .count() /
+          scaledDelayInMicro(cm.t_avg , t0)
+               /
           (1000.0 * 1000.0);
       A(i, 0) = 1;
       A(i, 1) = time_elapsed;
@@ -122,8 +122,7 @@ private:
     for (int i = 0; i < atc.size(); i++) {
       auto &cm = atc[i];
       auto time_elapsed =
-          std::chrono::duration_cast<std::chrono::microseconds>(cm.t_avg - t0)
-              .count() /
+          scaledDelayInMs(cm.t_avg , t0) /
           (1000.0 * 1000.0);
       A(i, 0) = 1;
       A(i, 1) = time_elapsed;
@@ -213,7 +212,6 @@ public:
       int trainingCount = trainingPointCount(traj.alignedContours.size());
       for (int ii = 0; ii < traj.alignedContours.size(); ii++) {
         const auto &pt = traj.alignedContours[ii];
-        // std::cout<<"("<<pt.x<<","<<pt.y<<","<<pt.z<<")"<<" ";
         double x, y;
         getScreenYZ(p, pt.y, pt.z, x, y);
         draw_list->AddCircle(ImVec2(x, y), 10,
@@ -222,9 +220,8 @@ public:
       }
 
       double timeElapsed =
-          std::chrono::duration_cast<std::chrono::milliseconds>(
-              currentTime - traj.alignedContours[0].t_avg)
-              .count() /
+          scaledDelayInMs(
+              currentTime , traj.alignedContours[0].t_avg) /
           1000.0;
       double px, py, pz;
       getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
@@ -279,9 +276,8 @@ public:
       // Draw where current point would be
 
       double timeElapsed =
-          std::chrono::duration_cast<std::chrono::milliseconds>(
-              currentTime - traj.alignedContours[0].t_avg)
-              .count() /
+          scaledDelayInMs(
+              currentTime , traj.alignedContours[0].t_avg) /
           1000.0;
       double px, py, pz;
       getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),

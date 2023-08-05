@@ -130,8 +130,7 @@ public:
 
       delete cgl;
 
-      auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
-          now - frameTimedMat.timestamp);
+      auto delay = scaledDelayInMs(now, frameTimedMat.timestamp);
       glTexImage2D(
           GL_TEXTURE_2D, // Type of texture
           0,             // Pyramid level (for mip-mapping) - 0 is the top level
@@ -151,8 +150,8 @@ public:
         ImGui::SetWindowSize(ImVec2(imageSize.width, imageSize.height + 80));
         auto io = ImGui::GetIO();
         ImGui::SameLine();
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS) %li",
-                    1000.0f / io.Framerate, io.Framerate, delay.count());
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS) %.1f",
+                    1000.0f / io.Framerate, io.Framerate, delay);
 
         ImGui::Text("size = %d x %d", imageSize.width, imageSize.height);
         auto cpos = ImGui::GetCursorScreenPos();

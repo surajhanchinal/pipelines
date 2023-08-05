@@ -16,14 +16,19 @@ public:
   // Frame syncer params
   static constexpr int maxFrameOffset = 6;
 
-  //  Time between frames
-  static constexpr int frameTime = 16500;
+  static constexpr double timeScale = 3;
 
-  static constexpr double frameTimeInSeconds = ((double)frameTime)/(1000.0*1000.0);
+  static constexpr double realFrameTime = 16500;
+
+  //  Time between frames
+  static constexpr int frameTime = realFrameTime * timeScale;
+
+  static constexpr double frameTimeInSeconds =
+      ((double)realFrameTime) / (1000.0 * 1000.0);
 
   // Time to live in milliseconds. Vary this based on your framerate. Usually
   // for nice-looking videos, use around 10 frames worth, but for actual usage
   // use, 3-4x frame time.
-  // static constexpr int contourGroupTimeToLive = (frameTime/1000)*8;
-  static constexpr int contourGroupTimeToLive = 160;
+  static constexpr double contourGroupTimeToLive = (frameTime / 1000.0) * 10.0;
+  // static constexpr int contourGroupTimeToLive = 160;
 };

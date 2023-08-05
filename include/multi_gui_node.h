@@ -10,6 +10,7 @@
 #include "opencv2/imgproc.hpp"
 #include "trajectory_store.h"
 #include "types.h"
+#include "utils.h"
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #include <chrono>
 #include <stdio.h>
@@ -292,10 +293,6 @@ private:
                    std::string &windowName) {
     auto frame = frameTimedMat.mat;
 
-    auto now = std::chrono::system_clock::now();
-    auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now - frameTimedMat.timestamp);
-
     writeTexture(texID, frame);
     {
       ImGui::Begin(windowName.c_str(), nullptr, ImGuiWindowFlags_NoDecoration);
@@ -317,13 +314,10 @@ private:
     {
 
       auto now = std::chrono::system_clock::now();
-      auto delay1 =
-          std::chrono::duration_cast<std::chrono::milliseconds>(now - f1Ts);
-      auto delay2 =
-          std::chrono::duration_cast<std::chrono::milliseconds>(now - f2Ts);
+      auto delay1 = scaledDelayInMs(now, f1Ts);
+      auto delay2 = scaledDelayInMs(now, f2Ts);
 
-      auto interDelay =
-          std::chrono::duration_cast<std::chrono::milliseconds>(f1Ts - f2Ts);
+      auto interDelay = scaledDelayInMs(f1Ts, f2Ts);
 
       ImGui::Begin("metrics", nullptr, ImGuiWindowFlags_NoDecoration);
       ImGui::SetWindowSize(windowSize);
@@ -337,11 +331,11 @@ private:
       ImGui::TableHeadersRow();
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
-      ImGui::Text("%li", delay1.count());
+      ImGui::Text("%.1f", delay1);
       ImGui::TableNextColumn();
-      ImGui::Text("%li", delay2.count());
+      ImGui::Text("%.1f", delay2);
       ImGui::TableNextColumn();
-      ImGui::Text("%li", interDelay.count());
+      ImGui::Text("%.1f", interDelay);
       ImGui::EndTable();
       ImGui::End();
     }
