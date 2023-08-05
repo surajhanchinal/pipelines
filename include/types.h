@@ -44,12 +44,6 @@ struct CombinedTrajectory {
   SingleTrajectory lt;
   SingleTrajectory rt;
   vector<AlignedTimedContour> atc;
-  double x0;
-  double y0;
-  double z0;
-  double vx;
-  double vy;
-  double vz;
 };
 
 struct CameraPairData {

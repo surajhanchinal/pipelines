@@ -8,6 +8,7 @@
 #include "node.h"
 #include "opencv2/core/mat.hpp"
 #include "opencv2/imgproc.hpp"
+#include "trajectory_store.h"
 #include "types.h"
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #include <chrono>
@@ -25,6 +26,8 @@ public:
   MultiGuiNode(std::string _windowName, const cv::Size _imageSize) {
     windowName = _windowName;
     imageSize = _imageSize;
+
+    trajectoryStore = TrajectoryStore();
 
     // Window creation is in the constructor as it needs to be done in the main
     // thread. Also have other things such as texture creation and ImGui context
@@ -100,6 +103,10 @@ public:
       auto frameTimedMat2 = cameraPairData.rightTMCT;
       auto trajectories = cameraPairData.trajectories;
 
+      for (auto &traj : *trajectories) {
+        trajectoryStore.addTrajectory(traj);
+      }
+
       screenSize = ImGui::GetIO().DisplaySize;
 
       // auto windowHeight = screenSize.y / 2.0;
@@ -109,10 +116,10 @@ public:
 
       windowSize = ImVec2(ratio * imageSize.width, ratio * imageSize.height);
 
-      // cout << windowSize.x << " " << windowSize.y << endl;
+      trajectoryStore.setScreenSize(screenSize);
+      trajectoryStore.setWindowSize(windowSize);
+      trajectoryStore.setCurrentTIme(frameTimedMat1.timestamp);
 
-      // windowSize = ImVec2(1280, 720);
-      // ratio = 1;
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
       ImGui::SetNextWindowPos(ImVec2(0, 0));
       renderFrame(frameTimedMat1, tex1, w1);
@@ -181,57 +188,6 @@ public:
     }*/
   }
 
-  void getScreenYZ(ImVec2 &p, double y, double z, double &sx, double &sy) {
-    sx = (z / 10) * windowSize.x + p.x;
-    sy = ((y + 0.5) / 2.2) * windowSize.y + p.y;
-  }
-
-  void render_yz(ImVec2 &p, vector<CombinedTrajectory> &trajectories) {
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    for (const auto &traj : trajectories) {
-      for (const auto &pt : traj.atc) {
-        auto x = (pt.z / 10) * windowSize.x;
-        auto y = ((pt.y + 0.5) / 2.2) * windowSize.y;
-        auto xratio = windowSize.x / imageSize.width;
-        auto yratio = windowSize.y / imageSize.height;
-        draw_list->AddCircle(ImVec2(p.x + x, p.y + y), 10, colorPalette[0]);
-      }
-      for (int i = -30; i < 30; i++) {
-        double y0 = traj.y0;
-        double vy = traj.vy;
-        double z0 = traj.z0;
-        double vz = traj.vz;
-        double newy1 = y0 + 0.0165 * i * vy + 4.9 * 0.0165 * 0.0165 * i * i;
-        double newz1 = z0 + 0.0165 * i * vz;
-        double sx1, sy1;
-        getScreenYZ(p, newy1, newz1, sx1, sy1);
-        // draw_list->AddCircle(ImVec2(sx1, sy1), 10, colorPalette[3]);
-
-        double newy2 = y0 + (0.0165 * (i + 1.0) * vy) +
-                       (4.9 * 0.0165 * 0.0165 * (i + 1.0) * (i + 1.0));
-        double newz2 = z0 + (0.0165 * (i + 1.0) * vz);
-        double sx2, sy2;
-        getScreenYZ(p, newy2, newz2, sx2, sy2);
-
-        draw_list->AddLine(ImVec2(sx2, sy2), ImVec2(sx1, sy1), colorPalette[4],
-                           2);
-      }
-    }
-  }
-
-  void render_xz(ImVec2 &p, vector<CombinedTrajectory> &trajectories) {
-    auto height = 2 * windowSize.y;
-    auto width = screenSize.x - 2 * windowSize.x;
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    for (const auto &traj : trajectories) {
-      for (const auto &pt : traj.atc) {
-        auto y = height - (pt.z / 10) * height;
-        auto x = (pt.x / 8.0) * (width / 2.0) + width / 2.0;
-        draw_list->AddCircle(ImVec2(p.x + x, p.y + y), 10, colorPalette[0]);
-      }
-    }
-  }
-
   void renderYZFrame(vector<CombinedTrajectory> &trajectories) {
     ImGui::Begin("yz", nullptr, ImGuiWindowFlags_NoDecoration);
     ImGui::SetWindowSize(windowSize);
@@ -239,7 +195,7 @@ public:
     // Draw using offset from where image begins. We use the cursor
     // position before the image is rendered to get this offset
     // render_combined_contours(cpos, *trajectories);
-    render_yz(cpos, trajectories);
+    trajectoryStore.render_yz(cpos);
     ImGui::End();
   }
 
@@ -253,7 +209,7 @@ public:
     // Draw using offset from where image begins. We use the cursor
     // position before the image is rendered to get this offset
     // render_combined_contours(cpos, *trajectories);
-    render_xz(cpos, trajectories);
+    trajectoryStore.render_xz(cpos);
     ImGui::End();
   }
 
@@ -293,6 +249,7 @@ private:
   ImVec2 windowSize;
   float ratio;
   ImVec2 screenSize;
+  TrajectoryStore trajectoryStore;
 
   ImVec2 contourCenterPoint(std::vector<cv::Point> &contour) {
     cv::Moments M = cv::moments(contour);

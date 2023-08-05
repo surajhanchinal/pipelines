@@ -50,34 +50,6 @@ public:
       alignGroups(dt1.contourGroupList, dt2.contourGroupList,
                   alignedTrajectories);
 
-      /*for (auto &traj : alignedTrajectories) {
-        auto obvSize = traj.atc.size();
-        Eigen::MatrixXf A(obvSize, 3);
-        Eigen::MatrixXf b(obvSize, 1);
-        auto t0 = traj.atc[0].t_avg;
-        for (int i = 0; i < traj.atc.size(); i++) {
-          auto &cm = traj.atc[i];
-          auto time_elapsed =
-              std::chrono::duration_cast<std::chrono::microseconds>(cm.t_avg -
-                                                                    t0)
-                  .count() /
-              (1000.0 * 1000.0);
-          A(i, 0) = 1;
-          A(i, 1) = time_elapsed;
-          A(i, 2) = (time_elapsed * time_elapsed) / 2;
-          b(i) = cm.y;
-          cout << "(" << abs(cm.leftCenter.x - cm.rightCenter.x) << " , "
-               << abs(cm.leftCenter.y - cm.rightCenter.y) << " , "
-               << time_elapsed << ") , ";
-        }
-        Eigen::MatrixXf soln =
-            (A.transpose() * A).ldlt().solve(A.transpose() * b);
-        cout << "G: " << (A.transpose() * A).ldlt().solve(A.transpose() * b)
-             << endl;
-        cout << "left: " << traj.lt.id << " right: " << traj.rt.id
-             << " L: " << traj.atc.size() << " G: " << soln(2) << endl;
-      }*/
-
       auto vecPtr = new vector(alignedTrajectories);
 
       CameraPairData dt = {
@@ -85,50 +57,6 @@ public:
       writeData<0>(dt);
     }
     std::cout << "Closing heavy frame syncer" << std::endl;
-  }
-
-  void solveAssumingGravity(vector<AlignedTimedContour> &atc, double &x0,
-                            double &y0, double &z0, double &vx, double &vy,
-                            double &vz) {
-    auto obvSize = atc.size();
-    Eigen::MatrixXf A(obvSize, 2);
-    Eigen::MatrixXf b(obvSize, 1);
-    auto t0 = atc[0].t_avg;
-    for (int i = 0; i < atc.size(); i++) {
-      auto &cm = atc[i];
-      auto time_elapsed =
-          std::chrono::duration_cast<std::chrono::microseconds>(cm.t_avg - t0)
-              .count() /
-          (1000.0 * 1000.0);
-      A(i, 0) = 1;
-      A(i, 1) = time_elapsed;
-    }
-    // Solve for X params
-    for (int i = 0; i < atc.size(); i++) {
-      auto &cm = atc[i];
-      b(i) = cm.x;
-    }
-    Eigen::MatrixXf solnX = (A.transpose() * A).ldlt().solve(A.transpose() * b);
-    x0 = solnX(0);
-    vx = solnX(1);
-
-    // Solve for X params
-    for (int i = 0; i < atc.size(); i++) {
-      auto &cm = atc[i];
-      b(i) = cm.y - 9.8 * A(i, 1) * A(i, 1) / 2.0;
-    }
-    Eigen::MatrixXf solnY = (A.transpose() * A).ldlt().solve(A.transpose() * b);
-    y0 = solnY(0);
-    vy = solnY(1);
-
-    // Solve for Z params
-    for (int i = 0; i < atc.size(); i++) {
-      auto &cm = atc[i];
-      b(i) = cm.z;
-    }
-    Eigen::MatrixXf solnZ = (A.transpose() * A).ldlt().solve(A.transpose() * b);
-    z0 = solnZ(0);
-    vz = solnZ(1);
   }
 
   void alignGroups(vector<SingleTrajectory> *leftGroups,
@@ -214,39 +142,37 @@ public:
         auto diff_2 = diff / 2;
         auto t_avg = rtc.timestamp + diff_2;
 
-        auto disparity = (rightctr.x - leftctr.x + 0.001);
-        auto depth = (1084.5238 * 0.823378) / disparity;
-        auto height = ((leftctr.y - 364.5288) * depth) / 1093.4296;
-        auto x =
-            (((leftctr.x + rightctr.x - 661.7751 - 621.3420) / 2.0) * depth) /
-            1084.5238;
+        double x, y, z;
+        get3dCoords(leftctr, rightctr, x, y, z);
+
         AlignedTimedContour alignedTimedContour = {
             .lt = ltc,
             .rt = rtc,
             .leftCenter = leftctr,
             .rightCenter = rightctr,
             .x = x,
-            .y = height,
-            .z = depth,
+            .y = y,
+            .z = z,
             .t_avg = ltc.timestamp,
         };
         alignedTrajectory.push_back(alignedTimedContour);
         // cout << x << " " << height << " " << depth << endl;
       }
-      double x0, y0, z0, vx, vy, vz;
-      solveAssumingGravity(alignedTrajectory, x0, y0, z0, vx, vy, vz);
       alignedTrajectories.push_back({
           .lt = leftTrajectory,
           .rt = rightTrajectory,
           .atc = alignedTrajectory,
-          .x0 = x0,
-          .y0 = y0,
-          .z0 = z0,
-          .vx = vx,
-          .vy = vy,
-          .vz = vz,
       });
     }
+  }
+
+  void get3dCoords(ImVec2 &leftctr, ImVec2 &rightctr, double &x, double &y,
+                   double &z) {
+    auto disparity = (rightctr.x - leftctr.x + 0.001);
+    z = (1084.5238 * 0.823378) / disparity;
+    y = ((leftctr.y - 364.5288) * z) / 1093.4296;
+    x = (((leftctr.x + rightctr.x - 661.7751 - 621.3420) / 2.0) * z) /
+        1084.5238;
   }
 
   bool areAlignedInTime(TimedContour &left, TimedContour &right) {

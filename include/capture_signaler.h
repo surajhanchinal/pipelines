@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config_store.h"
 #include "node.h"
 #include <chrono>
 #include <thread>
@@ -10,7 +11,7 @@ public:
     while (*running) {
       writeData<0>(true);
       writeData<1>(true);
-      std::this_thread::sleep_for(std::chrono::microseconds(10500));
+      std::this_thread::sleep_for(std::chrono::microseconds(ConfigStore::frameTime));
     }
   }
 };
