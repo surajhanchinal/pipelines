@@ -20,17 +20,7 @@ using namespace std;
 class FrameSyncer
     : public Node<frame_syncer::input_type, frame_syncer::output_type> {
 public:
-  FrameSyncer() {
-    cv::FileStorage fs("../scripts/stereoParams.xml", cv::FileStorage::READ);
-    fs["K1"] >> K1;
-    fs["K2"] >> K2;
-    fs["D1"] >> D1;
-    fs["D2"] >> D2;
-    fs["R1"] >> R1;
-    fs["R2"] >> R2;
-    fs["P1"] >> P1;
-    fs["P2"] >> P2;
-  }
+  FrameSyncer(CameraParams cameraParams) : cameraParams(cameraParams) {}
   void process() {
     FpsCounter fc(240, "FS");
     // std::this_thread::sleep_for(std::chrono::milliseconds(3000));
@@ -162,11 +152,19 @@ public:
 
   void get3dCoords(ImVec2 &leftctr, ImVec2 &rightctr, double &x, double &y,
                    double &z) {
-    auto disparity = (rightctr.x - leftctr.x + 0.001);
-    z = (1084.5238 * 0.823378) / disparity;
-    y = ((leftctr.y - 364.5288) * z) / 1093.4296;
-    x = (((leftctr.x + rightctr.x - 661.7751 - 621.3420) / 2.0) * z) /
-        1084.5238;
+
+    double fx = cameraParams.P1.at<double>(0, 0);
+    double fy = cameraParams.P1.at<double>(1, 1);
+    double cx = cameraParams.P1.at<double>(0, 2);
+    double cy = cameraParams.P1.at<double>(1, 2);
+    double xln = leftctr.x;
+    double xrn = rightctr.x;
+    double baseline =
+        cameraParams.T1.at<double>(0, 0) / 1000.0; // input is in mm
+    auto disparity = xrn - xln;
+    z = (fx * baseline) / disparity;
+    y = ((leftctr.y - cy) * z) / fy;
+    x = (((leftctr.x + rightctr.x - 2 * cx) / 2.0) * z) / fx;
   }
 
   bool areAlignedInTime(TimedContour &left, TimedContour &right) {
@@ -189,8 +187,10 @@ public:
     vector<cv::Point2f> unLC;
     vector<cv::Point2f> rights = {rightCenter};
     vector<cv::Point2f> unRC;
-    cv::undistortPoints(lefts, unLC, K1, D1, R1, P1);
-    cv::undistortPoints(rights, unRC, K2, D2, R2, P2);
+    cv::undistortPoints(lefts, unLC, cameraParams.K1, cameraParams.D1,
+                        cameraParams.R1, cameraParams.P1);
+    cv::undistortPoints(rights, unRC, cameraParams.K2, cameraParams.D2,
+                        cameraParams.R2, cameraParams.P2);
     leftctr.x = unLC[0].x;
     leftctr.y = unLC[0].y;
     rightctr.x = unRC[0].x;
@@ -212,5 +212,5 @@ public:
     return ImVec2(X, Y);
   }
 
-  cv::Mat K1, K2, D1, D2, R1, R2, P1, P2;
+  CameraParams cameraParams;
 };

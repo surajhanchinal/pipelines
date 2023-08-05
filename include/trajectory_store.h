@@ -1,10 +1,13 @@
 #pragma once
 #include "config_store.h"
 #include "types.h"
+#include "utils.h"
 #include <algorithm>
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 #include <map>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/types.hpp>
 #include <vector>
 
 using namespace std;
@@ -48,11 +51,12 @@ private:
       ImColor(83, 200, 33),  ImColor(255, 201, 40), ImColor(255, 148, 35),
       ImColor(255, 72, 162), ImColor(122, 71, 255), ImColor(42, 153, 235)};
 
-  double groundHeight = 0.5;
+  double groundHeight = 1.7;
   ImVec2 windowSize, screenSize;
   std::chrono::time_point<std::chrono::system_clock> currentTime;
-  Eigen::MatrixXf K1, K2, D1, D2, R1, R2, P1, P2;
   map<long long, Trajectory> trajectories;
+
+  CameraParams cameraParams;
 
   void addEstimatedParams(Trajectory &traj) {
     double x0, y0, z0, vx, vy, vz, g, error;
@@ -79,10 +83,7 @@ private:
     auto t0 = atc[0].t_avg;
     for (int i = 0; i < atc.size(); i++) {
       auto &cm = atc[i];
-      auto time_elapsed =
-          scaledDelayInMicro(cm.t_avg , t0)
-               /
-          (1000.0 * 1000.0);
+      auto time_elapsed = scaledDelayInMicro(cm.t_avg, t0) / (1000.0 * 1000.0);
       A(i, 0) = 1;
       A(i, 1) = time_elapsed;
     }
@@ -121,9 +122,7 @@ private:
     auto t0 = atc[0].t_avg;
     for (int i = 0; i < atc.size(); i++) {
       auto &cm = atc[i];
-      auto time_elapsed =
-          scaledDelayInMs(cm.t_avg , t0) /
-          (1000.0 * 1000.0);
+      auto time_elapsed = scaledDelayInMs(cm.t_avg, t0) / (1000.0 * 1000.0);
       A(i, 0) = 1;
       A(i, 1) = time_elapsed;
       A(i, 2) = (time_elapsed * time_elapsed) / 2;
@@ -159,7 +158,7 @@ private:
   int trainingPointCount(int alignedSize) {
     // Minimum size is 4 and this is set in the frame_syncer. so min estimated
     // param uses 4 aligned contours;
-    return min(4, alignedSize);
+    return min(6, alignedSize);
   }
 
 public:
@@ -167,7 +166,7 @@ public:
   //                 Eigen::MatrixXf D2, Eigen::MatrixXf R1, Eigen::MatrixXf R2,
   //                 Eigen::MatrixXf P1, Eigen::MatrixXf P2)
   //     : K1(K1), K2(K2), D1(D1), D2(D2), R1(R1), R2(R2), P1(P1), P2(P2) {}
-  TrajectoryStore() {}
+  TrajectoryStore(CameraParams cameraParams) : cameraParams(cameraParams) {}
   void setGroundHeight(double gh) { groundHeight = gh; }
   void setWindowSize(ImVec2 sz) { windowSize = sz; }
   void setScreenSize(ImVec2 sz) { screenSize = sz; }
@@ -202,8 +201,8 @@ public:
   }
 
   void getScreenYZ(ImVec2 &p, double y, double z, double &sx, double &sy) {
-    sx = (z / 10) * windowSize.x + p.x;
-    sy = ((y + 0.5) / (0.5 + 0.8)) * windowSize.y + p.y;
+    sx = (z / 15) * windowSize.x + p.x;
+    sy = ((y + 0.5) / (0.5 + groundHeight + 0.1)) * windowSize.y + p.y;
   }
 
   void render_yz(ImVec2 &p) {
@@ -220,9 +219,7 @@ public:
       }
 
       double timeElapsed =
-          scaledDelayInMs(
-              currentTime , traj.alignedContours[0].t_avg) /
-          1000.0;
+          scaledDelayInMs(currentTime, traj.alignedContours[0].t_avg) / 1000.0;
       double px, py, pz;
       getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                               timeElapsed, px, py, pz);
@@ -231,7 +228,7 @@ public:
 
       draw_list->AddCircle(ImVec2(ssx, ssy), 30, colorPalette[2]);
 
-      for (int i = -30; i < 30; i++) {
+      for (int i = -50; i < 50; i++) {
         double sx1, sy1;
         double newx1, newy1, newz1;
         getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
@@ -256,7 +253,7 @@ public:
 
     auto height = 2 * windowSize.y;
     auto width = screenSize.x - 2 * windowSize.x;
-    sy = height - (z / 10) * height + p.y;
+    sy = height - (z / 15) * height + p.y;
     sx = (x / 8.0) * (width / 2.0) + width / 2.0 + p.x;
   }
 
@@ -276,9 +273,7 @@ public:
       // Draw where current point would be
 
       double timeElapsed =
-          scaledDelayInMs(
-              currentTime , traj.alignedContours[0].t_avg) /
-          1000.0;
+          scaledDelayInMs(currentTime, traj.alignedContours[0].t_avg) / 1000.0;
       double px, py, pz;
       getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                               timeElapsed, px, py, pz);
@@ -288,7 +283,7 @@ public:
       draw_list->AddCircle(ImVec2(ssx, ssy), 30, colorPalette[2]);
 
       // Draw trajectory line
-      for (int i = -30; i < 30; i++) {
+      for (int i = -50; i < 50; i++) {
         double sx1, sy1;
         double newx1, newy1, newz1;
         getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
@@ -306,6 +301,98 @@ public:
         draw_list->AddLine(ImVec2(sx2, sy2), ImVec2(sx1, sy1), colorPalette[4],
                            2);
       }
+    }
+  }
+
+  void renderLeftPred(ImVec2 &p) {
+
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    for (const auto &[_, traj] : trajectories) {
+      int trainingCount = trainingPointCount(traj.alignedContours.size());
+      double timeElapsed =
+          scaledDelayInMs(currentTime, traj.alignedContours[0].t_avg) / 1000.0;
+      double px, py, pz;
+      getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
+                              timeElapsed, px, py, pz);
+
+      double fx = cameraParams.P1.at<double>(0, 0);
+      double fy = cameraParams.P1.at<double>(1, 1);
+      double cx = cameraParams.P1.at<double>(0, 2);
+      double cy = cameraParams.P1.at<double>(1, 2);
+      double baseline =
+          cameraParams.T1.at<double>(0, 0) / 1000.0; // input is in mm
+
+      double xl = ((px - (baseline / 2.0)) * (fx / pz)) + cx;
+      double yl = (py * (fy / pz)) + cy;
+
+      double frx = cameraParams.K1.at<double>(0, 0);
+      double fry = cameraParams.K1.at<double>(1, 1);
+      double crx = cameraParams.K1.at<double>(0, 2);
+      double cry = cameraParams.K1.at<double>(1, 2);
+
+      double xx = (xl - cx) / fx;
+      double yy = (yl - cy) / fy;
+
+      cv::Mat R1 = cameraParams.R1;
+
+      cv::Mat newOld = R1.inv() * (cv::Mat_<double>(3, 1) << xx, yy, 1);
+
+      double newx = newOld.at<double>(0, 0);
+      double newy = newOld.at<double>(1, 0);
+
+      newx = newx * frx + crx;
+      newy = newy * fry + cry;
+
+      double ratio = windowSize.x / 1280;
+
+      draw_list->AddCircle(ImVec2(p.x + newx * ratio, p.y + newy * ratio), 30,
+                           colorPalette[2], -1, 5);
+    }
+  }
+
+  void renderRightPred(ImVec2 &p) {
+
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    for (const auto &[_, traj] : trajectories) {
+      int trainingCount = trainingPointCount(traj.alignedContours.size());
+      double timeElapsed =
+          scaledDelayInMs(currentTime, traj.alignedContours[0].t_avg) / 1000.0;
+      double px, py, pz;
+      getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
+                              timeElapsed, px, py, pz);
+
+      double fx = cameraParams.P1.at<double>(0, 0);
+      double fy = cameraParams.P1.at<double>(1, 1);
+      double cx = cameraParams.P1.at<double>(0, 2);
+      double cy = cameraParams.P1.at<double>(1, 2);
+      double baseline =
+          cameraParams.T1.at<double>(0, 0) / 1000.0; // input is in mm
+
+      double xl = ((px + (baseline / 2.0)) * (fx / pz)) + cx;
+      double yl = (py * (fy / pz)) + cy;
+
+      double frx = cameraParams.K2.at<double>(0, 0);
+      double fry = cameraParams.K2.at<double>(1, 1);
+      double crx = cameraParams.K2.at<double>(0, 2);
+      double cry = cameraParams.K2.at<double>(1, 2);
+
+      double xx = (xl - cx) / fx;
+      double yy = (yl - cy) / fy;
+
+      cv::Mat R2 = cameraParams.R2;
+
+      cv::Mat newOld = R2.inv() * (cv::Mat_<double>(3, 1) << xx, yy, 1);
+
+      double newx = newOld.at<double>(0, 0);
+      double newy = newOld.at<double>(1, 0);
+
+      newx = newx * frx + crx;
+      newy = newy * fry + cry;
+
+      double ratio = windowSize.x / 1280;
+
+      draw_list->AddCircle(ImVec2(p.x + newx * ratio, p.y + newy * ratio), 30,
+                           colorPalette[2], -1, 5);
     }
   }
 };

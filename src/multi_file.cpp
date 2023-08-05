@@ -6,6 +6,8 @@
 #include "multi_gui_node.h"
 #include "node.h"
 #include "orchestrator.h"
+#include "types.h"
+#include "utils.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GLFW/glfw3.h>
@@ -29,7 +31,7 @@ int main() {
   const int height = 720;
   const int width = 1280;
   const cv::Size captureSize(width, height);
-
+ 
   auto frameReader1 = new FileReader("../lefty2.mp4", captureSize);
 
   auto frameReader2 = new FileReader("../righty2.mp4", captureSize);
@@ -38,7 +40,9 @@ int main() {
 
   auto frameProcessor2 = new FrameProcessor(captureSize, 0);
 
-  auto frameSyncer = new FrameSyncer();
+  CameraParams cameraParams;
+  loadCameraParams(cameraParams);
+  auto frameSyncer = new FrameSyncer(cameraParams);
   auto captureSignaler = new CaptureSignaler();
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -46,7 +50,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  auto multiGuiNode = new MultiGuiNode("w1", captureSize);
+  auto multiGuiNode = new MultiGuiNode("w1", captureSize,cameraParams);
 
   auto o1 = Orchestrator();
   o1.registerNode(captureSignaler);

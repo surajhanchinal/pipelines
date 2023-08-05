@@ -24,11 +24,12 @@ class MultiGuiNode : public Node<type_list_t<CameraPairData>, type_list_t<>> {
       ImColor(255, 72, 162), ImColor(122, 71, 255), ImColor(42, 153, 235)};
 
 public:
-  MultiGuiNode(std::string _windowName, const cv::Size _imageSize) {
+  MultiGuiNode(std::string _windowName, const cv::Size _imageSize,
+               CameraParams cameraParams) {
     windowName = _windowName;
     imageSize = _imageSize;
 
-    trajectoryStore = TrajectoryStore();
+    trajectoryStore = new TrajectoryStore(cameraParams);
 
     // Window creation is in the constructor as it needs to be done in the main
     // thread. Also have other things such as texture creation and ImGui context
@@ -105,7 +106,7 @@ public:
       auto trajectories = cameraPairData.trajectories;
 
       for (auto &traj : *trajectories) {
-        trajectoryStore.addTrajectory(traj);
+        trajectoryStore->addTrajectory(traj);
       }
 
       screenSize = ImGui::GetIO().DisplaySize;
@@ -117,9 +118,9 @@ public:
 
       windowSize = ImVec2(ratio * imageSize.width, ratio * imageSize.height);
 
-      trajectoryStore.setScreenSize(screenSize);
-      trajectoryStore.setWindowSize(windowSize);
-      trajectoryStore.setCurrentTIme(frameTimedMat1.timestamp);
+      trajectoryStore->setScreenSize(screenSize);
+      trajectoryStore->setWindowSize(windowSize);
+      trajectoryStore->setCurrentTIme(frameTimedMat1.timestamp);
 
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
       ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -196,7 +197,7 @@ public:
     // Draw using offset from where image begins. We use the cursor
     // position before the image is rendered to get this offset
     // render_combined_contours(cpos, *trajectories);
-    trajectoryStore.render_yz(cpos);
+    trajectoryStore->render_yz(cpos);
     ImGui::End();
   }
 
@@ -210,7 +211,7 @@ public:
     // Draw using offset from where image begins. We use the cursor
     // position before the image is rendered to get this offset
     // render_combined_contours(cpos, *trajectories);
-    trajectoryStore.render_xz(cpos);
+    trajectoryStore->render_xz(cpos);
     ImGui::End();
   }
 
@@ -250,7 +251,7 @@ private:
   ImVec2 windowSize;
   float ratio;
   ImVec2 screenSize;
-  TrajectoryStore trajectoryStore;
+  TrajectoryStore *trajectoryStore;
 
   ImVec2 contourCenterPoint(std::vector<cv::Point> &contour) {
     cv::Moments M = cv::moments(contour);
@@ -302,7 +303,12 @@ private:
       ImGui::Image((void *)(intptr_t)texID, windowSize);
       // Draw using offset from where image begins. We use the cursor
       // position before the image is rendered to get this offset
-      render_contours2(cpos, frameTimedMat.contourGroupList);
+      // render_contours2(cpos, frameTimedMat.contourGroupList);
+      if (!windowName.compare("cam1")) {
+        trajectoryStore->renderLeftPred(cpos);
+      } else {
+        trajectoryStore->renderRightPred(cpos);
+      }
       delete frameTimedMat.contourGroupList;
       ImGui::End();
     }

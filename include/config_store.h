@@ -16,7 +16,7 @@ public:
   // Frame syncer params
   static constexpr int maxFrameOffset = 6;
 
-  static constexpr double timeScale = 3;
+  static constexpr double timeScale = 1;
 
   static constexpr double realFrameTime = 16500;
 
