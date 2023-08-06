@@ -32,15 +32,15 @@ int main() {
 
   auto captureSignaler = new CaptureSignaler();
 
-  auto frameReader1 = new FrameReader(0, "left", captureSize);
+  auto frameReader1 = new FrameReader(4, "left", captureSize);
 
   auto frameReader2 = new FrameReader(2, "right", captureSize);
 
   auto frameSyncer = new LightFrameSyncer();
 
-  auto leftWriter = new GstVideoWriter("lefty", captureSize);
+  auto leftWriter = new GstVideoWriter("green_ball_left_5", captureSize);
 
-  auto rightWriter = new GstVideoWriter("righty", captureSize);
+  auto rightWriter = new GstVideoWriter("green_ball_right_5", captureSize);
 
   auto o1 = Orchestrator();
 

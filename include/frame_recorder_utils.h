@@ -5,6 +5,7 @@
 #include "node.h"
 #include "opencv2/videoio.hpp"
 #include "types.h"
+#include "utils.h"
 #include <iostream>
 #include <sstream>
 
@@ -44,7 +45,7 @@ public:
     line << _cameraName;
     line << ".mp4";
 
-    writer = new cv::VideoWriter(line.str(), cv::CAP_GSTREAMER, 0, 60,
+    writer = new cv::VideoWriter(line.str(), cv::CAP_GSTREAMER, 0, 94,
                                  cv::Size(1280, 720), true);
   }
   void process() {

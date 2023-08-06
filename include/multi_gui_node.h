@@ -128,7 +128,7 @@ public:
       ImGui::SetNextWindowPos(ImVec2(0, windowSize.y));
       renderFrame(frameTimedMat2, tex2, w2);
       ImGui::SetNextWindowPos(ImVec2(windowSize.x, 0));
-      renderMetricsWindow(frameTimedMat1.timestamp, frameTimedMat2.timestamp);
+      renderMetricsWindow(frameTimedMat1.timestamp, frameTimedMat2.timestamp,*trajectories);
 
       ImGui::SetNextWindowPos(ImVec2(windowSize.x, windowSize.y));
       renderYZFrame(*trajectories);
@@ -210,7 +210,6 @@ public:
     auto cpos = ImGui::GetCursorScreenPos();
     // Draw using offset from where image begins. We use the cursor
     // position before the image is rendered to get this offset
-    // render_combined_contours(cpos, *trajectories);
     trajectoryStore->render_xz(cpos);
     ImGui::End();
   }
@@ -316,7 +315,8 @@ private:
 
   void
   renderMetricsWindow(std::chrono::time_point<std::chrono::system_clock> f1Ts,
-                      std::chrono::time_point<std::chrono::system_clock> f2Ts) {
+                      std::chrono::time_point<std::chrono::system_clock> f2Ts,
+                      vector<CombinedTrajectory> &trajectories) {
     {
 
       auto now = std::chrono::system_clock::now();
@@ -328,6 +328,7 @@ private:
       ImGui::Begin("metrics", nullptr, ImGuiWindowFlags_NoDecoration);
       ImGui::SetWindowSize(windowSize);
       auto io = ImGui::GetIO();
+      auto cpos = ImGui::GetCursorScreenPos();
       ImGui::Text("Framerate: (%.1f FPS)", io.Framerate);
 
       ImGui::BeginTable("Metrics", 3);
@@ -343,7 +344,7 @@ private:
       ImGui::TableNextColumn();
       ImGui::Text("%.1f", interDelay);
       ImGui::EndTable();
-
+      render_combined_contours(cpos, trajectories);
 
       trajectoryStore->renderMetrics();
       ImGui::End();

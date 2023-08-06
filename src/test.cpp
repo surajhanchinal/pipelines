@@ -41,7 +41,6 @@ int main() {
 
   auto frameProcessor2 = new FrameProcessor(captureSize, 0);
 
-
   CameraParams cameraParams;
   loadCameraParams(cameraParams);
 
@@ -53,7 +52,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  auto multiGuiNode = new MultiGuiNode("w1", captureSize,cameraParams);
+  auto multiGuiNode = new MultiGuiNode("w1", captureSize, cameraParams);
 
   auto o1 = Orchestrator();
   o1.registerNode(frameReader1);

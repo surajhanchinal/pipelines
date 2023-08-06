@@ -136,21 +136,26 @@ private:
   void getPredictedPointAtTime(const EstimatedParams &params,
                                double elapsedTimeInSeconds, double &x,
                                double &y, double &z) {
-    x = params.x0 + elapsedTimeInSeconds * params.vx;
-    z = params.z0 + elapsedTimeInSeconds * params.vz;
 
     double a = 9.8 / 2.0;
     double b = params.vy;
     double c = params.y0 - groundHeight;
     double timeToContact = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
-    double elasticity = 0.8;
+    double elasticity = 0.6;
     double velocityAtContact = elasticity * (params.vy + (9.8 * timeToContact));
 
     if (elapsedTimeInSeconds < timeToContact) {
+      x = params.x0 + elapsedTimeInSeconds * params.vx;
+      z = params.z0 + elapsedTimeInSeconds * params.vz;
       y = params.y0 + elapsedTimeInSeconds * params.vy +
           4.9 * elapsedTimeInSeconds * elapsedTimeInSeconds;
     } else {
       double timeFromContact = elapsedTimeInSeconds - timeToContact;
+      double factor = 0.75;
+      x = (params.x0 + timeToContact * params.vx) +
+          timeFromContact * factor * params.vx;
+      z = (params.z0 + timeToContact * params.vz) +
+          timeFromContact * factor * params.vz;
       y = groundHeight - (velocityAtContact * timeFromContact) +
           (4.9 * timeFromContact * timeFromContact);
     }
@@ -159,7 +164,7 @@ private:
   int trainingPointCount(int alignedSize) {
     // Minimum size is 4 and this is set in the frame_syncer. so min estimated
     // param uses 4 aligned contours;
-    return min(6, alignedSize);
+    return min(10, alignedSize);
   }
 
 public:
@@ -176,7 +181,7 @@ public:
   }
 
   void addTrajectory(CombinedTrajectory &ct) {
-    long long hash = cantorHash(ct.lt.id, ct.lt.id);
+    long long hash = cantorHash(ct.lt.id, ct.rt.id);
     if (trajectories.find(hash) != trajectories.end()) {
       bool newPoints =
           trajectories[hash].alignedContours.size() != ct.atc.size();
@@ -202,8 +207,8 @@ public:
   }
 
   void getScreenYZ(ImVec2 &p, double y, double z, double &sx, double &sy) {
-    sx = (z / 15) * windowSize.x + p.x;
-    sy = ((y + 0.5) / (0.5 + groundHeight + 0.1)) * windowSize.y + p.y;
+    sx = (z / 22) * windowSize.x + p.x;
+    sy = ((y + 0.8) / (0.8 + groundHeight + 0.1)) * windowSize.y + p.y;
   }
 
   void render_yz(ImVec2 &p) {
@@ -212,7 +217,7 @@ public:
     double xp1, xp2, yp1, yp2;
     getScreenYZ(p, groundHeight, 0, xp1, yp1);
 
-    getScreenYZ(p, groundHeight, 30, xp2, yp2);
+    getScreenYZ(p, groundHeight, 22, xp2, yp2);
 
     draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
 
@@ -237,7 +242,7 @@ public:
 
       draw_list->AddCircle(ImVec2(ssx, ssy), 30, colorPalette[2]);
 
-      for (int i = -50; i < 50; i++) {
+      for (int i = -50; i < 100; i++) {
         double sx1, sy1;
         double newx1, newy1, newz1;
         getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
@@ -262,7 +267,7 @@ public:
 
     auto height = 2 * windowSize.y;
     auto width = screenSize.x - 2 * windowSize.x;
-    sy = height - (z / 15) * height + p.y;
+    sy = height - (z / 22) * height + p.y;
     sx = (x / 8.0) * (width / 2.0) + width / 2.0 + p.x;
   }
 
@@ -272,9 +277,9 @@ public:
     // Render center line
 
     double xp1, xp2, yp1, yp2;
-    getScreenXZ(p, 0, 0, xp1, yp1);
+    getScreenXZ(p, 0, 1, xp1, yp1);
 
-    getScreenXZ(p, 0, 30, xp2, yp2);
+    getScreenXZ(p, 4.25, 22, xp2, yp2);
 
     draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
 
@@ -302,7 +307,7 @@ public:
       draw_list->AddCircle(ImVec2(ssx, ssy), 30, colorPalette[2]);
 
       // Draw trajectory line
-      for (int i = -50; i < 50; i++) {
+      for (int i = -50; i < 100; i++) {
         double sx1, sy1;
         double newx1, newy1, newz1;
         getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
@@ -323,6 +328,42 @@ public:
     }
   }
 
+  void project3dTo2d(cv::Mat &P1, cv::Mat &K1, cv::Mat &R1, cv::Mat &T1,
+                     bool isLeft, ImVec2 &offset, double x, double y, double z,
+                     double &sx, double &sy) {
+    double fx = P1.at<double>(0, 0);
+    double fy = P1.at<double>(1, 1);
+    double cx = P1.at<double>(0, 2);
+    double cy = P1.at<double>(1, 2);
+    double baseline = T1.at<double>(0, 0) / 1000.0; // input is in mm
+
+    double sgn = isLeft ? -1 : 1;
+
+    double xl = ((x + sgn * (baseline / 2.0)) * (fx / z)) + cx;
+    double yl = (y * (fy / z)) + cy;
+
+    double frx = K1.at<double>(0, 0);
+    double fry = K1.at<double>(1, 1);
+    double crx = K1.at<double>(0, 2);
+    double cry = K1.at<double>(1, 2);
+
+    double xx = (xl - cx) / fx;
+    double yy = (yl - cy) / fy;
+
+    cv::Mat newOld = R1.inv() * (cv::Mat_<double>(3, 1) << xx, yy, 1);
+
+    double newx = newOld.at<double>(0, 0);
+    double newy = newOld.at<double>(1, 0);
+
+    newx = newx * frx + crx;
+    newy = newy * fry + cry;
+
+    double ratio = windowSize.x / 1280;
+
+    sx = offset.x + ratio * newx;
+    sy = offset.y + ratio * newy;
+  }
+
   void renderLeftPred(ImVec2 &p) {
 
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
@@ -333,39 +374,23 @@ public:
       double px, py, pz;
       getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                               timeElapsed, px, py, pz);
+      double sx, sy;
+      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
+                    cameraParams.T1, true, p, px, py, pz, sx, sy);
 
-      double fx = cameraParams.P1.at<double>(0, 0);
-      double fy = cameraParams.P1.at<double>(1, 1);
-      double cx = cameraParams.P1.at<double>(0, 2);
-      double cy = cameraParams.P1.at<double>(1, 2);
-      double baseline =
-          cameraParams.T1.at<double>(0, 0) / 1000.0; // input is in mm
+      draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
+    }
+    // draw camera middle to stump line
+    {
+      double lx1, lx2, ly1, ly2;
 
-      double xl = ((px - (baseline / 2.0)) * (fx / pz)) + cx;
-      double yl = (py * (fy / pz)) + cy;
+      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
+                    cameraParams.T1, true, p, 0, 1.7, 1, lx1, ly1);
+      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
+                    cameraParams.T1, true, p, 4.25, 1.7, 22, lx2, ly2);
 
-      double frx = cameraParams.K1.at<double>(0, 0);
-      double fry = cameraParams.K1.at<double>(1, 1);
-      double crx = cameraParams.K1.at<double>(0, 2);
-      double cry = cameraParams.K1.at<double>(1, 2);
-
-      double xx = (xl - cx) / fx;
-      double yy = (yl - cy) / fy;
-
-      cv::Mat R1 = cameraParams.R1;
-
-      cv::Mat newOld = R1.inv() * (cv::Mat_<double>(3, 1) << xx, yy, 1);
-
-      double newx = newOld.at<double>(0, 0);
-      double newy = newOld.at<double>(1, 0);
-
-      newx = newx * frx + crx;
-      newy = newy * fry + cry;
-
-      double ratio = windowSize.x / 1280;
-
-      draw_list->AddCircle(ImVec2(p.x + newx * ratio, p.y + newy * ratio), 30,
-                           colorPalette[2], -1, 5);
+      draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
+                         2);
     }
   }
 
@@ -380,53 +405,45 @@ public:
       getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                               timeElapsed, px, py, pz);
 
-      double fx = cameraParams.P1.at<double>(0, 0);
-      double fy = cameraParams.P1.at<double>(1, 1);
-      double cx = cameraParams.P1.at<double>(0, 2);
-      double cy = cameraParams.P1.at<double>(1, 2);
-      double baseline =
-          cameraParams.T1.at<double>(0, 0) / 1000.0; // input is in mm
+      double sx, sy;
+      project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
+                    cameraParams.T2, false, p, px, py, pz, sx, sy);
+      draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
+    }
 
-      double xl = ((px + (baseline / 2.0)) * (fx / pz)) + cx;
-      double yl = (py * (fy / pz)) + cy;
+    {
 
-      double frx = cameraParams.K2.at<double>(0, 0);
-      double fry = cameraParams.K2.at<double>(1, 1);
-      double crx = cameraParams.K2.at<double>(0, 2);
-      double cry = cameraParams.K2.at<double>(1, 2);
+      double lx1, lx2, ly1, ly2;
 
-      double xx = (xl - cx) / fx;
-      double yy = (yl - cy) / fy;
+      project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
+                    cameraParams.T2, false, p, 0, 1.7, 1, lx1, ly1);
+      project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
+                    cameraParams.T2, false, p, 4.25, 1.7, 22, lx2, ly2);
 
-      cv::Mat R2 = cameraParams.R2;
-
-      cv::Mat newOld = R2.inv() * (cv::Mat_<double>(3, 1) << xx, yy, 1);
-
-      double newx = newOld.at<double>(0, 0);
-      double newy = newOld.at<double>(1, 0);
-
-      newx = newx * frx + crx;
-      newy = newy * fry + cry;
-
-      double ratio = windowSize.x / 1280;
-
-      draw_list->AddCircle(ImVec2(p.x + newx * ratio, p.y + newy * ratio), 30,
-                           colorPalette[2], -1, 5);
+      draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
+                         2);
     }
   }
 
-  void renderMetrics(){
-    for(auto const& [_,traj] : trajectories){
-        int paramIndex = trainingPointCount(traj.alignedContours.size());
-        double gravity = traj.estimatedParams.at(paramIndex).g;
-        double vx = traj.estimatedParams.at(paramIndex).vx;
-        double vy = traj.estimatedParams.at(paramIndex).vy;
-        double vz = traj.estimatedParams.at(paramIndex).vz;
+  void renderMetrics() {
+    for (auto const &[_, traj] : trajectories) {
+      int paramIndex = trainingPointCount(traj.alignedContours.size());
+      double gravity = traj.estimatedParams.at(paramIndex).g;
+      double vx = traj.estimatedParams.at(paramIndex).vx;
+      double vy = traj.estimatedParams.at(paramIndex).vy;
+      double vz = traj.estimatedParams.at(paramIndex).vz;
 
-        double speed = sqrt(vx*vx + vy*vy + vz*vz);
+      double speed = sqrt(vx * vx + vy * vy + vz * vz);
 
-        //ImGui::Text("Gravity: %.2f m/s2",gravity);
-        ImGui::Text("Speed: %.2f kmph",speed*3.6);
+      double z = traj.alignedContours.at(paramIndex - 1).z;
+      double remainingZ = 22 - z;
+      double remainingTime = remainingZ / vz;
+
+      // ImGui::Text("Gravity: %.2f m/s2",gravity);
+      ImGui::Text("Speed: %.2f kmph", speed * 3.6);
+      ImGui::Text("Predicted with %d points, at distance: %.2f", paramIndex, z);
+      ImGui::Text("Remaining distance %.2f | Remaining time: %.2f", remainingZ,
+                  remainingTime);
     }
   }
 };

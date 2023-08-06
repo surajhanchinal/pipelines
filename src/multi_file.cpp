@@ -32,9 +32,9 @@ int main() {
   const int width = 1280;
   const cv::Size captureSize(width, height);
  
-  auto frameReader1 = new FileReader("../lefty2.mp4", captureSize);
+  auto frameReader1 = new FileReader("../red_ball_left_5.mp4", captureSize);
 
-  auto frameReader2 = new FileReader("../righty2.mp4", captureSize);
+  auto frameReader2 = new FileReader("../red_ball_right_5.mp4", captureSize);
 
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 
