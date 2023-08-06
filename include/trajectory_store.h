@@ -1,5 +1,6 @@
 #pragma once
 #include "config_store.h"
+#include "imgui.h"
 #include "types.h"
 #include "utils.h"
 #include <algorithm>
@@ -122,7 +123,7 @@ private:
     auto t0 = atc[0].t_avg;
     for (int i = 0; i < atc.size(); i++) {
       auto &cm = atc[i];
-      auto time_elapsed = scaledDelayInMs(cm.t_avg, t0) / (1000.0 * 1000.0);
+      auto time_elapsed = scaledDelayInMicro(cm.t_avg, t0) / (1000.0 * 1000.0);
       A(i, 0) = 1;
       A(i, 1) = time_elapsed;
       A(i, 2) = (time_elapsed * time_elapsed) / 2;
@@ -411,6 +412,21 @@ public:
 
       draw_list->AddCircle(ImVec2(p.x + newx * ratio, p.y + newy * ratio), 30,
                            colorPalette[2], -1, 5);
+    }
+  }
+
+  void renderMetrics(){
+    for(auto const& [_,traj] : trajectories){
+        int paramIndex = trainingPointCount(traj.alignedContours.size());
+        double gravity = traj.estimatedParams.at(paramIndex).g;
+        double vx = traj.estimatedParams.at(paramIndex).vx;
+        double vy = traj.estimatedParams.at(paramIndex).vy;
+        double vz = traj.estimatedParams.at(paramIndex).vz;
+
+        double speed = sqrt(vx*vx + vy*vy + vz*vz);
+
+        //ImGui::Text("Gravity: %.2f m/s2",gravity);
+        ImGui::Text("Speed: %.2f kmph",speed*3.6);
     }
   }
 };

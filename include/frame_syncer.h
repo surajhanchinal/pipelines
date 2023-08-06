@@ -27,7 +27,7 @@ public:
     while (*running) {
       auto dt1 = readData<0, TimedMatWithCTree>();
       auto dt2 = readData<1, TimedMatWithCTree>();
-
+      fc.loop();
       // std::this_thread::sleep_for(std::chrono::microseconds(16500));
       auto delay = scaledDelayInMs(dt1.timestamp, dt2.timestamp);
 

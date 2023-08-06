@@ -303,7 +303,7 @@ private:
       ImGui::Image((void *)(intptr_t)texID, windowSize);
       // Draw using offset from where image begins. We use the cursor
       // position before the image is rendered to get this offset
-      // render_contours2(cpos, frameTimedMat.contourGroupList);
+      render_contours2(cpos, frameTimedMat.contourGroupList);
       if (!windowName.compare("cam1")) {
         trajectoryStore->renderLeftPred(cpos);
       } else {
@@ -343,6 +343,9 @@ private:
       ImGui::TableNextColumn();
       ImGui::Text("%.1f", interDelay);
       ImGui::EndTable();
+
+
+      trajectoryStore->renderMetrics();
       ImGui::End();
     }
   }

@@ -18,7 +18,7 @@ public:
 
   static constexpr double timeScale = 1;
 
-  static constexpr double realFrameTime = 16500;
+  static constexpr double realFrameTime = 10500;
 
   //  Time between frames
   static constexpr int frameTime = realFrameTime * timeScale;
