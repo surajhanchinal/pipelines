@@ -13,6 +13,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
+
+# <------------ add hiredis dependency --------------->
+find_path(HIREDIS_HEADER hiredis)
+
+find_library(HIREDIS_LIB hiredis)
+
+# <------------ add redis-plus-plus dependency -------------->
+# NOTE: this should be *sw* NOT *redis++*
+find_path(REDIS_PLUS_PLUS_HEADER sw)
+find_library(REDIS_PLUS_PLUS_LIB redis++)
+
+
 
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui)
 
@@ -50,3 +63,19 @@ target_include_directories(SingleTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_executable(RecorderTest src/stereo_record.cpp)
 target_link_libraries( RecorderTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW Eigen3::Eigen)
 target_include_directories(RecorderTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(PosesTest src/poses.cpp)
+target_link_libraries( PosesTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW Eigen3::Eigen)
+target_link_libraries(PosesTest ${HIREDIS_LIB})
+target_link_libraries(PosesTest ${REDIS_PLUS_PLUS_LIB})
+target_include_directories(PosesTest PUBLIC ${HIREDIS_HEADER})
+target_include_directories(PosesTest PUBLIC ${REDIS_PLUS_PLUS_HEADER})
+target_include_directories(PosesTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(IkService src/ik_service.cpp)
+target_link_libraries( IkService ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW Eigen3::Eigen)
+target_link_libraries(IkService ${HIREDIS_LIB})
+target_link_libraries(IkService ${REDIS_PLUS_PLUS_LIB})
+target_include_directories(IkService PUBLIC ${HIREDIS_HEADER})
+target_include_directories(IkService PUBLIC ${REDIS_PLUS_PLUS_HEADER})
+target_include_directories(IkService PRIVATE ${CMAKE_SOURCE_DIR}/include)

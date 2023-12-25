@@ -31,4 +31,8 @@ public:
   // use, 3-4x frame time.
   static constexpr double contourGroupTimeToLive = (frameTime / 1000.0) * 7.0;
   // static constexpr int contourGroupTimeToLive = 160;
+
+  static constexpr double groundHeight = 0;
+  static constexpr double elasticity = 0.6;
+  static constexpr double slowDownFactor = 0.75;
 };

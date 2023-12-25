@@ -52,7 +52,6 @@ private:
       ImColor(83, 200, 33),  ImColor(255, 201, 40), ImColor(255, 148, 35),
       ImColor(255, 72, 162), ImColor(122, 71, 255), ImColor(42, 153, 235)};
 
-  double groundHeight = 1.7;
   ImVec2 windowSize, screenSize;
   std::chrono::time_point<std::chrono::system_clock> currentTime;
   map<long long, Trajectory> trajectories;
@@ -133,33 +132,7 @@ private:
     g = soln(2);
   }
 
-  void getPredictedPointAtTime(const EstimatedParams &params,
-                               double elapsedTimeInSeconds, double &x,
-                               double &y, double &z) {
-
-    double a = 9.8 / 2.0;
-    double b = params.vy;
-    double c = params.y0 - groundHeight;
-    double timeToContact = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
-    double elasticity = 0.6;
-    double velocityAtContact = elasticity * (params.vy + (9.8 * timeToContact));
-
-    if (elapsedTimeInSeconds < timeToContact) {
-      x = params.x0 + elapsedTimeInSeconds * params.vx;
-      z = params.z0 + elapsedTimeInSeconds * params.vz;
-      y = params.y0 + elapsedTimeInSeconds * params.vy +
-          4.9 * elapsedTimeInSeconds * elapsedTimeInSeconds;
-    } else {
-      double timeFromContact = elapsedTimeInSeconds - timeToContact;
-      double factor = 0.75;
-      x = (params.x0 + timeToContact * params.vx) +
-          timeFromContact * factor * params.vx;
-      z = (params.z0 + timeToContact * params.vz) +
-          timeFromContact * factor * params.vz;
-      y = groundHeight - (velocityAtContact * timeFromContact) +
-          (4.9 * timeFromContact * timeFromContact);
-    }
-  }
+  
 
   int trainingPointCount(int alignedSize) {
     // Minimum size is 4 and this is set in the frame_syncer. so min estimated
@@ -173,11 +146,68 @@ public:
   //                 Eigen::MatrixXf P1, Eigen::MatrixXf P2)
   //     : K1(K1), K2(K2), D1(D1), D2(D2), R1(R1), R2(R2), P1(P1), P2(P2) {}
   TrajectoryStore(CameraParams cameraParams) : cameraParams(cameraParams) {}
-  void setGroundHeight(double gh) { groundHeight = gh; }
   void setWindowSize(ImVec2 sz) { windowSize = sz; }
   void setScreenSize(ImVec2 sz) { screenSize = sz; }
   void setCurrentTIme(std::chrono::time_point<std::chrono::system_clock> curr) {
     currentTime = curr;
+  }
+
+  static void getPredictedPointAtTime2(const EstimatedParams &params,
+                               double elapsedTimeInSeconds, double &x,
+                               double &y, double &z) {
+
+    double groundHeight = 0;
+    double a = -9.8 / 2.0;
+    double b = params.vz;
+    double c = params.z0 - groundHeight;
+    double timeToContact = (-b + sqrt(b * b - 4 * a * c)) / (-2 * a);
+    double elasticity = ConfigStore::elasticity;
+    double velocityAtContact = elasticity * (params.vz - (9.8 * timeToContact));
+
+    if (elapsedTimeInSeconds < timeToContact) {
+      x = params.x0 + elapsedTimeInSeconds * params.vx;
+      y = params.y0 + elapsedTimeInSeconds * params.vy;
+      z = params.z0 + elapsedTimeInSeconds * params.vz -
+          4.9 * elapsedTimeInSeconds * elapsedTimeInSeconds;
+    } else {
+      double timeFromContact = elapsedTimeInSeconds - timeToContact;
+      double factor = ConfigStore::slowDownFactor;
+      x = (params.x0 + timeToContact * params.vx) +
+          timeFromContact * factor * params.vx;
+      y = (params.y0 + timeToContact * params.vy) +
+          timeFromContact * factor * params.vy;
+      z = groundHeight - (velocityAtContact * timeFromContact) -
+          (4.9 * timeFromContact * timeFromContact);
+    }
+  }
+
+  static void getPredictedPointAtTime(const EstimatedParams &params,
+                               double elapsedTimeInSeconds, double &x,
+                               double &y, double &z) {
+
+    double groundHeight = ConfigStore::groundHeight;
+    double a = 9.8 / 2.0;
+    double b = params.vy;
+    double c = params.y0 - groundHeight;
+    double timeToContact = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
+    double elasticity = ConfigStore::elasticity;
+    double velocityAtContact = elasticity * (params.vy + (9.8 * timeToContact));
+
+    if (elapsedTimeInSeconds < timeToContact) {
+      x = params.x0 + elapsedTimeInSeconds * params.vx;
+      z = params.z0 + elapsedTimeInSeconds * params.vz;
+      y = params.y0 + elapsedTimeInSeconds * params.vy +
+          4.9 * elapsedTimeInSeconds * elapsedTimeInSeconds;
+    } else {
+      double timeFromContact = elapsedTimeInSeconds - timeToContact;
+      double factor = ConfigStore::slowDownFactor;
+      x = (params.x0 + timeToContact * params.vx) +
+          timeFromContact * factor * params.vx;
+      z = (params.z0 + timeToContact * params.vz) +
+          timeFromContact * factor * params.vz;
+      y = groundHeight - (velocityAtContact * timeFromContact) +
+          (4.9 * timeFromContact * timeFromContact);
+    }
   }
 
   void addTrajectory(CombinedTrajectory &ct) {
@@ -208,16 +238,16 @@ public:
 
   void getScreenYZ(ImVec2 &p, double y, double z, double &sx, double &sy) {
     sx = (z / 22) * windowSize.x + p.x;
-    sy = ((y + 0.8) / (0.8 + groundHeight + 0.1)) * windowSize.y + p.y;
+    sy = ((y + 0.8) / (0.8 + ConfigStore::groundHeight + 0.1)) * windowSize.y + p.y;
   }
 
   void render_yz(ImVec2 &p) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
     double xp1, xp2, yp1, yp2;
-    getScreenYZ(p, groundHeight, 0, xp1, yp1);
+    getScreenYZ(p, ConfigStore::groundHeight, 0, xp1, yp1);
 
-    getScreenYZ(p, groundHeight, 22, xp2, yp2);
+    getScreenYZ(p, ConfigStore::groundHeight, 22, xp2, yp2);
 
     draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
 
