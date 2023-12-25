@@ -515,6 +515,9 @@ class IKSolver
     cb4(3,7) = 1;
 
     // Arm 5
+    // This cube is interesting because it encodes the entire 360 degree rotation of the bat.
+    // That makes collision detection so much faster, and I can rev up the bat as fast as I want
+    // To hit the ball with full speed. So many similar cool implementation details all over this codebase.
     cb5(0,0) = -0.9;
     cb5(1,0) = -0.9;
     cb5(2,0) = 0.1;
