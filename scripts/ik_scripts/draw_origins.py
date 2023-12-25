@@ -19,8 +19,8 @@ def draw_origin(ax,length,pose_matrix):
   ax.quiver(x0,y0,z0,z[0,0]-x0,z[1,0]-y0,z[2,0]-z0,length=length, color=np.array([1,0,0]))
 
 
-def draw_line(ax,x1,y1,z1,x2,y2,z2):
-  ax.quiver(x1,y1,z1,x2-x1,y2-y1,z2-z1,length=1, color=np.random.rand(3,))
+def draw_line(ax,x1,y1,z1,x2,y2,z2,color):
+  ax.quiver(x1,y1,z1,x2-x1,y2-y1,z2-z1,length=1, color=color)
   
 
 
@@ -28,20 +28,20 @@ def draw_arm(ax,j1e,j2e,j3e,j4e,j5e):
   #print(j1e*(180/np.pi),j2e*(180/np.pi),j3e*(180/np.pi),j4e*(180/np.pi),j5e*(180/np.pi))
   draw_origin(ax,0.5,np.eye(4))
   T1e = T1(j1e)
-  draw_line(ax,0,0,0,T1e[0,3],T1e[1,3],T1e[2,3])
-  #draw_origin(ax,0.3,T1e)
+  draw_line(ax,0,0,0,T1e[0,3],T1e[1,3],T1e[2,3],np.array([0/255,68/255,121/255]))
+  draw_origin(ax,0.3,T1e)
   T2e = T1e@T2(j2e)
-  draw_line(ax,T1e[0,3],T1e[1,3],T1e[2,3],T2e[0,3],T2e[1,3],T2e[2,3])
-  #draw_origin(ax,0.3,T2e)
+  draw_line(ax,T1e[0,3],T1e[1,3],T1e[2,3],T2e[0,3],T2e[1,3],T2e[2,3],np.array([0/255,68/255,121/255]))
+  draw_origin(ax,0.3,T2e)
   T3e = T2e@T3(j3e)
-  draw_line(ax,T2e[0,3],T2e[1,3],T2e[2,3],T3e[0,3],T3e[1,3],T3e[2,3])
-  #draw_origin(ax,0.3,T3e)
+  draw_line(ax,T2e[0,3],T2e[1,3],T2e[2,3],T3e[0,3],T3e[1,3],T3e[2,3],np.array([0/255,97/255,172/255]))
+  draw_origin(ax,0.3,T3e)
   T4e = T3e@T4(j4e)
-  draw_line(ax,T3e[0,3],T3e[1,3],T3e[2,3],T4e[0,3],T4e[1,3],T4e[2,3])
-  #draw_origin(ax,0.3,T4e)
+  draw_line(ax,T3e[0,3],T3e[1,3],T3e[2,3],T4e[0,3],T4e[1,3],T4e[2,3],np.array([59/255,59/255,59/255]))
+  draw_origin(ax,0.3,T4e)
   T5e = T4e@T5(j5e)
-  draw_line(ax,T4e[0,3],T4e[1,3],T4e[2,3],T5e[0,3],T5e[1,3],T5e[2,3])
+  draw_line(ax,T4e[0,3],T4e[1,3],T4e[2,3],T5e[0,3],T5e[1,3],T5e[2,3],np.array([255/255,204/255,102/255]))
   pt2 = np.array([[0],[0],[0.3],[1]])
   tpt2 = T5e @ pt2
-  draw_line(ax,T5e[0,3],T5e[1,3],T5e[2,3],tpt2[0,0],tpt2[1,0],tpt2[2,0])
-  #draw_origin(ax,0.3,T5e)
+  draw_line(ax,T5e[0,3],T5e[1,3],T5e[2,3],tpt2[0,0],tpt2[1,0],tpt2[2,0],np.array([99/255,147/255,113/255]))
+  draw_origin(ax,0.3,T5e)

@@ -29,6 +29,7 @@ velocity_vector = [0, 30, 0]
 g = 9.81
 dt = 0.1
 
+
 # Create the figure and 3D plot
 fig, ax = plt.subplots(figsize=(8, 6), subplot_kw={"projection": "3d"})
 
@@ -107,15 +108,16 @@ def update_trajectory(val):
     ye = y0
     t = 0
     while ye >= 0:
-        t = t +  0.05
+        t = t +  0.001
         params = EstimatedParams(x0=x0, y0=y0, z0=z0, vx=velocity_vector[0], vy=-velocity_vector[1], vz=velocity_vector[2])
         xe,ye,ze = get_predicted_point_at_time(params,t)
         points.append([xe,ye,ze])
     x_coordinates, y_coordinates, z_coordinates = zip(*points)
 
     ax.clear()
+    ax.set_box_aspect((1, 11, 1))
     ax.set_xlim3d(-1, 1)
-    ax.set_ylim3d(-1, 1)
+    ax.set_ylim3d(-1, 21)
     ax.set_zlim3d(-1, 1)
     draw_arm(ax,j1,j2,j3,j4,j5)
     ax.plot3D(x_coordinates,y_coordinates,z_coordinates, label="Parabolic Trajectory")  # Replot trajectory
@@ -134,7 +136,7 @@ vz_slider = Slider(ax=plt.axes([0.2, 0.1, 0.65, 0.03]), label="Vz", valmin=-10, 
 
 x0_slider = Slider(ax=plt.axes([0.2, 0.2, 0.65, 0.03]), label="X0", valmin=-1, valmax=1, valinit=x0, valfmt="%0.1f")
 z0_slider = Slider(ax=plt.axes([0.2, 0.15, 0.65, 0.03]), label="Z0", valmin=0, valmax=2, valinit=z0, valfmt="%0.1f")
-button = Button(ax=plt.axes([0.4, 0.15, 0.65, 0.03]), label="Send")
+button = Button(ax=plt.axes([0.85, 0.15, 0.1, 0.03]), label="Send")
 button.on_clicked(sendMessage)
 
 # Connect sliders to the update function
