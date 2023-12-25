@@ -287,7 +287,7 @@ class IKSolver
     if(abs(a.j2 - b.j2) <= 0.03){
       if(abs(a.j3 - b.j3) <= 0.03){
         if(abs(a.j4 - b.j4) <= 0.03){
-          if(abs(a.j1) < abs(b.j1) <= 0.03){
+          if(abs(a.j1 -b.j1) <= 0.03){
             return abs(a.j5) < abs(b.j5);
           }
           else{
