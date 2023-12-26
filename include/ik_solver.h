@@ -284,6 +284,10 @@ class IKSolver
 
   static bool compareFn(Solution &a,Solution &b){
     //0.02 is 1 degree
+    // Can be upgraded to include dot product to the desired output direction.
+    //The smaller the dot product the better
+    //We can have a map of desired output directions based on XYZ.
+    //Although we are naturally getting human like shots which is super cool
     if(abs(a.j2 - b.j2) <= 0.03){
       if(abs(a.j3 - b.j3) <= 0.03){
         if(abs(a.j4 - b.j4) <= 0.03){
