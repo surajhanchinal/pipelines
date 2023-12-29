@@ -9,6 +9,7 @@ enum Command {
   SET_ACCELERATION,
   RESET_POSITION,
   UNKNOWN_COMMAND,
+  STATUS
 };
 
 class StateMachine {
@@ -39,13 +40,17 @@ class StateMachine {
                 readHead++;
                 return MOVE;
             }
-            else if(currLineLength >= 2 && (currLine[0] == 'S' && currLine[0] == 's') && (currLine[1] == 'A' || currLine[1] == 'a')){
+            else if(currLineLength >= 2 && (currLine[0] == 'S' || currLine[0] == 's') && (currLine[1] == 'A' || currLine[1] == 'a')){
                 readHead += 2;
                 return SET_ACCELERATION;
             }
-            else if(currLineLength >= 2 && (currLine[0] == 'R' && currLine[0] == 'r') && (currLine[1] == 'P' || currLine[1] == 'p')){
+            else if(currLineLength >= 2 && (currLine[0] == 'R' || currLine[0] == 'r') && (currLine[1] == 'P' || currLine[1] == 'p')){
                 readHead += 2;
                 return RESET_POSITION;
+            }
+            else if(currLineLength >= 2 && (currLine[0] == 'G' || currLine[0] == 'g') && (currLine[1] == 'S' || currLine[1] == 's')){
+              readHead += 2;
+              return STATUS;
             }
             return UNKNOWN_COMMAND;
         }
@@ -63,9 +68,20 @@ class StateMachine {
                 currLine = next;
             }
             
-            targets[2] = targets[2] - targets[1]/3;
-            targets[3] = targets[3] + targets[1]/9 - targets[2]/3;
-            targets[4] = targets[4] + targets[1]/9 - targets[2]/3;
+            targets[1] = steppers[1]->getModuloTarget(targets[1]);
+            targets[2] = steppers[2]->getModuloTarget(targets[2]);
+
+            long j2_target = targets[1];
+            long j3_target = targets[2];
+
+            long j4_target = targets[3] - targets[4];
+            long j5_target = targets[3] + targets[4];
+
+            targets[1] = j2_target;
+            targets[2] = j3_target + j2_target/3;
+            targets[3] = j4_target + j2_target/3 + j3_target/3;
+            targets[4] = j5_target + j2_target/3 + j3_target/3;
+            
             for(int i=0;i<5;i++){
                 steppers[i]->setTarget(targets[i]);
             }
@@ -83,9 +99,19 @@ class StateMachine {
                 currLine = next;
             }
             
-            targets[2] = targets[2] - targets[1]/3;
-            targets[3] = targets[3] + targets[1]/9 - targets[2]/3;
-            targets[4] = targets[4] + targets[1]/9 - targets[2]/3;
+            targets[1] = steppers[1]->getModuloTarget(targets[1]);
+            targets[2] = steppers[2]->getModuloTarget(targets[2]);
+
+            long j2_target = targets[1];
+            long j3_target = targets[2];
+
+            long j4_target = targets[3] - targets[4];
+            long j5_target = targets[3] + targets[4];
+
+            targets[1] = j2_target;
+            targets[2] = j3_target + j2_target/3;
+            targets[3] = j4_target + j2_target/3 + j3_target/3;
+            targets[4] = j5_target + j2_target/3 + j3_target/3;
             for(int i=0;i<5;i++){
                 steppers[i]->setRelativeTarget(targets[i]);
             }
@@ -104,6 +130,20 @@ class StateMachine {
             }
             steppers[accelerationValues[0]]->setSlope(accelerationValues[1]);
             steppers[accelerationValues[0]]->setConstant(accelerationValues[2]);
+        }
+
+        void returnStatus(){
+          for(int i=0;i<5;i++){
+            Serial.print("Stepper ");
+            Serial.print(i+1);
+            Serial.print(" : ");
+            Serial.print("m: ");
+            Serial.print(steppers[i]->getSlope());
+            Serial.print(", c: ");
+            Serial.print(steppers[i]->getConstant());
+            Serial.print(", pos: ");
+            Serial.println(steppers[i]->getPosition());
+          }
         }
 
         void resetPosition(){
@@ -170,7 +210,10 @@ class StateMachine {
                 break;
             case RESET_POSITION:
                 resetPosition();
-                break;            
+                break;   
+            case STATUS:
+                returnStatus();
+                break;         
             default:
                 break;
             }
