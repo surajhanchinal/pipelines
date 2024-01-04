@@ -19,7 +19,7 @@ async def redisReader(channel: Redis.client.PubSub,websocket):
 
 r = Redis.from_url("redis://localhost")
 async def run():
-    async with websockets.connect("ws://localhost:8765") as websocket:
+    async with websockets.connect("ws://192.168.224.231:8765") as websocket:
         async with r.pubsub() as pubsub:
             await pubsub.subscribe("channel:1")
 
