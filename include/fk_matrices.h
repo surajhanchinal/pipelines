@@ -7,7 +7,7 @@ typedef Eigen::Matrix<float, 4, 4> Matrix4f;
 class FKMatrices
 {
 private:
-  float J1_Lx = 0.1;
+  float J1_Lx = 0.0525;
   float J1_Lz = 0.66;
   float J2_Lz = 0.3;
   float J3_Lz = 0.3;

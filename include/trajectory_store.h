@@ -7,6 +7,7 @@
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 #include <map>
+#include "fk_matrices.h"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core/types.hpp>
 #include <vector>
@@ -54,7 +55,6 @@ private:
 
   ImVec2 windowSize, screenSize;
   std::chrono::time_point<std::chrono::system_clock> currentTime;
-  map<long long, Trajectory> trajectories;
 
   CameraParams cameraParams;
 
@@ -141,11 +141,17 @@ private:
   }
 
 public:
+  map<long long, Trajectory> trajectories;
+  Matrix4f pos_transform;
+  Matrix4f vel_transform;
   // TrajectoryStore(Eigen::MatrixXf K1, Eigen::MatrixXf K2, Eigen::MatrixXf D1,
   //                 Eigen::MatrixXf D2, Eigen::MatrixXf R1, Eigen::MatrixXf R2,
   //                 Eigen::MatrixXf P1, Eigen::MatrixXf P2)
   //     : K1(K1), K2(K2), D1(D1), D2(D2), R1(R1), R2(R2), P1(P1), P2(P2) {}
-  TrajectoryStore(CameraParams cameraParams) : cameraParams(cameraParams) {}
+  TrajectoryStore(CameraParams cameraParams) : cameraParams(cameraParams) {
+    calculatePositionTranformation();
+    calculateVelocityTransformation();
+  }
   void setWindowSize(ImVec2 sz) { windowSize = sz; }
   void setScreenSize(ImVec2 sz) { screenSize = sz; }
   void setCurrentTIme(std::chrono::time_point<std::chrono::system_clock> curr) {
@@ -161,6 +167,7 @@ public:
     double b = params.vz;
     double c = params.z0 - groundHeight;
     double timeToContact = (-b + sqrt(b * b - 4 * a * c)) / (-2 * a);
+    cout<<"time to contact 2: "<<timeToContact<<endl;
     double elasticity = ConfigStore::elasticity;
     double velocityAtContact = elasticity * (params.vz - (9.8 * timeToContact));
 
@@ -192,6 +199,7 @@ public:
     double timeToContact = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
     double elasticity = ConfigStore::elasticity;
     double velocityAtContact = elasticity * (params.vy + (9.8 * timeToContact));
+    //cout<<"time to contact: "<<timeToContact<<endl;
 
     if (elapsedTimeInSeconds < timeToContact) {
       x = params.x0 + elapsedTimeInSeconds * params.vx;
@@ -410,6 +418,16 @@ public:
 
       draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
     }
+
+    {
+      Matrix4f ff = pos_transform.inverse();
+      //std::cout<<ff(0,3)<< " "<<ff(1,3)<<" "<<ff(2,3)<<endl;
+      double sx, sy;
+      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
+                    cameraParams.T1, true, p, ff(0,3),ff(1,3),ff(2,3), sx, sy);
+
+      draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[0], -1, 2);
+    }
     // draw camera middle to stump line
     {
       double lx1, lx2, ly1, ly2;
@@ -418,7 +436,6 @@ public:
                     cameraParams.T1, true, p, 0, 1.7, 1, lx1, ly1);
       project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
                     cameraParams.T1, true, p, 4.25, 1.7, 22, lx2, ly2);
-
       draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
                          2);
     }
@@ -439,6 +456,15 @@ public:
       project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
                     cameraParams.T2, false, p, px, py, pz, sx, sy);
       draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
+    }
+    {
+      Matrix4f ff = pos_transform.inverse();
+      double sx, sy;
+      cout<< ff(0,3)<<" "<<ff(1,3)<<" "<<ff(2,3)<<" "<<endl;
+      project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
+                    cameraParams.T2, false, p, ff(0,3),ff(1,3),ff(2,3), sx, sy);
+
+      draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[0], -1, 2);
     }
 
     {
@@ -476,4 +502,35 @@ public:
                   remainingTime);
     }
   }
+
+
+  void calculatePositionTranformation(){
+    Eigen::Affine3f pos_tf  = translate(0,17,0);
+    pos_tf  = pos_tf*rotate(0,0,M_PI);
+    pos_tf  = pos_tf*translate(0,0,1.7);
+    pos_tf = pos_tf*rotate(M_PI/2.0,0,0);
+    pos_transform = pos_tf.matrix();
+  }
+
+  void calculateVelocityTransformation(){
+    Eigen::Affine3f vel_tf = rotate(0,0,M_PI);
+    vel_tf = vel_tf*rotate(M_PI/2.0,0,0);
+    vel_transform = vel_tf.matrix();
+  }
+
+  Eigen::Affine3f rotate(double ax, double ay, double az) {
+    Eigen::Affine3f rx =
+        Eigen::Affine3f(Eigen::AngleAxisf(ax, Eigen::Vector3f(1, 0, 0)));
+    Eigen::Affine3f ry =
+        Eigen::Affine3f(Eigen::AngleAxisf(ay, Eigen::Vector3f(0, 1, 0)));
+    Eigen::Affine3f rz =
+        Eigen::Affine3f(Eigen::AngleAxisf(az, Eigen::Vector3f(0, 0, 1)));
+    return rz * ry * rx;
+  }
+
+  Eigen::Affine3f translate(double x,double y,double z){
+    Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(x,y,z)));
+    return t;
+  }
+
 };

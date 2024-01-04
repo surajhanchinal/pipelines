@@ -16,6 +16,10 @@
 #include <stdio.h>
 #include <string>
 #include <utility>
+#include <sw/redis++/redis++.h>
+#include "ik_solver.h"
+#include <iomanip>
+
 using namespace std;
 
 class MultiGuiNode : public Node<type_list_t<CameraPairData>, type_list_t<>> {
@@ -28,8 +32,9 @@ public:
                CameraParams cameraParams) {
     windowName = _windowName;
     imageSize = _imageSize;
-
+    solver = new IKSolver();
     trajectoryStore = new TrajectoryStore(cameraParams);
+    redis = new sw::redis::Redis("tcp://127.0.0.1:6379");
 
     // Window creation is in the constructor as it needs to be done in the main
     // thread. Also have other things such as texture creation and ImGui context
@@ -107,6 +112,42 @@ public:
 
       for (auto &traj : *trajectories) {
         trajectoryStore->addTrajectory(traj);
+      }
+      if(!sent){
+        for(auto &[_,fullTraj]: trajectoryStore->trajectories){
+          if(fullTraj.alignedContours.size() < 6){
+            continue;
+          }
+          auto &params = fullTraj.estimatedParams[6];
+          // add transformation
+          std::vector<Solution> sols;
+
+          Eigen::Vector4f pos;
+          pos << params.x0 , params.y0 , params.z0 , 1;
+          pos = trajectoryStore->pos_transform * pos;
+          Eigen::Vector4f vel;
+          vel << params.vx , params.vy , params.vz , 1;
+          vel = trajectoryStore->vel_transform * vel;
+
+          solver->trajectory_ik(pos(0),pos(1),pos(2),vel(0),vel(1),vel(2),sols);
+          sent = true;
+          if(sols.size()){
+            long j1_a = ((float)sols[0].j1*(180.0/M_PI)*(4000.0/360.0));
+            long j2_a = ((float)sols[0].j2*(180.0/M_PI)*(3600.0/360.0));
+            long j3_a = ((float)sols[0].j3*(180.0/M_PI)*(3600.0/360.0));
+            long j4_a = ((float)sols[0].j4*(180.0/M_PI)*(3600.0/360.0));
+            long j5_a = ((float)sols[0].j5*(180.0/M_PI)*(3600.0/360.0));
+            std::ostringstream oss;
+            oss << "MR ";
+            oss << j1_a << " ";
+            oss << j2_a << " ";
+            oss << j3_a << " ";
+            oss << j4_a << " ";
+            oss << j5_a << " ";
+            cout<<oss.str()<<endl;
+            redis->publish("channel:1",oss.str());
+          }
+        }
       }
 
       screenSize = ImGui::GetIO().DisplaySize;
@@ -241,6 +282,9 @@ public:
   }
 
 private:
+  sw::redis::Redis *redis;
+  bool sent = false;
+  IKSolver *solver;
   int k = 0;
   GLuint tex1, tex2;
   std::string windowName;
@@ -345,6 +389,8 @@ private:
       ImGui::Text("%.1f", interDelay);
       ImGui::EndTable();
       render_combined_contours(cpos, trajectories);
+
+      ImGui::Text("Robot motion command sent?: %s",sent ? "true" : "false");
 
       trajectoryStore->renderMetrics();
       ImGui::End();

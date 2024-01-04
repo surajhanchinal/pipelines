@@ -18,7 +18,7 @@ class IKSolver
 {
     public:
 
-  const float J1_Lx = 0.1;
+  const float J1_Lx = 0.0525;
   const float J1_Lz = 0.66;
   const float J2_Lz = 0.3;
   const float J3_Lz = 0.3;
@@ -314,7 +314,7 @@ class IKSolver
 
 
   void trajectory_ik(float x0,float y0,float z0,float vx,float vy,float vz,std::vector<Solution> &sols){
-    for(float y=1;y>=-2;y -= 0.1){
+          for(float y=1;y>=-2;y -= 0.1){
     // get time taken to achieve this y    
       double t = (y - y0)/vy;
       double xe,ye,ze;
