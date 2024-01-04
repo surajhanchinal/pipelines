@@ -67,20 +67,15 @@ class StateMachine {
                 }
                 currLine = next;
             }
-            
-            targets[1] = steppers[1]->getModuloTarget(targets[1]);
-            targets[2] = steppers[2]->getModuloTarget(targets[2]);
 
             long j2_target = targets[1];
-            long j3_target = targets[2];
-
-            long j4_target = targets[3] - targets[4];
-            long j5_target = targets[3] + targets[4];
-
-            targets[1] = j2_target;
-            targets[2] = j3_target + j2_target/3;
-            targets[3] = j4_target + j2_target/3 + j3_target/3;
-            targets[4] = j5_target + j2_target/3 + j3_target/3;
+            long j3_target = targets[2] + j2_target/3;
+            long j4_target = targets[3] - targets[4] + j3_target/3 - j2_target/9;
+            long j5_target = targets[3] + targets[4] + j3_target/3 - j2_target/9;
+            targets[1] = targets[1];
+            targets[2] = j3_target;
+            targets[3] = j4_target;
+            targets[4] = j4_target;
             
             for(int i=0;i<5;i++){
                 steppers[i]->setTarget(targets[i]);
@@ -98,20 +93,16 @@ class StateMachine {
                 }
                 currLine = next;
             }
-            
-            targets[1] = steppers[1]->getModuloTarget(targets[1]);
-            targets[2] = steppers[2]->getModuloTarget(targets[2]);
 
             long j2_target = targets[1];
-            long j3_target = targets[2];
+            long j3_target = targets[2] + j2_target/3;
+            long j4_target = targets[3] - targets[4] + j3_target/3 - j2_target/9;
+            long j5_target = targets[3] + targets[4] + j3_target/3 - j2_target/9;
+            targets[1] = targets[1];
+            targets[2] = j3_target;
+            targets[3] = j4_target;
+            targets[4] = j4_target;
 
-            long j4_target = targets[3] - targets[4];
-            long j5_target = targets[3] + targets[4];
-
-            targets[1] = j2_target;
-            targets[2] = j3_target + j2_target/3;
-            targets[3] = j4_target + j2_target/3 + j3_target/3;
-            targets[4] = j5_target + j2_target/3 + j3_target/3;
             for(int i=0;i<5;i++){
                 steppers[i]->setRelativeTarget(targets[i]);
             }
@@ -133,6 +124,12 @@ class StateMachine {
         }
 
         void returnStatus(){
+          long positions[5];
+          positions[0] = steppers[0]->getPosition();
+          positions[1] = steppers[1]->getPosition();
+          positions[2] = steppers[2]->getPosition() - steppers[1]->getPosition()/3;
+          positions[3] = (steppers[3]->getPosition() + steppers[4]->getPosition())/2 - steppers[3]->getPosition()/3 + steppers[4]->getPosition()/9;
+          positions[4] = (steppers[4]->getPosition() - steppers[3]->getPosition())/2;
           for(int i=0;i<5;i++){
             Serial.print("Stepper ");
             Serial.print(i+1);
@@ -142,7 +139,7 @@ class StateMachine {
             Serial.print(", c: ");
             Serial.print(steppers[i]->getConstant());
             Serial.print(", pos: ");
-            Serial.println(steppers[i]->getPosition());
+            Serial.println(positions[i]);
           }
         }
 

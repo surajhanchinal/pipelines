@@ -32,7 +32,7 @@ class CustomStepper {
             digitalWrite(_pulsePin,LOW);
             elapsed++;
             currPos += _dir;    
-            currPos = currPos % stepsTo360;
+            currPos = currPos;
         }
 
         float getAcceleration(){
@@ -60,7 +60,7 @@ class CustomStepper {
         }
 
         void setTarget(long target) {
-            target = target % stepsTo360;
+            target = target;
             done = false;
             elapsed = 0;
             _toGo = target - currPos;
@@ -106,10 +106,6 @@ class CustomStepper {
                 speed = speed + getAcceleration()/speed;
                 timeToNextPulse = (long)(((float)1000000.0)/speed);
             }
-        }
-
-        long getModuloTarget(long target){
-          return target % stepsTo360;
         }
 
         float getSlope(){
