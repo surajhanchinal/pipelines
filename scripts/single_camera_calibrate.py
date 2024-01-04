@@ -8,7 +8,7 @@ ignore_list = []
 def calibrate_camera(images_folder, camera_name,ignore_list=[]):
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_COUNT, 10, 1e-5)
     CHECKERBOARD = (8, 11)
-    images = glob.glob(images_folder + "/*.jpg")
+    images = sorted(glob.glob(images_folder + "/*.jpg"))
     counter = 0
     counter2 = 0
     objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
@@ -46,7 +46,7 @@ def calibrate_camera(images_folder, camera_name,ignore_list=[]):
                 imgPoints.append(corners2)
             else:
                 ignore_list.append(path)
-              print("bad image: ",path)
+                print("bad image: ",path)
         else:
             print("Chessboard corners not found in image: ", path)
 

@@ -45,7 +45,6 @@ while True:
             skip = True
             break
     if skip:
-
         counter2 = counter2 + 1
         continue
     if not os.path.exists(leftName) or not os.path.exists(rightName):
@@ -97,7 +96,6 @@ distR = right_camera_params.getNode("distCoeffs").mat()
 flags = 0
 flags |= cv2.CALIB_USE_INTRINSIC_GUESS
 
-flags |= cv2.CALIB_USE_EXTRINSIC_GUESS
 
 criteria_stereo= (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 1000, 0.001)
 
