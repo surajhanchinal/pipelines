@@ -1,7 +1,7 @@
 import numpy as np
 import cloudpickle
 
-J1_Lx =  0.1
+J1_Lx =  0.0525
 J1_Lz = 0.66
 J2_Lz = 0.3
 J3_Lz = 0.3

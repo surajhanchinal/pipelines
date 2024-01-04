@@ -32,12 +32,11 @@ dt = 0.1
 
 # Create the figure and 3D plot
 fig, ax = plt.subplots(figsize=(8, 6), subplot_kw={"projection": "3d"})
-
-j1 = -30*(np.pi/180)
-j2 = 16.67*(np.pi/180)
-j3 = np.pi/2
-j4 = -5.68*(np.pi/180)
-j5 = -4.82*(np.pi/180)
+j1 = (-666/1000)*(90)*(np.pi/180)
+j2 = (13/900)*(90)*(np.pi/180)
+j3 = (899/900)*(90)*(np.pi/180)
+j4 = (-803/900)*(90)*(np.pi/180)
+j5 = (-44/900)*(90)*(np.pi/180)
 
 groundHeight = 0
 elasticity = 0.6
@@ -54,10 +53,10 @@ class EstimatedParams:
 
 def get_predicted_point_at_time(params, elapsed_time_in_seconds):
     global groundHeight,elasticity,slowDownFactor
-    a = -9.8 / 2.0
+    g = 9.8
     b = params.vz
     c = params.z0
-    time_to_contact = (-b + np.sqrt(b * b - 4 * a * c)) / (-2 * a)
+    time_to_contact = (b + np.sqrt(b * b + 2 * g * c)) / g
     velocity_at_contact = elasticity * (params.vz - (9.8 * time_to_contact))
 
     if elapsed_time_in_seconds < time_to_contact:
@@ -69,6 +68,7 @@ def get_predicted_point_at_time(params, elapsed_time_in_seconds):
         factor = slowDownFactor
         x = (params.x0 + time_to_contact * params.vx) + time_from_contact * factor * params.vx
         y = (params.y0 + time_to_contact * params.vy) + time_from_contact * factor * params.vy
+        print(elapsed_time_in_seconds,time_from_contact)
         z = -(velocity_at_contact * time_from_contact) - (4.9 * time_from_contact**2)
 
     return x, y, z
@@ -108,16 +108,16 @@ def update_trajectory(val):
     ye = y0
     t = 0
     while ye >= 0:
-        t = t +  0.001
+        t = t +  0.0001
         params = EstimatedParams(x0=x0, y0=y0, z0=z0, vx=velocity_vector[0], vy=-velocity_vector[1], vz=velocity_vector[2])
         xe,ye,ze = get_predicted_point_at_time(params,t)
         points.append([xe,ye,ze])
     x_coordinates, y_coordinates, z_coordinates = zip(*points)
 
     ax.clear()
-    ax.set_box_aspect((1, 11, 1))
+    ax.set_box_aspect((1, 1, 1))
     ax.set_xlim3d(-1, 1)
-    ax.set_ylim3d(-1, 21)
+    ax.set_ylim3d(-1, 22)
     ax.set_zlim3d(-1, 1)
     draw_arm(ax,j1,j2,j3,j4,j5)
     ax.plot3D(x_coordinates,y_coordinates,z_coordinates, label="Parabolic Trajectory")  # Replot trajectory
@@ -132,7 +132,7 @@ def update_trajectory(val):
 # Create sliders for velocity components
 vx_slider = Slider(ax=plt.axes([0.2, 0.0, 0.65, 0.03]), label="Vx", valmin=-10, valmax=10, valinit=velocity_vector[0], valfmt="%0.1f")
 vy_slider = Slider(ax=plt.axes([0.2, 0.05, 0.65, 0.03]), label="Vy", valmin=0.1, valmax=40, valinit=velocity_vector[1], valfmt="%0.1f")
-vz_slider = Slider(ax=plt.axes([0.2, 0.1, 0.65, 0.03]), label="Vz", valmin=-10, valmax=10, valinit=velocity_vector[2], valfmt="%0.1f")
+vz_slider = Slider(ax=plt.axes([0.2, 0.1, 0.65, 0.03]), label="Vz", valmin=-40, valmax=40, valinit=velocity_vector[2], valfmt="%0.1f")
 
 x0_slider = Slider(ax=plt.axes([0.2, 0.2, 0.65, 0.03]), label="X0", valmin=-1, valmax=1, valinit=x0, valfmt="%0.1f")
 z0_slider = Slider(ax=plt.axes([0.2, 0.15, 0.65, 0.03]), label="Z0", valmin=0, valmax=2, valinit=z0, valfmt="%0.1f")

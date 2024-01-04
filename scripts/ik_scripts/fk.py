@@ -109,7 +109,7 @@ from sympy.utilities.codegen import codegen
 c_code = codegen(('result', T_f), 'C')
 print(c_code[0][1])
 
-T_f = T_f.subs({J1_Lx:  0.1,
+T_f = T_f.subs({J1_Lx:  0.0525,
 J1_Lz: 0.66,
 J2_Lz: 0.3,
 J3_Lz: 0.3,
@@ -130,7 +130,7 @@ pprint(T_f.subs({J1_a:jj1,J2_a:jj2,J3_a:jj3,J4_a:jj4,J5_a:jj5}).evalf())
 print("   ")
 print(T_func(jj1,jj2,jj3,jj4,jj5))
 
-my_subs = {J1_Lx:  0.1,
+my_subs = {J1_Lx:  0.0525,
 J1_Lz: 0.66,
 J2_Lz: 0.3,
 J3_Lz: 0.3,
@@ -151,7 +151,7 @@ def getf(j1a,j2a,j3a,j4a,j5a):
     #print(s1.subs(my_subs).evalf(),s2.subs(my_subs).evalf(),s3.subs(my_subs).evalf(),s4.subs(my_subs).evalf(),s5.subs(my_subs).evalf())
     return J1_Lz + J2_Lz*np.cos(j2a) + J3_Lz*np.cos(j2a + j3a) + J4_Lz*np.cos(j2a + j3a + j4a) - J5_Lx*np.sin(j2a + j3a + j4a)*np.cos(j5a)
 
-print(getf(jj1,jj2,jj3,jj4,jj5).subs({J1_Lx:  0.1,
+print(getf(jj1,jj2,jj3,jj4,jj5).subs({J1_Lx:  0.0525,
 J1_Lz: 0.66,
 J2_Lz: 0.3,
 J3_Lz: 0.3,
