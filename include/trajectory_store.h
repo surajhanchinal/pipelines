@@ -375,6 +375,9 @@ public:
     double cy = P1.at<double>(1, 2);
     double baseline = T1.at<double>(0, 0) / 1000.0; // input is in mm
 
+    // This might be wrong. If the camera is to the left. Then we need to add baseline/2. Because the left camera is to the right of the origin
+    // This is correct. xo (center origin x coordinate) xo = xl + b/2 ( since xl is shifted in the positive x axis. when xl = 0, xo = b/2. makes sense.)
+    //Make sure baseline is positive. Everything comes with that. And baseline is positive when the left camera is the left camera when seen from the front.
     double sgn = isLeft ? -1 : 1;
 
     double xl = ((x + sgn * (baseline / 2.0)) * (fx / z)) + cx;
