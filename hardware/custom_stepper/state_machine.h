@@ -75,7 +75,7 @@ class StateMachine {
             targets[1] = targets[1];
             targets[2] = j3_target;
             targets[3] = j4_target;
-            targets[4] = j4_target;
+            targets[4] = j5_target;
             
             for(int i=0;i<5;i++){
                 steppers[i]->setTarget(targets[i]);
@@ -93,7 +93,6 @@ class StateMachine {
                 }
                 currLine = next;
             }
-
             long j2_target = targets[1];
             long j3_target = targets[2] + j2_target/3;
             long j4_target = targets[3] - targets[4] + j3_target/3 - j2_target/9;
@@ -101,7 +100,7 @@ class StateMachine {
             targets[1] = targets[1];
             targets[2] = j3_target;
             targets[3] = j4_target;
-            targets[4] = j4_target;
+            targets[4] = j5_target;
 
             for(int i=0;i<5;i++){
                 steppers[i]->setRelativeTarget(targets[i]);

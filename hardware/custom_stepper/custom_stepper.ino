@@ -1,10 +1,10 @@
 #include "state_machine.h"
 
-CustomStepper J1(7,6,0,0,4000,100,4000,"J1");
-CustomStepper J2(11,10,1,0,4000,100,3600,"J2");
-CustomStepper J3(2,3,1,0,4000,100,3600,"J3");
-CustomStepper J4(9,8,1,0,4000,100,3600,"J4");
-CustomStepper J5(4,5,0,0,4000,100,3600,"J5");
+CustomStepper J1(2,4,0,0,4000,100,4000,"J1");
+CustomStepper J2(16,14,1,0,4000,100,3600,"J2");
+CustomStepper J3(23,21,1,0,4000,100,3600,"J3");
+CustomStepper J4(38,36,1,0,4000,100,3600,"J4");
+CustomStepper J5(6,8,0,0,4000,100,3600,"J5");
 
 StateMachine* stateMachine = new StateMachine();
 
