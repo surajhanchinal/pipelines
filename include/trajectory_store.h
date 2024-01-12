@@ -163,11 +163,10 @@ public:
                                double &y, double &z) {
 
     double groundHeight = 0;
-    double a = -9.8 / 2.0;
+    double g = 9.8
     double b = params.vz;
-    double c = params.z0 - groundHeight;
-    double timeToContact = (-b + sqrt(b * b - 4 * a * c)) / (-2 * a);
-    cout<<"time to contact 2: "<<timeToContact<<endl;
+    double c = params.z0;
+    double timeToContact = (b + sqrt(b * b + 2 * g * c)) / g;
     double elasticity = ConfigStore::elasticity;
     double velocityAtContact = elasticity * (params.vz - (9.8 * timeToContact));
 
@@ -183,7 +182,7 @@ public:
           timeFromContact * factor * params.vx;
       y = (params.y0 + timeToContact * params.vy) +
           timeFromContact * factor * params.vy;
-      z = groundHeight - (velocityAtContact * timeFromContact) -
+      z = - (velocityAtContact * timeFromContact) -
           (4.9 * timeFromContact * timeFromContact);
     }
   }
