@@ -35,4 +35,9 @@ public:
   static constexpr double groundHeight = 1.7;
   static constexpr double elasticity = 0.6;
   static constexpr double slowDownFactor = 0.75;
+  static constexpr double j1_start = 0;
+  static constexpr double j2_start = 0;
+  static constexpr double j3_start = M_PI_2;
+  static constexpr double j4_start = 0;
+  static constexpr double j5_start = 0;
 };

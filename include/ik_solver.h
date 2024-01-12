@@ -288,28 +288,42 @@ class IKSolver
     //The smaller the dot product the better
     //We can have a map of desired output directions based on XYZ.
     //Although we are naturally getting human like shots which is super cool
-    if(abs(a.j2 - b.j2) <= 0.03){
-      if(abs(a.j3 - b.j3) <= 0.03){
-        if(abs(a.j4 - b.j4) <= 0.03){
-          if(abs(a.j1 -b.j1) <= 0.03){
-            return abs(a.j5) < abs(b.j5);
-          }
-          else{
-            return abs(a.j1) < abs(b.j1);
-          }
-        }
-        else{
-          return abs(a.j4) < abs(b.j4);
-        }
-      }
-      else{
-        // starting angle is 90 degrees
-        return abs(a.j3 - M_PI_2) < abs(b.j3 - M_PI_2);
-      }
+    int ans = compareHelper(a.j2,b.j2,ConfigStore::j2_start,
+    compareHelper(a.j3,b.j3,ConfigStore::j3_start,
+    compareHelper(a.j1,b.j1,ConfigStore::j1_start,
+    compareHelper(a.j4,b.j4,ConfigStore::j4_start,
+    compareHelper(a.j5,b.j5,ConfigStore::j5_start,-1)))));
+    if(ans != -1 ){
+      return ans;
+    }
+    //If above returns -1 that means that all the angles are very close to each other in absolute terms
+    // Then we need to bias them towards positive angles
+    return compareHelper2(a.j1,b.j1,
+    compareHelper2(a.j2,b.j2),
+    compareHelper2(a.j3,b.j3,
+    compareHelper2(a.j4,b.j4,
+    compareHelper2(a.j5,b.j5,1))));   
+  }
+  
+  // All inputs in radian.
+  static int compareHelper(float a1,float a2,float startAngle,int fallForward){
+    float movement1 = abs(a1 - startAngle);
+    float movement2 = abs(a2 - startAngle);
+    // Movement is basically the same, defer to other angles.
+    if(abs(movement1 - movement2) < 0.03){
+      return fallForward;
     }
     else{
-      return abs(a.j2) < abs(b.j2);
+      // Movement is different. Bias towards minimal movement.
+      return movement1 < movement2;
     }
+  }
+
+  static int compareHelper2(float a1,float a2,int fallForward){
+    if(abs(a1 - a2) < 0.03){
+      return fallForward;
+    }
+    return a1 > a2;
   }
 
 
