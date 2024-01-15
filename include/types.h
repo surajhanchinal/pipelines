@@ -9,7 +9,7 @@
 using namespace std;
 
 struct CameraParams {
-  cv::Mat K1, K2, D1, D2, R1, R2, T1, T2, P1, P2;
+  cv::Mat K1, K2, D1, D2, R,R1, R2, T1, T2, P1, P2;
 };
 
 struct TimedContour {

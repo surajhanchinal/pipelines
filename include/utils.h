@@ -29,6 +29,7 @@ void loadCameraParams(CameraParams &cameraParams) {
   fs["D2"] >> cameraParams.D2;
   fs["R1"] >> cameraParams.R1;
   fs["R2"] >> cameraParams.R2;
+  fs["R"] >> cameraParams.R;
   fs["P1"] >> cameraParams.P1;
   fs["P2"] >> cameraParams.P2;
   fs["T"] >> cameraParams.T1;

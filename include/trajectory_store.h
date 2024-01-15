@@ -163,7 +163,7 @@ public:
                                double &y, double &z) {
 
     double groundHeight = 0;
-    double g = 9.8
+    double g = 9.8;
     double b = params.vz;
     double c = params.z0;
     double timeToContact = (b + sqrt(b * b + 2 * g * c)) / g;
@@ -305,7 +305,7 @@ public:
     auto height = 2 * windowSize.y;
     auto width = screenSize.x - 2 * windowSize.x;
     sy = height - (z / 22) * height + p.y;
-    sx = (x / 8.0) * (width / 2.0) + width / 2.0 + p.x;
+    sx = (x / 2.0) * (width / 2.0) + width / 2.0 + p.x;
   }
 
   void render_xz(ImVec2 &p) {
@@ -316,7 +316,7 @@ public:
     double xp1, xp2, yp1, yp2;
     getScreenXZ(p, 0, 1, xp1, yp1);
 
-    getScreenXZ(p, 4.25, 22, xp2, yp2);
+    getScreenXZ(p, 0, 22, xp2, yp2);
 
     draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
 
@@ -365,7 +365,7 @@ public:
     }
   }
 
-  void project3dTo2d(cv::Mat &P1, cv::Mat &K1, cv::Mat &R1, cv::Mat &T1,
+  void project3dTo2d(cv::Mat &P1, cv::Mat &K1,cv::Mat &D1, cv::Mat &R1, cv::Mat &T1,
                      bool isLeft, ImVec2 &offset, double x, double y, double z,
                      double &sx, double &sy) {
     double fx = P1.at<double>(0, 0);
@@ -392,11 +392,21 @@ public:
 
     cv::Mat newOld = R1.inv() * (cv::Mat_<double>(3, 1) << xx, yy, 1);
 
-    double newx = newOld.at<double>(0, 0);
-    double newy = newOld.at<double>(1, 0);
+    double newx = newOld.at<double>(0, 0)/newOld.at<double>(2, 0);
+    double newy = newOld.at<double>(1, 0)/newOld.at<double>(2, 0);
 
-    newx = newx * frx + crx;
-    newy = newy * fry + cry;
+    //Need to distort here.
+     double k1 = D1.at<double>(0,0);
+    double k2 = D1.at<double>(1,0);
+    double p1 = D1.at<double>(2,0);
+    double p2 = D1.at<double>(3,0);
+    double k3 = D1.at<double>(4,0);
+    double r1 = sqrt(newx*newx + newy*newy);
+    newx = newx*(1 + k1*pow(r1,2) + k2*pow(r1,4) + k3*pow(r1,6)) + 2*p1*newx*newy  + p2*(r1*r1 + 2*newx*newx);
+    newy = newy*(1 + k1*pow(r1,2) + k2*pow(r1,4) + k3*pow(r1,6)) + p1*(r1*r1 + 2*newy*newy) + 2*p2*newx*newy; 
+
+    newx = (newx * frx) + crx;
+    newy = (newy * fry) + cry;
 
     double ratio = windowSize.x / 1280;
 
@@ -415,32 +425,11 @@ public:
       getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                               timeElapsed, px, py, pz);
       double sx, sy;
-      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
+      project3dTo2d(cameraParams.P1, cameraParams.K1,cameraParams.D1, cameraParams.R1,
                     cameraParams.T1, true, p, px, py, pz, sx, sy);
 
       draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
-    }
-
-    {
-      Matrix4f ff = pos_transform.inverse();
-      //std::cout<<ff(0,3)<< " "<<ff(1,3)<<" "<<ff(2,3)<<endl;
-      double sx, sy;
-      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
-                    cameraParams.T1, true, p, ff(0,3),ff(1,3),ff(2,3), sx, sy);
-
-      draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[0], -1, 2);
-    }
-    // draw camera middle to stump line
-    {
-      double lx1, lx2, ly1, ly2;
-
-      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
-                    cameraParams.T1, true, p, 0, 1.7, 1, lx1, ly1);
-      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.R1,
-                    cameraParams.T1, true, p, 4.25, 1.7, 22, lx2, ly2);
-      draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
-                         2);
-    }
+    } 
   }
 
   void renderRightPred(ImVec2 &p) {
@@ -455,31 +444,9 @@ public:
                               timeElapsed, px, py, pz);
 
       double sx, sy;
-      project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
+      project3dTo2d(cameraParams.P2, cameraParams.K2,cameraParams.D2, cameraParams.R2,
                     cameraParams.T2, false, p, px, py, pz, sx, sy);
       draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
-    }
-    {
-      Matrix4f ff = pos_transform.inverse();
-      double sx, sy;
-      cout<< ff(0,3)<<" "<<ff(1,3)<<" "<<ff(2,3)<<" "<<endl;
-      project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
-                    cameraParams.T2, false, p, ff(0,3),ff(1,3),ff(2,3), sx, sy);
-
-      draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[0], -1, 2);
-    }
-
-    {
-
-      double lx1, lx2, ly1, ly2;
-
-      project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
-                    cameraParams.T2, false, p, 0, 1.7, 1, lx1, ly1);
-      project3dTo2d(cameraParams.P2, cameraParams.K2, cameraParams.R2,
-                    cameraParams.T2, false, p, 4.25, 1.7, 22, lx2, ly2);
-
-      draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
-                         2);
     }
   }
 
@@ -507,16 +474,16 @@ public:
 
 
   void calculatePositionTranformation(){
-    Eigen::Affine3f pos_tf  = translate(0,17,0);
+    Eigen::Affine3f pos_tf  = translate(0.58,18.19,0);
     pos_tf  = pos_tf*rotate(0,0,M_PI);
-    pos_tf  = pos_tf*translate(0,0,1.7);
-    pos_tf = pos_tf*rotate(M_PI/2.0,0,0);
+    pos_tf  = pos_tf*translate(0,0,1.72);
+    pos_tf = pos_tf*rotate(-M_PI/2.0,0,0);
     pos_transform = pos_tf.matrix();
   }
 
   void calculateVelocityTransformation(){
     Eigen::Affine3f vel_tf = rotate(0,0,M_PI);
-    vel_tf = vel_tf*rotate(M_PI/2.0,0,0);
+    vel_tf = vel_tf*rotate(-M_PI/2.0,0,0);
     vel_transform = vel_tf.matrix();
   }
 
