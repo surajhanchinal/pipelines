@@ -20,10 +20,11 @@ redis_client2 = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
 # Define initial point and velocity vector
-x0 = 0.4
-y0 = 20
-z0 = 1.5
-velocity_vector = [0, 30, 0]
+x0 =  1.59768
+y0 = 15.4951
+z0 =  1.81544
+
+velocity_vector = [-1.82261, -17.2788, -1.90592]
 
 # Define gravitational constant and time step
 g = 9.81
@@ -68,7 +69,6 @@ def get_predicted_point_at_time(params, elapsed_time_in_seconds):
         factor = slowDownFactor
         x = (params.x0 + time_to_contact * params.vx) + time_from_contact * factor * params.vx
         y = (params.y0 + time_to_contact * params.vy) + time_from_contact * factor * params.vy
-        print(elapsed_time_in_seconds,time_from_contact)
         z = -(velocity_at_contact * time_from_contact) - (4.9 * time_from_contact**2)
 
     return x, y, z
@@ -76,13 +76,13 @@ def get_predicted_point_at_time(params, elapsed_time_in_seconds):
 def handler(message):
     global j1,j2,j3,j4,j5
     #print(message)
-    angles = message['data'].split()
+    angles = message['data'].split()[1:]
     angles = [float(a) for a in angles]
-    j1 = angles[0]
-    j2 = angles[1]
-    j3 = angles[2]
-    j4 = angles[3]
-    j5 = angles[4]
+    j1 = angles[0]*(np.pi/2000)
+    j2 = angles[1]*(np.pi/1800) 
+    j3 = angles[2]*(np.pi/1800) + np.pi/2
+    j4 = angles[3]*(np.pi/1800)
+    j5 = angles[4]*(np.pi/1800)
     plt.cla()
     print(j1,j2,j3,j4,j5)
     update_trajectory(None)
@@ -97,11 +97,11 @@ def sendMessage(val):
 # Define a function to update the trajectory based on velocity
 def update_trajectory(val):
     global velocity_vector,x0,y0,z0
-    velocity_vector[0] = vx_slider.val
-    velocity_vector[1] = vy_slider.val
-    velocity_vector[2] = vz_slider.val
-    x0 = x0_slider.val
-    z0 = z0_slider.val
+    #velocity_vector[0] = vx_slider.val
+    #velocity_vector[1] = vy_slider.val
+    #velocity_vector[2] = vz_slider.val
+    #x0 = x0_slider.val
+    #z0 = z0_slider.val
 
 
     points = []
@@ -109,16 +109,16 @@ def update_trajectory(val):
     t = 0
     while ye >= 0:
         t = t +  0.0001
-        params = EstimatedParams(x0=x0, y0=y0, z0=z0, vx=velocity_vector[0], vy=-velocity_vector[1], vz=velocity_vector[2])
+        params = EstimatedParams(x0=x0, y0=y0, z0=z0, vx=velocity_vector[0], vy=velocity_vector[1], vz=velocity_vector[2])
         xe,ye,ze = get_predicted_point_at_time(params,t)
         points.append([xe,ye,ze])
     x_coordinates, y_coordinates, z_coordinates = zip(*points)
 
     ax.clear()
     ax.set_box_aspect((1, 1, 1))
-    ax.set_xlim3d(-1, 1)
-    ax.set_ylim3d(-1, 22)
-    ax.set_zlim3d(-1, 1)
+    ax.set_xlim3d(-2, 2)
+    ax.set_ylim3d(-2, 22)
+    ax.set_zlim3d(-2, 2)
     draw_arm(ax,j1,j2,j3,j4,j5)
     ax.plot3D(x_coordinates,y_coordinates,z_coordinates, label="Parabolic Trajectory")  # Replot trajectory
     ax.set_xlabel("X")

@@ -47,13 +47,13 @@ int main()
       std::ostringstream oss;
 
       // Set the precision for the output stream
-      oss << std::fixed << std::setprecision(3);
-
-      oss << sol.j1 << " ";
-      oss << sol.j2 << " ";
-      oss << sol.j3 << " ";
-      oss << sol.j4 << " ";
-      oss << sol.j5 << " ";
+      oss << std::fixed << std::setprecision(0);
+      oss << "MR" << " ";
+      oss << (sol.j1-ConfigStore::j1_start)*(2000/M_PI) << " ";
+      oss << (sol.j2 - ConfigStore::j2_start)*(1800/M_PI) << " ";
+      oss << (sol.j3 - ConfigStore::j3_start)*(1800/M_PI) << " ";
+      oss << (sol.j4 - ConfigStore::j4_start)*(1800/M_PI) << " ";
+      oss << (sol.j5 - ConfigStore::j5_start)*(1800/M_PI) << " ";
       redis2.publish("solution", oss.str());
     }
   });
