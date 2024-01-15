@@ -78,8 +78,8 @@ public:
       threads.push_back(std::thread(&NodeBase::process, nodes[i]));
     }
 
-    threads.push_back(
-        std::thread(&Orchestrator::close_threads_on_sigint, this));
+    //threads.push_back(
+    //    std::thread(&Orchestrator::close_threads_on_sigint, this));
     int ti = 0;
     for (auto &t : threads) {
       cpu_set_t cpuset;
