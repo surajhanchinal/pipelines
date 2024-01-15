@@ -268,7 +268,7 @@ class IKSolver
         bool isValid =  checkPositionSolution(sol.j1,sol.j2,sol.j3,sol.j4,sol.j5,Px,Py,Pz);
         sol_found = sol_found or isValid;
         if(isValid){
-          //std::cout<<sol.j1*(180.0/M_PI)<<" "<<sol.j2*(180.0/M_PI)<<" "<<sol.j3*(180.0/M_PI)<<" "<<sol.j4*(180.0/M_PI)<<" "<<sol.j5*(180.0/M_PI)<<std::endl;
+        //std::cout<<sol.j1*(180.0/M_PI)<<" "<<sol.j2*(180.0/M_PI)<<" "<<sol.j3*(180.0/M_PI)<<" "<<sol.j4*(180.0/M_PI)<<" "<<sol.j5*(180.0/M_PI)<<std::endl;
           sols.push_back(sol);
         }
     }
@@ -276,6 +276,7 @@ class IKSolver
 
   Solution findBestSolution(std::vector<Solution> &sols){
     std::sort(sols.begin(),sols.end(),compareFn);
+    std::cout<<"New solution"<<std::endl;
     for(auto &sol : sols){
         std::cout<<sol.j1*(180.0/M_PI)<<" "<<sol.j2*(180.0/M_PI)<<" "<<sol.j3*(180.0/M_PI)<<" "<<sol.j4*(180.0/M_PI)<<" "<<sol.j5*(180.0/M_PI)<<std::endl;
     }
@@ -299,10 +300,10 @@ class IKSolver
     //If above returns -1 that means that all the angles are very close to each other in absolute terms
     // Then we need to bias them towards positive angles
     return compareHelper2(a.j1,b.j1,
-    compareHelper2(a.j2,b.j2),
+    compareHelper2(a.j2,b.j2,
     compareHelper2(a.j3,b.j3,
     compareHelper2(a.j4,b.j4,
-    compareHelper2(a.j5,b.j5,1))));   
+    compareHelper2(a.j5,b.j5,1)))));   
   }
   
   // All inputs in radian.
@@ -310,7 +311,7 @@ class IKSolver
     float movement1 = abs(a1 - startAngle);
     float movement2 = abs(a2 - startAngle);
     // Movement is basically the same, defer to other angles.
-    if(abs(movement1 - movement2) < 0.03){
+    if(abs(movement1 - movement2) < 0.350){
       return fallForward;
     }
     else{
@@ -320,21 +321,40 @@ class IKSolver
   }
 
   static int compareHelper2(float a1,float a2,int fallForward){
-    if(abs(a1 - a2) < 0.03){
+    if(abs(a1 - a2) < 0.350){
       return fallForward;
     }
     return a1 > a2;
   }
 
+  float searchYZero(const EstimatedParams &params){
+    float t1 = 0;
+    float t2 = 10;
+    while(abs(t1-t2) > 0.001){
+      float te = (t1+t2)/2.0;
+      double xe,ye,ze;
+      TrajectoryStore::getPredictedPointAtTime2(params,te,xe,ye,ze);
+      if(abs(ye) < 0.01){
+        return te;
+      }
+      else if(ye > 0){
+        t1 = te;
+      }
+      else{
+        t2 = te;
+      }
+    }
+    return t1;
+  }
+
 
   void trajectory_ik(float x0,float y0,float z0,float vx,float vy,float vz,std::vector<Solution> &sols){
-          for(float y=1;y>=-2;y -= 0.1){
-    // get time taken to achieve this y    
-      double t = (y - y0)/vy;
-      double xe,ye,ze;
       const EstimatedParams params = {.vx = vx,.vy = vy,.vz = vz,.x0 = x0,.y0 = y0,.z0 = z0,.g = 9.8,.error = 0,};
+    float te = searchYZero(params);
+    for(float t = te - 1; t <= te + 1;t += 0.01){
+      double xe,ye,ze;
       TrajectoryStore::getPredictedPointAtTime2(params,t,xe,ye,ze);
-      std::cout<<"x: "<<xe<<" y: "<<ye<<" z: "<<ze<<std::endl;
+      //cout<<xe<<" "<<ye<<" "<<ze<<endl;
       position_ik(xe,ye,ze,sols);
     }
     findBestSolution(sols);
