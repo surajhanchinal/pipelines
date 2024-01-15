@@ -4,7 +4,11 @@ import numpy as np
 
 ignore_list = []
 
-
+font                   = cv2.FONT_HERSHEY_SIMPLEX
+bottomLeftCornerOfText = (500,500)
+fontScale              = 10
+fontColor              = (0,255,0)
+lineType               = 5
 def calibrate_camera(images_folder, camera_name,ignore_list=[]):
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_COUNT, 10, 1e-5)
     CHECKERBOARD = (8, 11)
@@ -38,6 +42,7 @@ def calibrate_camera(images_folder, camera_name,ignore_list=[]):
         if ret:
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
             img = cv2.drawChessboardCorners(img, CHECKERBOARD, corners2, ret)
+            img = cv2.putText(img,path,(0,100),font,     1,    fontColor,    lineType)
             cv2.imshow("img", img)
             pressed = cv2.waitKey(0) & 0xFF
             if(pressed == ord('y')):
