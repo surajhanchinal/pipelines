@@ -5,8 +5,8 @@ import os
 import argparse
 import shutil
 
-camera1 = cv2.VideoCapture(2,cv2.CAP_V4L2)
-camera2 = cv2.VideoCapture(4,cv2.CAP_V4L2)
+camera1 = cv2.VideoCapture(4,cv2.CAP_V4L2)
+camera2 = cv2.VideoCapture(2,cv2.CAP_V4L2)
 cv_file = cv2.FileStorage('stereoParams.xml', cv2.FILE_STORAGE_READ)
 
 # Setting Motion Codecs
@@ -69,17 +69,12 @@ cv2.createTrackbar("x", "right" , 640, 1280, onrX)
 cv2.createTrackbar("y", "right" , 360, 720, onrY)
 
 def calculateDepth(lx,ly,rx,ry):
+    bowl = np.array([lx,ly]).astype(np.float32)
+    bowr = np.array([rx,ry]).astype(np.float32)
 
-    pts1 = cv2.undistortPoints(np.array([[lx,ly]]).astype(np.float32),K1,D1,R=R1,P=P1)
-    pts2 = cv2.undistortPoints(np.array([[rx,ry]]).astype(np.float32),K2,D2,R=R2,P=P2)
-    print(pts1[0][0])
-    print(pts2[0][0])
-    baseline = T[0,0]/1000.0
-    depth = P1[0,0]*(baseline)/(abs(pts1[0][0][0] - pts2[0][0][0]) + 1)
-    y = depth*(pts1[0][0][1] + pts2[0][0][1] - P1[1,2] - P2[1,2])/(2*P1[1,1])
-    x = depth*((pts1[0][0][0] + pts2[0][0][0] - P1[0,2] - P2[0,2]))/(2*(P1[0,0]))
-    print(x,y,depth)
-    return depth
+    pts1 = cv2.undistortPoints(bowl,K1,D1,None,R1,P1).squeeze()
+    pts2 = cv2.undistortPoints(bowr,K2,D2,None,R2,P2).squeeze()
+    print(lx,ly,rx,ry,pts1[0],pts1[1],pts2[0],pts2[1])
 while(True):
     camera1.grab()
     camera2.grab()
@@ -89,14 +84,16 @@ while(True):
     up_points = (1066,600)
 
 
-    cv2.circle(frame1,(lx_slider,ly_slider),1,(0,0,255),3)
-    cv2.circle(frame2,(rx_slider,ry_slider),1,(0,0,255),3)
+    cv2.circle(frame1,(lx_slider,ly_slider),10,(0,0,255),1)
+    cv2.circle(frame1,(lx_slider,ly_slider),1,(0,255,0),1)
+    cv2.circle(frame2,(rx_slider,ry_slider),10,(0,0,255),1)
+    cv2.circle(frame2,(rx_slider,ry_slider),1,(0,255,0),1)
     frame1 = cv2.resize(frame1, up_points, interpolation= cv2.INTER_LINEAR)
     frame2 = cv2.resize(frame2, up_points, interpolation= cv2.INTER_LINEAR)
     
     depth = calculateDepth(lx_slider,ly_slider,rx_slider,ry_slider)
     
-    frame1 = cv2.putText(frame1,str(depth), (900,100),  font,     1,    fontColor,    lineType)
+    frame1 = cv2.putText(frame1,str(depth), (900,100),font,1,fontColor,lineType)
     cv2.imshow('left',frame1)
     cv2.imshow('right',frame2)
     cv2.waitKey(1)
