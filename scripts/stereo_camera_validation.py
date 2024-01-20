@@ -80,75 +80,23 @@ while True:
         d = np.array([x[di],y[di],z[di]])
         
         ## y diff
-
         o1 = d - a
-        i1 = np.array([0,7*0.045,0])
-
         o2 = c - b
-        i2 = np.array([0,7*0.045,0])
-
         ## x diff
-
         o5 = b - a
-        i5 = np.array([10*0.045,0,0])
-
         o6 = c - d
-        i6 = np.array([10*0.045,0,0])
 
         print("dist",np.sqrt(np.sum(np.square(b-a))))
         print("dist",np.sqrt(np.sum(np.square(d-c))))
         print("dist",np.sqrt(np.sum(np.square(d-a))))
         print("dist",np.sqrt(np.sum(np.square(b-c))))
-        print(o1)
-        print(o2)
-        print(o5)
-        print(o6)
-
-        sty1 = -o5[2]/i5[0]
-        sty2 = -o6[2]/i6[0] 
-
-        stx11 = o1[2]/(i1[1]*np.cos(np.arcsin(sty1)))
-        stx12 = o1[2]/(i1[1]*np.cos(np.arcsin(sty2)))
-
-        stx21 = o2[2]/(i2[1]*np.cos(np.arcsin(sty1)))
-        stx22 = o2[2]/(i2[1]*np.cos(np.arcsin(sty2)))
-
-        ttz1 = o5[1]/o5[0]
-        ttz2 = o6[1]/o6[0]
-
-        ty1 = np.arcsin(sty1)*(180/np.pi)
-        ty2 = np.arcsin(sty2)*(180/np.pi)
-
-        tx11 = np.arcsin(stx11)*(180/np.pi)
-        tx12 = np.arcsin(stx12)*(180/np.pi)
-
-        tx21 = np.arcsin(stx21)*(180/np.pi)
-        tx22 = np.arcsin(stx22)*(180/np.pi)
-
-        tz1 = np.arctan(ttz1)*(180/np.pi)
-        tz2 = np.arctan(ttz2)*(180/np.pi)
-        print(o1)
-        print(o2)
-        print(o5)
-        print(o6)
-        print(tx11,ty1,tz1)
-        print(tx12,ty2,tz1)
-        print(tx21,ty1,tz2)
-        print(tx22,ty2,tz2)
-
-        maxe = 0
 
         for i in range(corners2Leftn.shape[0]):
             pt1 = cv2.undistortPoints(corners2Leftn[i],K1,D1,None,R1,P1).squeeze()
             pt2 = cv2.undistortPoints(corners2Rightn[i],K2,D2,None,R2,P2).squeeze()
-            print(corners2Leftn[i],corners2Rightn[i],pt1,pt2)
-            #print(x[i],y[i],z[i])  
-            maxe = max(maxe,pt1[1]-pt2[1])  
             error = abs(pt1[1]-pt2[1]) + error
         error = error/len(objp[0])
-        print(maxe)
         print(counter2-1,error)
         cv2.imshow('imgLeft',imgLeft)
         cv2.imshow('imgRight',imgRight)
-        cv2.waitKey(30000)
-        break
+        cv2.waitKey(3000)

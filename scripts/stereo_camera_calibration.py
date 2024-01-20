@@ -87,11 +87,11 @@ right_camera_params = cv2.FileStorage('right_params.xml', cv2.FILE_STORAGE_READ)
 
 
 # Retrieve camera matrices and distortion coefficients
-newCameraMatrixL = left_camera_params.getNode("cameraMatrix").mat()
-distL = left_camera_params.getNode("distCoeffs").mat()
+onewCameraMatrixL = left_camera_params.getNode("cameraMatrix").mat()
+odistL = left_camera_params.getNode("distCoeffs").mat()
 
-newCameraMatrixR = right_camera_params.getNode("cameraMatrix").mat()
-distR = right_camera_params.getNode("distCoeffs").mat()
+onewCameraMatrixR = right_camera_params.getNode("cameraMatrix").mat()
+odistR = right_camera_params.getNode("distCoeffs").mat()
 
 flags = 0
 flags |= cv2.CALIB_USE_INTRINSIC_GUESS
@@ -104,8 +104,7 @@ initT = np.array([[820],[0],[0]],dtype=np.float64)
 
 
 #retStereo, newCameraMatrixL, distL, newCameraMatrixR, distR, rot, trans, essentialMatrix, fundamentalMatrix = cv2.stereoCalibrate(objPoints, imgPointsLeft, imgPointsRight, newCameraMatrixL, distL, newCameraMatrixR, distR, grayLeft.shape[::-1], criteria_stereo, flags)
-
-retStereo, newCameraMatrixL, distL, newCameraMatrixR, distR, rot, trans, essentialMatrix, fundamentalMatrix,rvecs,tvecs,perViewErrors = cv2.stereoCalibrateExtended(objPoints, imgPointsLeft, imgPointsRight,newCameraMatrixL,distL,newCameraMatrixR,distR,grayLeft.shape[::-1],initR,initT,flags=flags)
+retStereo, newCameraMatrixL, distL, newCameraMatrixR, distR, rot, trans, essentialMatrix, fundamentalMatrix,rvecs,tvecs,perViewErrors = cv2.stereoCalibrateExtended(objPoints, imgPointsLeft, imgPointsRight,onewCameraMatrixL,odistL,onewCameraMatrixR,odistR,grayLeft.shape[::-1],initR,initT,flags=flags)
 
 print(retStereo)
 print(rot)

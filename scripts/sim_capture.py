@@ -10,11 +10,11 @@ import shutil
 parser = argparse.ArgumentParser();
 parser.add_argument('--delete', help="Deletes old images",action="store_true")
 parser.add_argument("--validation",help="Use this flag to generate images for validation",action="store_true")
-
+parser.add_argument("--aruco",help="Use this flag to generate images for aruco",action="store_true")
 # Parse and print the results
 args = parser.parse_args()
 
-origPath = os.getcwd();
+origPath = os.getcwd()
 
 
 
@@ -23,6 +23,11 @@ if args.delete:
     if(args.validation):
         if(os.path.isdir('./images/validation')):
             os.chdir('./images/validation')
+        else:
+            valid = False
+    elif(args.aruco):
+        if(os.path.isdir('./images/aruco')):
+            os.chdir('./images/aruco')
         else:
             valid = False
     else:
@@ -52,6 +57,14 @@ except:
     pass
 try:
     os.makedirs('./images/calibration/right')
+except:
+    pass
+try:
+    os.makedirs('./images/aruco/left')
+except:
+    pass
+try:
+    os.makedirs('./images/aruco/right')
 except:
     pass
 
@@ -86,6 +99,8 @@ startPath = './images/calibration'
 
 if args.validation:
     startPath = './images/validation'
+elif args.aruco:
+    startPath = './images/aruco'
 
 
 while(True):

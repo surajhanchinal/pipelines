@@ -29,7 +29,7 @@ D2 = cv_file.getNode("D2").mat()
 P1 = cv_file.getNode("P1").mat()
 P2 = cv_file.getNode("P2").mat()
 R1 = cv_file.getNode("R1").mat()
-R2 = cv_file.getNode("R1").mat()
+R2 = cv_file.getNode("R2").mat()
 T = cv_file.getNode("T").mat()
 
 font                   = cv2.FONT_HERSHEY_SIMPLEX
@@ -69,12 +69,20 @@ cv2.createTrackbar("x", "right" , 640, 1280, onrX)
 cv2.createTrackbar("y", "right" , 360, 720, onrY)
 
 def calculateDepth(lx,ly,rx,ry):
-    bowl = np.array([lx,ly]).astype(np.float32)
-    bowr = np.array([rx,ry]).astype(np.float32)
+    bowl = np.array([lx, ly]).astype(np.float32)
+    bowr = np.array([rx, ry]).astype(np.float32)
 
     pts1 = cv2.undistortPoints(bowl,K1,D1,None,R1,P1).squeeze()
     pts2 = cv2.undistortPoints(bowr,K2,D2,None,R2,P2).squeeze()
-    print(lx,ly,rx,ry,pts1[0],pts1[1],pts2[0],pts2[1])
+
+    baseline = abs(T[0,0]/1000.0)
+    depth = P1[0,0]*(baseline)/(abs(pts1[:,0] - pts2[:,0]))
+    xl = depth*((pts1[:,0]  - P1[0,2]))/((P1[0,0])) + baseline/2   
+    xr = depth*((pts2[:,0] - P2[0,2]))/((P1[0,0]))   - baseline/2
+    yl = depth*(pts1[:,1]  - P1[1,2] )/(P1[1,1])
+    yr = depth*(pts2[:,1]  - P2[1,2])/(P2[1,1])
+    return xl,yl,depth
+
 while(True):
     camera1.grab()
     camera2.grab()
