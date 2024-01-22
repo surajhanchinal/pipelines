@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <sw/redis++/redis++.h>
+#include <iomanip>
 
 using namespace std;
 
@@ -47,10 +48,22 @@ int main()
   for (int i = 0; i < 1; i++)
   {
     std::vector<Solution> sols;
-    solver.trajectory_ik(0.4, 20, 1.5,0,-30,0,sols);
+    //solver.position_ik(0.260434 ,-0.00401968 ,0.705937,sols);
+
+    solver.trajectory_ik(0.474851,7.21219,1.5522,-0.394081,-10.2628,-1.66987,sols);
+    if(sols.size()){
+      long t = (1000.0*sols[0].t);
+      auto nownow = chrono::system_clock::now();
+      auto timeToContact = nownow + chrono::milliseconds(t);
+      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timeToContact - nownow);
+      std::cout<<timeToContact.time_since_epoch().count()<<endl;
+      std::cout<<nownow.time_since_epoch().count()<<endl;
+      std::cout<<t<<" "<<duration.count()<<std::endl;
+    }
+    cout<<"final: "<<sols.size()<<endl;
   }
   auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  std::cout << "Time taken: " << duration.count() / 100000 << " microseconds" << std::endl;
+  std::cout << "Time taken: " << duration.count() / 1 << " milliseconds" << std::endl;
 }

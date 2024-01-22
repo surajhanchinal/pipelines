@@ -33,7 +33,7 @@ int main() {
 
   auto captureSignaler = new CaptureSignaler();
 
-  auto frameReader1 = new FrameReader(3, "camera1", captureSize);
+  auto frameReader1 = new FrameReader(4, "camera1", captureSize);
 
   auto frameReader2 = new FrameReader(2, "camera2", captureSize);
 

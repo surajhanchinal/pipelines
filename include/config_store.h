@@ -41,4 +41,8 @@ public:
   static constexpr double j3_start = M_PI_2;
   static constexpr double j4_start = 0;
   static constexpr double j5_start = 0;
+  // Angle in degrees 
+  static constexpr double x_angle_offset = 0.82;
+  static constexpr double y_angle_offset = -5.88;
+  static constexpr double z_angle_offset = -1.18;
 };

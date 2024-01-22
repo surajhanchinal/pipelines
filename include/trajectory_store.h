@@ -144,6 +144,7 @@ public:
   map<long long, Trajectory> trajectories;
   Matrix4f pos_transform;
   Matrix4f vel_transform;
+  Eigen::Affine3f rotMatrix;
   // TrajectoryStore(Eigen::MatrixXf K1, Eigen::MatrixXf K2, Eigen::MatrixXf D1,
   //                 Eigen::MatrixXf D2, Eigen::MatrixXf R1, Eigen::MatrixXf R2,
   //                 Eigen::MatrixXf P1, Eigen::MatrixXf P2)
@@ -151,6 +152,7 @@ public:
   TrajectoryStore(CameraParams cameraParams) : cameraParams(cameraParams) {
     calculatePositionTranformation();
     calculateVelocityTransformation();
+    rotMatrix = rotate(ConfigStore::x_angle_offset*(M_PI/180.0),ConfigStore::y_angle_offset*(M_PI/180.0),ConfigStore::z_angle_offset*(M_PI/180.0));
   }
   void setWindowSize(ImVec2 sz) { windowSize = sz; }
   void setScreenSize(ImVec2 sz) { screenSize = sz; }
@@ -244,20 +246,36 @@ public:
   }
 
   void getScreenYZ(ImVec2 &p, double y, double z, double &sx, double &sy) {
-    sx = (z / 22) * windowSize.x + p.x;
+    sx = (z / 20) * windowSize.x + p.x;
     sy = ((y + 0.8) / (0.8 + ConfigStore::groundHeight + 0.1)) * windowSize.y + p.y;
   }
 
   void render_yz(ImVec2 &p) {
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();  
+
+
+    {
 
     double xp1, xp2, yp1, yp2;
     getScreenYZ(p, ConfigStore::groundHeight, 0, xp1, yp1);
 
-    getScreenYZ(p, ConfigStore::groundHeight, 22, xp2, yp2);
+    getScreenYZ(p, ConfigStore::groundHeight, 20, xp2, yp2);
 
     draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
 
+    }
+
+    {
+
+    double xp1, xp2, yp1, yp2;
+    getScreenYZ(p, 0, 20, xp1, yp1);
+
+    getScreenYZ(p, ConfigStore::groundHeight, 20, xp2, yp2);
+
+    draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
+
+    }
+    
     for (auto const &[_, traj] : trajectories) {
       int trainingCount = trainingPointCount(traj.alignedContours.size());
       for (int ii = 0; ii < traj.alignedContours.size(); ii++) {
@@ -304,7 +322,7 @@ public:
 
     auto height = 2 * windowSize.y;
     auto width = screenSize.x - 2 * windowSize.x;
-    sy = height - (z / 22) * height + p.y;
+    sy = height - (z / 20) * height + p.y;
     sx = (x / 2.0) * (width / 2.0) + width / 2.0 + p.x;
   }
 
@@ -314,9 +332,9 @@ public:
     // Render center line
 
     double xp1, xp2, yp1, yp2;
-    getScreenXZ(p, 0, 1, xp1, yp1);
+    getScreenXZ(p, 0.5, 1, xp1, yp1);
 
-    getScreenXZ(p, 0, 22, xp2, yp2);
+    getScreenXZ(p, 0.5, 20, xp2, yp2);
 
     draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
 
@@ -368,6 +386,14 @@ public:
   void project3dTo2d(cv::Mat &P1, cv::Mat &K1,cv::Mat &D1, cv::Mat &R1, cv::Mat &T1,
                      bool isLeft, ImVec2 &offset, double x, double y, double z,
                      double &sx, double &sy) {
+    
+    Eigen::Vector4f oi;
+    oi << x,y,z,1;
+    auto oo = rotMatrix * oi;
+    x = oo(0);
+    y = oo(1);
+    z = oo(2);
+    
     double fx = P1.at<double>(0, 0);
     double fy = P1.at<double>(1, 1);
     double cx = P1.at<double>(0, 2);
@@ -429,7 +455,18 @@ public:
                     cameraParams.T1, true, p, px, py, pz, sx, sy);
 
       draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
-    } 
+    }
+    {
+      double lx1, lx2, ly1, ly2;
+
+      project3dTo2d(cameraParams.P1, cameraParams.K1,cameraParams.D1, cameraParams.R1,
+                    cameraParams.T1, true, p, 0.5, 1.72, 1, lx1, ly1);
+      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.D1,cameraParams.R1,
+                    cameraParams.T1, true, p, 0.5, 1.72, 20.03, lx2, ly2);
+      draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
+                         2);
+    }
+ 
   }
 
   void renderRightPred(ImVec2 &p) {
@@ -447,6 +484,19 @@ public:
       project3dTo2d(cameraParams.P2, cameraParams.K2,cameraParams.D2, cameraParams.R2,
                     cameraParams.T2, false, p, px, py, pz, sx, sy);
       draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
+    }
+
+    {
+
+      double lx1, lx2, ly1, ly2;
+
+      project3dTo2d(cameraParams.P2, cameraParams.K2,cameraParams.D2, cameraParams.R2,
+                    cameraParams.T2, false, p,0.5, 1.72, 1, lx1, ly1);
+      project3dTo2d(cameraParams.P2, cameraParams.K2,cameraParams.D2, cameraParams.R2,
+                    cameraParams.T2, false, p, 0.5, 1.72, 20.03, lx2, ly2);
+
+      draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
+                         2);
     }
   }
 
@@ -472,9 +522,8 @@ public:
     }
   }
 
-
   void calculatePositionTranformation(){
-    Eigen::Affine3f pos_tf  = translate(0.58,18.19,0);
+    Eigen::Affine3f pos_tf  = translate(0.5,20.03,0);
     pos_tf  = pos_tf*rotate(0,0,M_PI);
     pos_tf  = pos_tf*translate(0,0,1.72);
     pos_tf = pos_tf*rotate(-M_PI/2.0,0,0);
@@ -485,21 +534,6 @@ public:
     Eigen::Affine3f vel_tf = rotate(0,0,M_PI);
     vel_tf = vel_tf*rotate(-M_PI/2.0,0,0);
     vel_transform = vel_tf.matrix();
-  }
-
-  Eigen::Affine3f rotate(double ax, double ay, double az) {
-    Eigen::Affine3f rx =
-        Eigen::Affine3f(Eigen::AngleAxisf(ax, Eigen::Vector3f(1, 0, 0)));
-    Eigen::Affine3f ry =
-        Eigen::Affine3f(Eigen::AngleAxisf(ay, Eigen::Vector3f(0, 1, 0)));
-    Eigen::Affine3f rz =
-        Eigen::Affine3f(Eigen::AngleAxisf(az, Eigen::Vector3f(0, 0, 1)));
-    return rz * ry * rx;
-  }
-
-  Eigen::Affine3f translate(double x,double y,double z){
-    Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(x,y,z)));
-    return t;
   }
 
 };

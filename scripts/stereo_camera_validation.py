@@ -86,10 +86,10 @@ while True:
         o5 = b - a
         o6 = c - d
 
-        print("dist",np.sqrt(np.sum(np.square(b-a))))
-        print("dist",np.sqrt(np.sum(np.square(d-c))))
-        print("dist",np.sqrt(np.sum(np.square(d-a))))
-        print("dist",np.sqrt(np.sum(np.square(b-c))))
+        #print("dist",np.sqrt(np.sum(np.square(b-a))))
+        #print("dist",np.sqrt(np.sum(np.square(d-c))))
+        #print("dist",np.sqrt(np.sum(np.square(d-a))))
+        #print("dist",np.sqrt(np.sum(np.square(b-c))))
 
         for i in range(corners2Leftn.shape[0]):
             pt1 = cv2.undistortPoints(corners2Leftn[i],K1,D1,None,R1,P1).squeeze()
@@ -99,4 +99,4 @@ while True:
         print(counter2-1,error)
         cv2.imshow('imgLeft',imgLeft)
         cv2.imshow('imgRight',imgRight)
-        cv2.waitKey(3000)
+        cv2.waitKey(1)

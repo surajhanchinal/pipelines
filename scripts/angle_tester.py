@@ -101,7 +101,7 @@ cv2.createTrackbar("z", "left" , 500, 1000, onZ)
 
 def project3dTo2d(K, D, R, T, isLeft, x, y, z):
     global x_slider,y_slider,z_slider
-    newxt = (rot_z(z_slider)@(rot_y(-5.96)@rot_x(-0.98))) @ np.array([x,y,z,1])
+    newxt = (rot_z(z_slider)@(rot_y(y_slider)@rot_x(x_slider))) @ np.array([x,y,z,1])
     x = newxt[0]
     y = newxt[1]
     z = newxt[2]
@@ -139,12 +139,12 @@ while(True):
     def draw_line1(frame,x1,y1,z1,x2,y2,z2):
         x1l,y1l = project3dTo2d(K1,D1,R1,T,True,x1,y1,z1)
         x2l,y2l = project3dTo2d(K1,D1,R1,T,True,x2,y2,z2)
-        cv2.line(frame,(x1l,y1l),(x2l,y2l),(0,255,0),1)
+        cv2.line(frame,(x1l,y1l),(x2l,y2l),(0,0,255),1)
     
     def draw_line2(frame,x1,y1,z1,x2,y2,z2):
         x1l,y1l = project3dTo2d(K2,D2,R2,T,False,x1,y1,z1)
         x2l,y2l = project3dTo2d(K2,D2,R2,T,False,x2,y2,z2)
-        cv2.line(frame,(x1l,y1l),(x2l,y2l),(0,255,0),1)
+        cv2.line(frame,(x1l,y1l),(x2l,y2l),(0,0,255),1)
     
 
     
@@ -170,21 +170,23 @@ while(True):
 
     width = 0.995
     height = 1.035
-    distance = 5.93
+    distance = 5.34
+    groundHeight = 1.72
+    x_offset = -0.5
     x1 = 0 + x_offset
-    y1 = 1.37 - height
+    y1 = groundHeight - height
     z1 = distance
 
     x2 = width + x_offset
-    y2 = 1.37 - height
+    y2 = groundHeight - height
     z2 = distance
 
     x3 = width + x_offset
-    y3 = 1.37
+    y3 = groundHeight
     z3 = distance
 
     x4 = 0 + x_offset
-    y4 = 1.37
+    y4 = groundHeight
     z4 = distance
     
     draw_line1(frame1,x1,y1,z1,x2,y2,z2)
@@ -197,10 +199,12 @@ while(True):
     draw_line2(frame2,x3,y3,z3,x4,y4,z4)    
     draw_line2(frame2,x4,y4,z4,x1,y1,z1)    
 
-    draw_line1(frame1,-0.1,1.37,3,-0.1,1.37,8.87)
-    draw_line2(frame2,-0.1,1.37,3,-0.1,1.37,8.87)
-    draw_line2(frame2,x4,y4,z4,x4,y4,7.40)
-    draw_line2(frame2,x3,y3,z3,x3,y3,7.40)
+    #draw_line1(frame1,0,groundHeight,3,0,groundHeight,8.87)
+    #draw_line2(frame2,0,groundHeight,3,0,groundHeight,8.87)
+    draw_line2(frame2,x4,y4,z4,x4,y4,6.61)
+    draw_line2(frame2,x3,y3,z3,x3,y3,6.54)
+    draw_line1(frame1,x4,y4,z4,x4,y4,6.61)
+    draw_line1(frame1,x3,y3,z3,x3,y3,6.54)
 
     frame1 = cv2.resize(frame1, up_points, interpolation= cv2.INTER_LINEAR)
     frame2 = cv2.resize(frame2, up_points, interpolation= cv2.INTER_LINEAR)

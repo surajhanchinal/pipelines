@@ -130,10 +130,11 @@ public:
           vel = trajectoryStore->vel_transform * vel;
 
           solver->trajectory_ik(pos(0),pos(1),pos(2),vel(0),vel(1),vel(2),sols);
+          std::cout<<"position: "<<pos<<std::endl;
+          std::cout<<"velocity: "<<vel<<std::endl;
           sent = true;
           if(sols.size()){
-            std::cout<<"position: "<<pos<<std::endl;
-            std::cout<<"velocity: "<<vel<<std::endl;
+            auto timeToContact = fullTraj.alignedContours[0].t_avg + chrono::milliseconds((long)(sols[0].t*1000));
             long j1_a = ((float)sols[0].j1*(180.0/M_PI)*(4000.0/360.0));
             long j2_a = ((float)sols[0].j2*(180.0/M_PI)*(3600.0/360.0));
             long j3_a = ((float)(sols[0].j3-M_PI_2)*(180.0/M_PI)*(3600.0/360.0));

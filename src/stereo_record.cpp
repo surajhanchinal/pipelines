@@ -38,9 +38,9 @@ int main() {
 
   auto frameSyncer = new LightFrameSyncer();
 
-  auto leftWriter = new GstVideoWriter("green_ball_left_5", captureSize);
+  auto leftWriter = new GstVideoWriter("new_left_1", captureSize);
 
-  auto rightWriter = new GstVideoWriter("green_ball_right_5", captureSize);
+  auto rightWriter = new GstVideoWriter("new_left_2", captureSize);
 
   auto o1 = Orchestrator();
 

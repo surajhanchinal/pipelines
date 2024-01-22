@@ -20,7 +20,9 @@ using namespace std;
 class FrameSyncer
     : public Node<frame_syncer::input_type, frame_syncer::output_type> {
 public:
-  FrameSyncer(CameraParams cameraParams) : cameraParams(cameraParams) {}
+  FrameSyncer(CameraParams cameraParams) : cameraParams(cameraParams) {
+    rotMatrix = rotate(ConfigStore::x_angle_offset*(M_PI/180.0),ConfigStore::y_angle_offset*(M_PI/180.0),ConfigStore::z_angle_offset*(M_PI/180.0)).inverse();
+  }
   void process() {
     FpsCounter fc(240, "FS");
     // std::this_thread::sleep_for(std::chrono::milliseconds(3000));
@@ -165,6 +167,13 @@ public:
     z = (fx * baseline) / disparity;
     y = ((leftctr.y - cy) * z) / fy;
     x = (((leftctr.x + rightctr.x - 2 * cx) / 2.0) * z) / fx;
+    //Align to ground using transform
+    Eigen::Vector4f vec;
+    vec << x ,y,z,1;
+    auto vec2 = rotMatrix * vec;
+    x = vec2(0);
+    y = vec2(1);
+    z = vec2(2);
   }
 
   bool areAlignedInTime(TimedContour &left, TimedContour &right) {
@@ -212,5 +221,6 @@ public:
     return ImVec2(X, Y);
   }
 
+  Eigen::Affine3f rotMatrix;
   CameraParams cameraParams;
 };

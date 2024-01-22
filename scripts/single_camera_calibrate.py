@@ -44,8 +44,8 @@ def calibrate_camera(images_folder, camera_name,ignore_list=[]):
             img = cv2.drawChessboardCorners(img, CHECKERBOARD, corners2, ret)
             img = cv2.putText(img,path,(0,100),font,     1,    fontColor,    lineType)
             cv2.imshow("img", img)
-            pressed = cv2.waitKey(0) & 0xFF
-            if(pressed == ord('y')):
+            pressed = cv2.waitKey(1) & 0xFF
+            if(pressed == ord('y') or True):
                 counter = counter + 1
                 objPoints.append(objp)
                 imgPoints.append(corners2)

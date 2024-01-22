@@ -10,7 +10,7 @@
 typedef Eigen::Matrix<float, 4, 8> Cuboid;
 
 struct Solution{
-    double j1,j2,j3,j4,j5;
+    double j1,j2,j3,j4,j5,t;
 };
 
 // e suffix stands for estimate
@@ -218,7 +218,7 @@ class IKSolver
     return collision;
   }
 
-  void partial_ik(float j1e,float j234e,float j5e,float Px,float Py,float Pz,std::vector<Solution> &sols){
+  void partial_ik(float j1e,float j234e,float j5e,float Px,float Py,float Pz,double t,std::vector<Solution> &sols){
     
     float j3e = j3(j1e,j5e,j234e,Px,Py,Pz);
     auto j2e = j2(j3e,j1e,j5e,j234e,Px,Py,Pz);
@@ -226,8 +226,8 @@ class IKSolver
     float j4_e2 = j234e + j3e - j2e.second;
     //sols.push_back({.j1=j1e,.j2=j2e.first,.j3=j3e,.j4=j4_e1,.j5=j5e});
     //sols.push_back({.j1=j1e,.j2=j2e.second,.j3=-j3e,.j4=j4_e2,.j5=j5e});
-    sols.push_back({.j1=getOptimalAngle(j1e),.j2=getOptimalAngle(j2e.first),.j3=getOptimalAngle(j3e),.j4=getOptimalAngle(j4_e1),.j5=getOptimalAngle(j5e)});
-    sols.push_back({.j1=getOptimalAngle(j1e),.j2=getOptimalAngle(j2e.second),.j3=getOptimalAngle(-j3e),.j4=getOptimalAngle(j4_e2),.j5=getOptimalAngle(j5e)});
+    sols.push_back({.j1=getOptimalAngle(j1e),.j2=getOptimalAngle(j2e.first),.j3=getOptimalAngle(j3e),.j4=getOptimalAngle(j4_e1),.j5=getOptimalAngle(j5e),.t = t});
+    sols.push_back({.j1=getOptimalAngle(j1e),.j2=getOptimalAngle(j2e.second),.j3=getOptimalAngle(-j3e),.j4=getOptimalAngle(j4_e2),.j5=getOptimalAngle(j5e),.t = t});
   }
 
   void full_ik(Matrix4f &pose_matrix){
@@ -250,17 +250,17 @@ class IKSolver
     float j5e = j5(tzz,tzx);
     float j234e = j234(tzx,tzy,j5e);
 
-    partial_ik(j1e,j234e,j5e,Px,Py,Pz,sols);
+    partial_ik(j1e,j234e,j5e,Px,Py,Pz,0,sols);
   }
 
-  void position_ik(float Px,float Py,float Pz, std::vector<Solution> &sols){
+  void position_ik(float Px,float Py,float Pz,double t, std::vector<Solution> &sols){
     std::vector<Solution> all_sols;
     for(int j1d=-90;j1d<=90;j1d+=10){
         for(int j234d=-179;j234d<=179;j234d+=10){
             float j1e = j1d*(M_PI/180);
             float j234e = j234d*(M_PI/180);
             float j5e = j5_new(j1e,Px,Py);
-            partial_ik(j1e,j234e,j5e,Px,Py,Pz,all_sols);
+            partial_ik(j1e,j234e,j5e,Px,Py,Pz,t,all_sols);
         }
     }
     bool sol_found = false;
@@ -277,7 +277,8 @@ class IKSolver
   Solution findBestSolution(std::vector<Solution> &sols){
     std::sort(sols.begin(),sols.end(),compareFn);
     std::cout<<"New solution"<<std::endl;
-    for(auto &sol : sols){
+    for(int i=0;i<min(5,(int)sols.size());i++){
+      auto &sol = sols[i];
         std::cout<<sol.j1*(180.0/M_PI)<<" "<<sol.j2*(180.0/M_PI)<<" "<<sol.j3*(180.0/M_PI)<<" "<<sol.j4*(180.0/M_PI)<<" "<<sol.j5*(180.0/M_PI)<<std::endl;
     }
     return sols[0];
@@ -303,7 +304,7 @@ class IKSolver
     compareHelper2(a.j2,b.j2,
     compareHelper2(a.j3,b.j3,
     compareHelper2(a.j4,b.j4,
-    compareHelper2(a.j5,b.j5,1)))));   
+    compareHelper2(a.j5,b.j5,0)))));  
   }
   
   // All inputs in radian.
@@ -351,13 +352,18 @@ class IKSolver
   void trajectory_ik(float x0,float y0,float z0,float vx,float vy,float vz,std::vector<Solution> &sols){
       const EstimatedParams params = {.vx = vx,.vy = vy,.vz = vz,.x0 = x0,.y0 = y0,.z0 = z0,.g = 9.8,.error = 0,};
     float te = searchYZero(params);
-    for(float t = te - 1; t <= te + 1;t += 0.01){
+    double xx,yy,zz;
+    TrajectoryStore::getPredictedPointAtTime2(params,te,xx,yy,zz);
+    std::cout<<"lol: "<<xx<<" "<<yy<<" "<<zz<<std::endl;
+    for(float t = te - 0.1; t <= te + 0.1;t += 0.01){
       double xe,ye,ze;
       TrajectoryStore::getPredictedPointAtTime2(params,t,xe,ye,ze);
       //cout<<xe<<" "<<ye<<" "<<ze<<endl;
-      position_ik(xe,ye,ze,sols);
+      position_ik(xe,ye,ze,t,sols);
     }
-    findBestSolution(sols);
+    if(sols.size()){
+      findBestSolution(sols);
+    }
   }
 
   

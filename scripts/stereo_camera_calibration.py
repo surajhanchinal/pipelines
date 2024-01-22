@@ -68,9 +68,9 @@ while True:
         imgRightSmol = cv2.resize(imgRight,up_points,interpolation= cv2.INTER_LINEAR)
         cv2.imshow('imgLeft',imgLeftSmol)
         cv2.imshow('imgRight',imgRightSmol)
-        pressed = cv2.waitKey(0) & 0xFF
+        pressed = cv2.waitKey(1) & 0xFF
         #if(True):
-        if(pressed == ord('y')):
+        if(pressed == ord('y') or True):
             counter =counter + 1
             objPoints.append(objp)
             imgPointsLeft.append(corners2Left)
