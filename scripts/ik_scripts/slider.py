@@ -24,7 +24,7 @@ x0 =  1.59768
 y0 = 15.4951
 z0 =  1.81544
 
-velocity_vector = [-1.82261, -17.2788, -1.90592]
+velocity_vector = [-1.82261, 17.2788, -1.90592]
 
 # Define gravitational constant and time step
 g = 9.81
@@ -97,11 +97,11 @@ def sendMessage(val):
 # Define a function to update the trajectory based on velocity
 def update_trajectory(val):
     global velocity_vector,x0,y0,z0
-    #velocity_vector[0] = vx_slider.val
-    #velocity_vector[1] = vy_slider.val
-    #velocity_vector[2] = vz_slider.val
-    #x0 = x0_slider.val
-    #z0 = z0_slider.val
+    velocity_vector[0] = vx_slider.val
+    velocity_vector[1] = vy_slider.val
+    velocity_vector[2] = vz_slider.val
+    x0 = x0_slider.val
+    z0 = z0_slider.val
 
 
     points = []
@@ -109,7 +109,7 @@ def update_trajectory(val):
     t = 0
     while ye >= 0:
         t = t +  0.0001
-        params = EstimatedParams(x0=x0, y0=y0, z0=z0, vx=velocity_vector[0], vy=velocity_vector[1], vz=velocity_vector[2])
+        params = EstimatedParams(x0=x0, y0=y0, z0=z0, vx=velocity_vector[0], vy=-velocity_vector[1], vz=velocity_vector[2])
         xe,ye,ze = get_predicted_point_at_time(params,t)
         points.append([xe,ye,ze])
     x_coordinates, y_coordinates, z_coordinates = zip(*points)
@@ -117,7 +117,7 @@ def update_trajectory(val):
     ax.clear()
     ax.set_box_aspect((1, 1, 1))
     ax.set_xlim3d(-2, 2)
-    ax.set_ylim3d(-2, 22)
+    ax.set_ylim3d(-2, 2)
     ax.set_zlim3d(-2, 2)
     draw_arm(ax,j1,j2,j3,j4,j5)
     ax.plot3D(x_coordinates,y_coordinates,z_coordinates, label="Parabolic Trajectory")  # Replot trajectory

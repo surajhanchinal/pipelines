@@ -41,7 +41,8 @@ int main()
     }
     vector<Solution> sols;
     solver.trajectory_ik(position[3], position[4], position[5], position[0], position[1], position[2], sols);
-    if (sols.size())
+    //Single solution mode
+    /*if (sols.size())
     {
       auto& sol = sols[0];
       std::ostringstream oss;
@@ -54,6 +55,24 @@ int main()
       oss << (sol.j3 - ConfigStore::j3_start)*(1800/M_PI) << " ";
       oss << (sol.j4 - ConfigStore::j4_start)*(1800/M_PI) << " ";
       oss << (sol.j5 - ConfigStore::j5_start)*(1800/M_PI) << " ";
+      redis2.publish("solution", oss.str());
+    }*/
+    // Multiple solutions mode
+    if(sols.size()){
+      std::ostringstream oss;
+      oss << std::fixed << std::setprecision(0);
+      for(int i=0;i<sols.size();i++){
+        auto &sol = sols[i];
+        oss << "MR" << " ";
+        oss << (sol.j1-ConfigStore::j1_start)*(2000/M_PI) << " ";
+        oss << (sol.j2 - ConfigStore::j2_start)*(1800/M_PI) << " ";
+        oss << (sol.j3 - ConfigStore::j3_start)*(1800/M_PI) << " ";
+        oss << (sol.j4 - ConfigStore::j4_start)*(1800/M_PI) << " ";
+        oss << (sol.j5 - ConfigStore::j5_start)*(1800/M_PI) << " ";
+        if(i != sols.size() - 1){
+          oss << " | ";
+        }
+      }
       redis2.publish("solution", oss.str());
     }
   });
