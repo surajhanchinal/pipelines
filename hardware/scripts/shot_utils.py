@@ -1,8 +1,9 @@
 import numpy as np
-
-ms = np.array([0,0,0,0,0])
-cs = np.array([4000,4000,4000,4000,4000])
+import math
+ms = np.array([-35,-35,-35,-35,-35])
+cs = np.array([40000,40000,40000,40000,40000])
 cs_final = np.array([4000,4000,4000,20000,20000])
+ms_final = np.array([0,0,0,0,0])
 
 def getRealMovements(targets):
     real_targets = np.array([0,0,0,0,0])
@@ -31,20 +32,20 @@ def get_time(targets):
     for i in range(5):
         normal_time[i] = getTimeTaken(ms[i],cs[i],target1[i])
         initial_shot_time[i] = getTimeTaken(ms[i],cs[i],target2[i])
-        final_shot_time[i] = getTimeTaken(ms[i],cs_final[i],final_shot_targets[i])
+        final_shot_time[i] = getTimeTaken(ms_final[i],cs_final[i],final_shot_targets[i])
     return np.max(normal_time),np.max(initial_shot_time),np.max(final_shot_time)
 def get_f(m,c):
     k = c/m
     def f(t,d):
-        return k/m*(np.exp(m*t) - 1) - k*t - d/2
+        return k/m*(math.exp(m*t) - 1) - k*t - d/2
     
     return f
 
 def get_df(m,c):
     k = c/m
     def df(t):
-        return k*np.exp(m*t) - k
-
+        return k*math.exp(m*t) - k
+    return df
 
 def getTimeTaken(m,c,steps):
     if(m == 0):
@@ -58,7 +59,7 @@ def newton(f,Df,steps,x0=0.05,epsilon=0.001,max_iter=100):
     xn = x0
     for n in range(0,max_iter):
         fxn = f(xn,steps/2)
-        if abs(fxn) < epsilon:
+        if math.fabs(fxn) < epsilon:
             return 2*xn
         Dfxn = Df(xn)
         if Dfxn == 0:
