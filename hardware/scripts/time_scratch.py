@@ -5,5 +5,7 @@ unix_ns = 1705772559465779908
 unix_ns2 = 1705772558784779908
 x = np.datetime64(unix_ns,'ns')
 y = np.datetime64(unix_ns2,'ns')
-print((1705773041977120205 - time.time_ns()))
-print(time.time_ns())
+#print((1705773041977120205 - time.time_ns()))
+#print(time.time_ns())
+unix_ns_string = "1705772559465779908"
+print(int(unix_ns_string) + unix_ns2)

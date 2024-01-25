@@ -1,7 +1,20 @@
 import serial
 import websockets
 import asyncio
+import time
+from shot_utils import get_time
+import numpy as np
 
+
+def parseMessage(message):
+    split_msg = message.split()
+    if(len(split_msg) != 7 and split_msg[0] != "MRT"):
+        return False
+    time_to_contact_ns = split_msg[6]
+    time_remaining_ns = time_to_contact_ns - time.time_ns()
+    t1 = time.time_ns()
+    single_frame_time,initial_time,final_shot_time = get_time(np.array([int(split_msg[j]) for j in range(1,6)]))
+    t2 = time.time_ns()
 
 async def serial_writer(websocket,ser):
     while True:
