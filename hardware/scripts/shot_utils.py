@@ -1,8 +1,8 @@
 import numpy as np
 import math
-ms = np.array([-35,-35,-35,-35,-35])
-cs = np.array([40000,40000,40000,40000,40000])
-cs_final = np.array([4000,4000,4000,20000,20000])
+ms = np.array([-35,-35,-35,0,0])
+cs = np.array([60000,60000,60000,20000,20000])
+cs_final = np.array([4000,4000,4000,40000,40000])
 ms_final = np.array([0,0,0,0,0])
 
 def getRealMovements(targets):

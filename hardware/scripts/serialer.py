@@ -5,21 +5,33 @@ import time
 from shot_utils import get_time
 import numpy as np
 
+final_shot_string = "MR 0 0 0 0 400"
 
 def parseMessage(message):
     split_msg = message.split()
     if(len(split_msg) != 7 and split_msg[0] != "MRT"):
-        return False
+        return False,None,None,None
     time_to_contact_ns = split_msg[6]
-    time_remaining_ns = time_to_contact_ns - time.time_ns()
-    t1 = time.time_ns()
     single_frame_time,initial_time,final_shot_time = get_time(np.array([int(split_msg[j]) for j in range(1,6)]))
-    t2 = time.time_ns()
+    time_remaining_ns = time_to_contact_ns - time.time_ns()
+    if(time_remaining_ns > initial_time + final_shot_time):
+        return False,"MR {j1} {j2} {j3} {j4} {j5}".format(j1=split_msg[1],j2=split_msg[2],j3=split_msg[3],j4=split_msg[4],j5=split_msg[5]),None,None
+    else:
+        delay = initial_time + final_shot_time - time_remaining_ns
+        return True,"MR {j1} {j2} {j3} {j4} {j5}".format(j1=split_msg[1],j2=split_msg[2],j3=split_msg[3],j4=split_msg[4],j5=(int(split_msg[5]) - 200)),final_shot_string,delay
 
 async def serial_writer(websocket,ser):
     while True:
         message = await websocket.recv()
-        ser.write(message.encode() + b'\n')
+        twoShots,mv1,mv2,delay = parseMessage(message)
+        if(not twoShots and mv1 is None):
+            ser.write(message.encode() + b'\n')
+        elif(not twoShots and not (mv1 is None)):
+            ser.write(mv1.encode() + b'\n')
+        elif(twoShots):
+            ser.write(mv1.encode() + b'\n')
+            await asyncio.sleep(delay)
+            ser.write(mv2.encode() + b'\n')
         print("wrote to serial")
         await asyncio.sleep(0)
 
