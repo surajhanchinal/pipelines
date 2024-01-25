@@ -7,3 +7,4 @@ t2 = time.time_ns()
 diff = t2 - t1
 diff = diff/1000
 print(diff)
+print(single_frame_time,initial_time+final_shot_time)

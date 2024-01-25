@@ -29,6 +29,8 @@ def get_time(targets):
     target2[4] = target2[4] - 200
     target1 = getRealMovements(target1)
     target2 = getRealMovements(target2)
+    target1 = np.abs(target1)
+    target2 = np.abs(target2)
     for i in range(5):
         normal_time[i] = getTimeTaken(ms[i],cs[i],target1[i])
         initial_shot_time[i] = getTimeTaken(ms[i],cs[i],target2[i])
@@ -38,7 +40,6 @@ def get_f(m,c):
     k = c/m
     def f(t,d):
         return k/m*(math.exp(m*t) - 1) - k*t - d/2
-    
     return f
 
 def get_df(m,c):
@@ -58,7 +59,7 @@ def getTimeTaken(m,c,steps):
 def newton(f,Df,steps,x0=0.05,epsilon=0.001,max_iter=100):
     xn = x0
     for n in range(0,max_iter):
-        fxn = f(xn,steps/2)
+        fxn = f(xn,steps)
         if math.fabs(fxn) < epsilon:
             return 2*xn
         Dfxn = Df(xn)
