@@ -22,7 +22,7 @@ public:
 		_size++;
 	}
 	
-	char* get() {
+	char* pop() {
 		Line *l = first;
 		first = (Line*) l->next;
 		if(first == NULL) last = NULL;
@@ -30,6 +30,10 @@ public:
 		delete l;
 		_size--;
 		return line;
+	}
+
+	char* get(){
+		return first->line;
 	}
 
 	boolean isEmpty() {
