@@ -213,7 +213,7 @@ public:
     currLineLength = strlen(currLine);
     readHead = 0;
     Command cmd = parseCommand();
-    if (moving and !(cmd == MOVE or cmd == RELATIVE_MOVE or cmd == BLOCKING_RELATIVE_MOVE))
+    if (moving and !(cmd == MOVE or cmd == RELATIVE_MOVE or cmd == BLOCKING_RELATIVE_MOVE or cmd == SET_ACCELERATION))
     {
       blockUntilAllStopped = true;
       return;

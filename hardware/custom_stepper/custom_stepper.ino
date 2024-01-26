@@ -16,7 +16,6 @@ void setup()
   stateMachine->setStepper(2,&J3);
   stateMachine->setStepper(3,&J4);
   stateMachine->setStepper(4,&J5);
-  delay(3000);
 }
 
 void loop()
@@ -24,4 +23,5 @@ void loop()
   stateMachine->processSerial();
   stateMachine->processNextCommand();
   stateMachine->run();
+  //delayMicroseconds(1);
 }
