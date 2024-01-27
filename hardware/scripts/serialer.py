@@ -9,15 +9,16 @@ final_shot_string = "SA 3 40000 | SA 4 40000 | MR 0 0 0 0 400"
 
 def parseMessage(message):
     split_msg = message.split()
-    if(len(split_msg) != 7 and split_msg[0] != "MRT"):
+    if(len(split_msg) != 7 or split_msg[0] != "MRT"):
         return False,None,None,None
-    time_to_contact_ns = split_msg[6]
+    time_to_contact_ns = int(split_msg[6])
     single_frame_time,initial_time,final_shot_time = get_time(np.array([int(split_msg[j]) for j in range(1,6)]))
     time_remaining_ns = time_to_contact_ns - time.time_ns()
-    if(time_remaining_ns > initial_time + final_shot_time):
+    time_remaining_s = time_remaining_ns/1e9
+    if(time_remaining_s > initial_time + final_shot_time):
         return False,"SA 3 0 4000 | SA 4 0 4000 | MR {j1} {j2} {j3} {j4} {j5}".format(j1=split_msg[1],j2=split_msg[2],j3=split_msg[3],j4=split_msg[4],j5=split_msg[5]),None,None
     else:
-        delay = initial_time + final_shot_time - time_remaining_ns
+        delay = initial_time + final_shot_time - time_remaining_s
         return True,"SA 3 0 4000 | SA 4 0 4000 | MR {j1} {j2} {j3} {j4} {j5}".format(j1=split_msg[1],j2=split_msg[2],j3=split_msg[3],j4=split_msg[4],j5=(int(split_msg[5]) - 200)),final_shot_string,delay
 
 async def serial_writer(websocket,ser):
