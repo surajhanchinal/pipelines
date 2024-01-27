@@ -87,7 +87,7 @@ private:
 
   void parseMoves(Command cmd)
   {
-    targetIndex = (targetIndex + 1) % 10;
+    targetIndex = (targetIndex + 1) % 100;
     targetsLen++;
     moveCommands[targetIndex] = cmd;
 
@@ -264,7 +264,7 @@ public:
         }
         if (currCommand < targetsLen)
         {
-          currStepperIndex[i]++;
+          currStepperIndex[i] = (currStepperIndex[i] + 1) % 100;
           int cmd = moveCommands[currStepperIndex[i]];
           if (cmd == BLOCKING_RELATIVE_MOVE or cmd == RELATIVE_MOVE)
           {
