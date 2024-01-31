@@ -105,8 +105,8 @@ private:
     }
     long j2_target = targets[targetIndex][1];
     long j3_target = targets[targetIndex][2] + j2_target / 3;
-    long j4_target = targets[targetIndex][3] - targets[targetIndex][4] + j3_target / 3 - j2_target / 9;
-    long j5_target = targets[targetIndex][3] + targets[targetIndex][4] + j3_target / 3 - j2_target / 9;
+    long j4_target = targets[targetIndex][3] - targets[targetIndex][4] + targets[targetIndex][2] / 3 + 2*(j2_target / 9.0);
+    long j5_target = targets[targetIndex][3] + targets[targetIndex][4] + targets[targetIndex][2] / 3 + 2*(j2_target / 9.0);
     targets[targetIndex][1] = targets[targetIndex][1];
     targets[targetIndex][2] = j3_target;
     targets[targetIndex][3] = j4_target;
@@ -254,7 +254,7 @@ public:
       allDone = done and allDone;
       if (done)
       {
-        int currCommand = currStepperIndex[i];
+        int currCommand = currStepperIndex[i] % 100;
         if (moveCommands[currCommand] == BLOCKING_RELATIVE_MOVE)
         {
           if (blockUntilSync)
@@ -262,17 +262,18 @@ public:
             continue;
           }
         }
-        if (currCommand < targetsLen)
+        if (currStepperIndex[i] < targetsLen)
         {
-          currStepperIndex[i] = (currStepperIndex[i] + 1) % 100;
-          int cmd = moveCommands[currStepperIndex[i]];
+          currStepperIndex[i] = (currStepperIndex[i] + 1);
+          int newCommandIndex = currStepperIndex[i] % 100;
+          int cmd = moveCommands[newCommandIndex];
           if (cmd == BLOCKING_RELATIVE_MOVE or cmd == RELATIVE_MOVE)
           {
-            steppers[i]->setRelativeTarget(targets[currStepperIndex[i]][i]);
+            steppers[i]->setRelativeTarget(targets[newCommandIndex][i]);
           }
           else if (cmd == MOVE)
           {
-            steppers[i]->setTarget(targets[currStepperIndex[i]][i]);
+            steppers[i]->setTarget(targets[newCommandIndex][i]);
           }
         }
       }
