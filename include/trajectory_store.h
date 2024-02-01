@@ -145,10 +145,7 @@ public:
   Matrix4f pos_transform;
   Matrix4f vel_transform;
   Eigen::Affine3f rotMatrix;
-  // TrajectoryStore(Eigen::MatrixXf K1, Eigen::MatrixXf K2, Eigen::MatrixXf D1,
-  //                 Eigen::MatrixXf D2, Eigen::MatrixXf R1, Eigen::MatrixXf R2,
-  //                 Eigen::MatrixXf P1, Eigen::MatrixXf P2)
-  //     : K1(K1), K2(K2), D1(D1), D2(D2), R1(R1), R2(R2), P1(P1), P2(P2) {}
+
   TrajectoryStore(StereoCameraParams stereoCameraParams) : stereoCameraParams(stereoCameraParams) {
     calculatePositionTranformation();
     calculateVelocityTransformation();
