@@ -1,5 +1,5 @@
 #pragma once
-
+#include <eigen3/Eigen/Dense>
 #include "imgui.h"
 #include "opencv2/core/mat.hpp"
 #include <chrono>
@@ -7,6 +7,8 @@
 #include <vector>
 
 using namespace std;
+
+typedef Eigen::Matrix<float, 4, 4> Matrix4f;
 
 struct CameraParams {
   cv::Mat K, D, R , T, P;

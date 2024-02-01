@@ -19,6 +19,8 @@
 #include <sw/redis++/redis++.h>
 #include "ik_solver.h"
 #include <iomanip>
+#include "fk_matrices.h"
+#include "common_data.h"
 
 using namespace std;
 
@@ -132,14 +134,17 @@ public:
           solver->trajectory_ik(pos(0),pos(1),pos(2),vel(0),vel(1),vel(2),sols);
           std::cout<<"position: "<<pos<<std::endl;
           std::cout<<"velocity: "<<vel<<std::endl;
-          sent = true;
           if(sols.size()){
-            auto timeToContact = fullTraj.alignedContours[0].t_avg + chrono::milliseconds((long)(sols[0].t*1000));
-            long j1_a = ((float)sols[0].j1*(180.0/M_PI)*(4000.0/360.0));
-            long j2_a = ((float)sols[0].j2*(180.0/M_PI)*(3600.0/360.0));
-            long j3_a = ((float)(sols[0].j3-M_PI_2)*(180.0/M_PI)*(3600.0/360.0));
-            long j4_a = ((float)sols[0].j4*(180.0/M_PI)*(3600.0/360.0));
-            long j5_a = ((float)sols[0].j5*(180.0/M_PI)*(3600.0/360.0));
+            sent = true;
+            common_data::solutionFound = true;
+            auto &sol = sols[0];
+            FKMatrices::fk(sol.j1,sol.j2,sol.j3,sol.j4,sol.j5,common_data::bat_fk);
+            auto timeToContact = fullTraj.alignedContours[0].t_avg + chrono::milliseconds((long)(sol.t*1000));
+            long j1_a = ((float)sol.j1*(180.0/M_PI)*(4000.0/360.0));
+            long j2_a = ((float)sol.j2*(180.0/M_PI)*(3600.0/360.0));
+            long j3_a = ((float)(sol.j3-M_PI_2)*(180.0/M_PI)*(3600.0/360.0));
+            long j4_a = ((float)sol.j4*(180.0/M_PI)*(3600.0/360.0));
+            long j5_a = ((float)sol.j5*(180.0/M_PI)*(3600.0/360.0));
             std::ostringstream oss;
             oss << "MR ";
             oss << j1_a << " ";

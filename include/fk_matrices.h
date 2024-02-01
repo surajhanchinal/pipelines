@@ -1,25 +1,24 @@
 #pragma once
 #include <cmath>
 #include <eigen3/Eigen/Dense>
-
-typedef Eigen::Matrix<float, 4, 4> Matrix4f;
+#include "utils.h"
 
 class FKMatrices
 {
 private:
-  float J1_Lx = 0.0525;
-  float J1_Lz = 0.66;
-  float J2_Lz = 0.3;
-  float J3_Lz = 0.3;
-  float J4_Lz = 0.1;
-  float J5_Lx = 0.45;
+  static constexpr float J1_Lx = 0.0525;
+  static constexpr float J1_Lz = 0.66;
+  static constexpr float J2_Lz = 0.3;
+  static constexpr float J3_Lz = 0.3;
+  static constexpr float J4_Lz = 0.1;
+  static constexpr float J5_Lx = 0.45;
 
 public:
   FKMatrices()
   {
   }
 
-  void fk(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& FK)
+  static void fk(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& FK)
   {
     FK(0, 0) = -sin(J1_a) * sin(J5_a) + cos(J1_a) * cos(J5_a) * cos(J2_a + J3_a + J4_a);
     FK(0, 1) = -sin(J2_a + J3_a + J4_a) * cos(J1_a);
@@ -40,7 +39,7 @@ public:
                J5_Lx * sin(J2_a + J3_a + J4_a) * cos(J5_a);
   }
 
-  void t1(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T1)
+  static void t1(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T1)
   {
     T1(0, 0) = cos(J1_a);
     T1(0, 1) = -sin(J1_a);
@@ -56,7 +55,7 @@ public:
     T1(2, 3) = 0;
   }
 
-  void t2(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T2)
+  static void t2(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T2)
   {
     T2(0, 0) = cos(J1_a) * cos(J2_a);
     T2(0, 1) = -sin(J1_a);
@@ -72,7 +71,7 @@ public:
     T2(2, 3) = J1_Lz;
   }
 
-  void t3(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T3)
+  static void t3(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T3)
   {
     T3(0, 0) = cos(J1_a) * cos(J2_a + J3_a);
     T3(0, 1) = -sin(J1_a);
@@ -88,7 +87,7 @@ public:
     T3(2, 3) = J1_Lz + J2_Lz * cos(J2_a);
   }
 
-  void t4(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T4)
+  static void t4(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T4)
   {
     T4(0, 0) = cos(J1_a) * cos(J2_a + J3_a + J4_a);
     T4(0, 1) = -sin(J1_a);
@@ -104,7 +103,7 @@ public:
     T4(2, 3) = J1_Lz + J2_Lz * cos(J2_a) + J3_Lz * cos(J2_a + J3_a);
   }
 
-  void t5(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T5)
+  static void t5(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T5)
   {
     T5(0, 0) = -sin(J1_a) * sin(J5_a) + cos(J1_a) * cos(J5_a) * cos(J2_a + J3_a + J4_a);
     T5(0, 1) = -sin(J1_a) * cos(J5_a) - sin(J5_a) * cos(J1_a) * cos(J2_a + J3_a + J4_a);

@@ -24,7 +24,6 @@ class IKSolver
   const float J3_Lz = 0.3;
   const float J4_Lz = 0.1;
   const float J5_Lx = 0.45;
-  FKMatrices* fkMatrices;
   Matrix4f FK;
   Matrix4f T1,T2,T3,T4,T5;
   std::vector<Cuboid> cuboids;
@@ -115,12 +114,12 @@ class IKSolver
   }
 
   bool checkFullSolution(float j1e,float j2e,float j3e,float j4e,float j5e,Matrix4f &pose_matrix){
-    fkMatrices->fk(j1e,j2e,j3e,j4e,j5e,FK);
+    FKMatrices::fk(j1e,j2e,j3e,j4e,j5e,FK);
     return ((FK - pose_matrix).array().abs() < 0.01).all();
   }
 
   bool checkPositionSolution(float j1e,float j2e,float j3e,float j4e,float j5e,float Px,float Py,float Pz){
-    fkMatrices->fk(j1e,j2e,j3e,j4e,j5e,FK);
+    FKMatrices::fk(j1e,j2e,j3e,j4e,j5e,FK);
     bool isValid = abs(FK(0,3) - Px) < 0.01 and abs(FK(1,3) - Py) < 0.01 and abs(FK(2,3) - Pz) < 0.01;
     if(isValid){
       bool collided = hasCollision(j1e,j2e,j3e,j4e,j5e);
@@ -158,11 +157,11 @@ class IKSolver
 
 
   bool hasCollision(float j1e,float j2e,float j3e,float j4e,float j5e){
-    fkMatrices->t1(j1e,j2e,j3e,j4e,j5e,T1);
-    fkMatrices->t2(j1e,j2e,j3e,j4e,j5e,T2);
-    fkMatrices->t3(j1e,j2e,j3e,j4e,j5e,T3);
-    fkMatrices->t4(j1e,j2e,j3e,j4e,j5e,T4);
-    fkMatrices->t5(j1e,j2e,j3e,j4e,j5e,T5);
+    FKMatrices::t1(j1e,j2e,j3e,j4e,j5e,T1);
+    FKMatrices::t2(j1e,j2e,j3e,j4e,j5e,T2);
+    FKMatrices::t3(j1e,j2e,j3e,j4e,j5e,T3);
+    FKMatrices::t4(j1e,j2e,j3e,j4e,j5e,T4);
+    FKMatrices::t5(j1e,j2e,j3e,j4e,j5e,T5);
 
     initializeCubes();
     Cuboid &cb1 = cuboids[0];
@@ -605,7 +604,6 @@ class IKSolver
 
   IKSolver()
   {
-    fkMatrices = new FKMatrices();
     FK = Eigen::MatrixXf::Identity(4, 4);
     T1 = Eigen::MatrixXf::Identity(4, 4);
     T2 = Eigen::MatrixXf::Identity(4, 4);
