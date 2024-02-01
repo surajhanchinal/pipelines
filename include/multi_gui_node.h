@@ -29,11 +29,11 @@ class MultiGuiNode : public Node<type_list_t<CameraPairData>, type_list_t<>> {
 
 public:
   MultiGuiNode(std::string _windowName, const cv::Size _imageSize,
-               CameraParams cameraParams) {
+               StereoCameraParams stereoCameraParams) {
     windowName = _windowName;
     imageSize = _imageSize;
     solver = new IKSolver();
-    trajectoryStore = new TrajectoryStore(cameraParams);
+    trajectoryStore = new TrajectoryStore(stereoCameraParams);
     redis = new sw::redis::Redis("tcp://127.0.0.1:6379");
 
     // Window creation is in the constructor as it needs to be done in the main
@@ -164,7 +164,7 @@ public:
 
       trajectoryStore->setScreenSize(screenSize);
       trajectoryStore->setWindowSize(windowSize);
-      trajectoryStore->setCurrentTIme(frameTimedMat1.timestamp);
+      trajectoryStore->setCurrentTime(frameTimedMat1.timestamp);
 
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
       ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -351,9 +351,9 @@ private:
       // position before the image is rendered to get this offset
       render_contours2(cpos, frameTimedMat.contourGroupList);
       if (!windowName.compare("cam1")) {
-        trajectoryStore->renderLeftPred(cpos);
+        trajectoryStore->renderOnCameraView(cpos,true);
       } else {
-        trajectoryStore->renderRightPred(cpos);
+        trajectoryStore->renderOnCameraView(cpos,false);
       }
       delete frameTimedMat.contourGroupList;
       ImGui::End();

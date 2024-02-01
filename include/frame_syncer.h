@@ -20,7 +20,7 @@ using namespace std;
 class FrameSyncer
     : public Node<frame_syncer::input_type, frame_syncer::output_type> {
 public:
-  FrameSyncer(CameraParams cameraParams) : cameraParams(cameraParams) {
+  FrameSyncer(StereoCameraParams stereoCameraParams) : stereoCameraParams(stereoCameraParams) {
     rotMatrix = rotate(ConfigStore::x_angle_offset*(M_PI/180.0),ConfigStore::y_angle_offset*(M_PI/180.0),ConfigStore::z_angle_offset*(M_PI/180.0)).inverse();
   }
   void process() {
@@ -155,14 +155,14 @@ public:
   void get3dCoords(ImVec2 &leftctr, ImVec2 &rightctr, double &x, double &y,
                    double &z) {
 
-    double fx = cameraParams.P1.at<double>(0, 0);
-    double fy = cameraParams.P1.at<double>(1, 1);
-    double cx = cameraParams.P1.at<double>(0, 2);
-    double cy = cameraParams.P1.at<double>(1, 2);
+    double fx = stereoCameraParams.C1.P.at<double>(0, 0);
+    double fy = stereoCameraParams.C1.P.at<double>(1, 1);
+    double cx = stereoCameraParams.C1.P.at<double>(0, 2);
+    double cy = stereoCameraParams.C1.P.at<double>(1, 2);
     double xln = leftctr.x;
     double xrn = rightctr.x;
     double baseline =
-        cameraParams.T1.at<double>(0, 0) / 1000.0; // input is in mm
+        stereoCameraParams.C1.T.at<double>(0, 0) / 1000.0; // input is in mm
     auto disparity = xrn - xln;
     z = (fx * baseline) / disparity;
     y = ((leftctr.y - cy) * z) / fy;
@@ -196,10 +196,10 @@ public:
     vector<cv::Point2f> unLC;
     vector<cv::Point2f> rights = {rightCenter};
     vector<cv::Point2f> unRC;
-    cv::undistortPoints(lefts, unLC, cameraParams.K1, cameraParams.D1,
-                        cameraParams.R1, cameraParams.P1);
-    cv::undistortPoints(rights, unRC, cameraParams.K2, cameraParams.D2,
-                        cameraParams.R2, cameraParams.P2);
+    cv::undistortPoints(lefts, unLC, stereoCameraParams.C1.K, stereoCameraParams.C1.D,
+                        stereoCameraParams.C1.R, stereoCameraParams.C1.P);
+    cv::undistortPoints(rights, unRC, stereoCameraParams.C2.K, stereoCameraParams.C2.D,
+                        stereoCameraParams.C2.R, stereoCameraParams.C2.P);
     leftctr.x = unLC[0].x;
     leftctr.y = unLC[0].y;
     rightctr.x = unRC[0].x;
@@ -222,5 +222,5 @@ public:
   }
 
   Eigen::Affine3f rotMatrix;
-  CameraParams cameraParams;
+  StereoCameraParams stereoCameraParams;
 };

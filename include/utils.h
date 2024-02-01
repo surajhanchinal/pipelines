@@ -37,17 +37,20 @@ Eigen::Affine3f rotate(double ax, double ay, double az) {
     return t;
   }
 
-void loadCameraParams(CameraParams &cameraParams) {
+void loadCameraParams(StereoCameraParams &stereoCameraParams) {
   cv::FileStorage fs("../scripts/stereoParams.xml", cv::FileStorage::READ);
-  fs["K1"] >> cameraParams.K1;
-  fs["K2"] >> cameraParams.K2;
-  fs["D1"] >> cameraParams.D1;
-  fs["D2"] >> cameraParams.D2;
-  fs["R1"] >> cameraParams.R1;
-  fs["R2"] >> cameraParams.R2;
-  fs["R"] >> cameraParams.R;
-  fs["P1"] >> cameraParams.P1;
-  fs["P2"] >> cameraParams.P2;
-  fs["T"] >> cameraParams.T1;
-  fs["T"] >> cameraParams.T2;
+  fs["K1"] >> stereoCameraParams.C1.K;
+  fs["D1"] >> stereoCameraParams.C1.D;
+  fs["R1"] >> stereoCameraParams.C1.R;
+  fs["P1"] >> stereoCameraParams.C1.P;
+  fs["T"] >> stereoCameraParams.C1.T;
+  stereoCameraParams.C1.isLeft = true;
+
+  fs["K2"] >> stereoCameraParams.C2.K;
+  fs["D2"] >> stereoCameraParams.C2.D;
+  fs["R2"] >> stereoCameraParams.C2.R;
+  fs["P2"] >> stereoCameraParams.C2.P;
+  fs["T"] >> stereoCameraParams.C2.T;
+  stereoCameraParams.C1.isLeft = false;
+
 }

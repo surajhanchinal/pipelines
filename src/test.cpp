@@ -41,10 +41,10 @@ int main() {
 
   auto frameProcessor2 = new FrameProcessor(captureSize, 0);
 
-  CameraParams cameraParams;
-  loadCameraParams(cameraParams);
+  StereoCameraParams stereoCameraParams;
+  loadCameraParams(stereoCameraParams);
 
-  auto frameSyncer = new FrameSyncer(cameraParams);
+  auto frameSyncer = new FrameSyncer(stereoCameraParams);
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -52,7 +52,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-  auto multiGuiNode = new MultiGuiNode("w1", captureSize, cameraParams);
+  auto multiGuiNode = new MultiGuiNode("w1", captureSize, stereoCameraParams);
 
   auto o1 = Orchestrator();
   o1.registerNode(frameReader1);

@@ -56,7 +56,7 @@ private:
   ImVec2 windowSize, screenSize;
   std::chrono::time_point<std::chrono::system_clock> currentTime;
 
-  CameraParams cameraParams;
+  StereoCameraParams stereoCameraParams;
 
   void addEstimatedParams(Trajectory &traj) {
     double x0, y0, z0, vx, vy, vz, g, error;
@@ -149,14 +149,14 @@ public:
   //                 Eigen::MatrixXf D2, Eigen::MatrixXf R1, Eigen::MatrixXf R2,
   //                 Eigen::MatrixXf P1, Eigen::MatrixXf P2)
   //     : K1(K1), K2(K2), D1(D1), D2(D2), R1(R1), R2(R2), P1(P1), P2(P2) {}
-  TrajectoryStore(CameraParams cameraParams) : cameraParams(cameraParams) {
+  TrajectoryStore(StereoCameraParams stereoCameraParams) : stereoCameraParams(stereoCameraParams) {
     calculatePositionTranformation();
     calculateVelocityTransformation();
     rotMatrix = rotate(ConfigStore::x_angle_offset*(M_PI/180.0),ConfigStore::y_angle_offset*(M_PI/180.0),ConfigStore::z_angle_offset*(M_PI/180.0));
   }
   void setWindowSize(ImVec2 sz) { windowSize = sz; }
   void setScreenSize(ImVec2 sz) { screenSize = sz; }
-  void setCurrentTIme(std::chrono::time_point<std::chrono::system_clock> curr) {
+  void setCurrentTime(std::chrono::time_point<std::chrono::system_clock> curr) {
     currentTime = curr;
   }
 
@@ -250,31 +250,20 @@ public:
     sy = ((y + 0.8) / (0.8 + ConfigStore::groundHeight + 0.1)) * windowSize.y + p.y;
   }
 
+  void render_yz_line(ImVec2 &p,double y1,double z1,double y2,double z2){
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();  
+    double xp1, xp2, yp1, yp2;
+    getScreenYZ(p, y1, z1, xp1, yp1);
+
+    getScreenYZ(p, y2, z2, xp2, yp2);
+
+    draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
+  }
+  
   void render_yz(ImVec2 &p) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();  
 
-
-    {
-
-    double xp1, xp2, yp1, yp2;
-    getScreenYZ(p, ConfigStore::groundHeight, 0, xp1, yp1);
-
-    getScreenYZ(p, ConfigStore::groundHeight, 20, xp2, yp2);
-
-    draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
-
-    }
-
-    {
-
-    double xp1, xp2, yp1, yp2;
-    getScreenYZ(p, 0, 20, xp1, yp1);
-
-    getScreenYZ(p, ConfigStore::groundHeight, 20, xp2, yp2);
-
-    draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
-
-    }
+    render_yz_line(p,1.72,2,1.72,20);
     
     for (auto const &[_, traj] : trajectories) {
       int trainingCount = trainingPointCount(traj.alignedContours.size());
@@ -287,6 +276,7 @@ public:
                                                        : colorPalette[1]);
       }
 
+      // Draw where the ball should be currently
       double timeElapsed =
           scaledDelayInMs(currentTime, traj.alignedContours[0].t_avg) / 1000.0;
       double px, py, pz;
@@ -297,23 +287,19 @@ public:
 
       draw_list->AddCircle(ImVec2(ssx, ssy), 30, colorPalette[2]);
 
+      // Draw the predicted trajectory
       for (int i = -50; i < 100; i++) {
-        double sx1, sy1;
         double newx1, newy1, newz1;
         getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                                 i * ConfigStore::frameTimeInSeconds, newx1,
                                 newy1, newz1);
-        getScreenYZ(p, newy1, newz1, sx1, sy1);
 
-        double sx2, sy2;
         double newx2, newy2, newz2;
         getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                                 (i + 1) * ConfigStore::frameTimeInSeconds,
                                 newx2, newy2, newz2);
-        getScreenYZ(p, newy2, newz2, sx2, sy2);
 
-        draw_list->AddLine(ImVec2(sx2, sy2), ImVec2(sx1, sy1), colorPalette[4],
-                           2);
+        render_yz_line(p,newy1,newz1,newy2,newz2);
       }
     }
   }
@@ -326,18 +312,22 @@ public:
     sx = (x / 2.0) * (width / 2.0) + width / 2.0 + p.x;
   }
 
+  void render_xz_line(ImVec2 &p,double x1,double z1,double x2,double z2){
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    double xp1, xp2, yp1, yp2;
+    getScreenXZ(p, x1, z1, xp1, yp1);
+
+    getScreenXZ(p, x2, z2, xp2, yp2);
+
+    draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
+  }
+  
   void render_xz(ImVec2 &p) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
     // Render center line
-
-    double xp1, xp2, yp1, yp2;
-    getScreenXZ(p, 0.5, 1, xp1, yp1);
-
-    getScreenXZ(p, 0.5, 20, xp2, yp2);
-
-    draw_list->AddLine(ImVec2(xp1, yp1), ImVec2(xp2, yp2), colorPalette[3], 2);
-
+    render_xz_line(p,0,2,0,20);
+    
     for (const auto &[_, traj] : trajectories) {
       int trainingCount = trainingPointCount(traj.alignedContours.size());
       for (int ii = 0; ii < traj.alignedContours.size(); ii++) {
@@ -368,81 +358,56 @@ public:
         getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                                 i * ConfigStore::frameTimeInSeconds, newx1,
                                 newy1, newz1);
-        getScreenXZ(p, newx1, newz1, sx1, sy1);
 
         double sx2, sy2;
         double newx2, newy2, newz2;
         getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                                 (i + 1) * ConfigStore::frameTimeInSeconds,
                                 newx2, newy2, newz2);
-        getScreenXZ(p, newx2, newz2, sx2, sy2);
 
-        draw_list->AddLine(ImVec2(sx2, sy2), ImVec2(sx1, sy1), colorPalette[4],
-                           2);
+        render_xz_line(p,newx1,newz1,newx2,newz2);
       }
     }
   }
 
-  void project3dTo2d(cv::Mat &P1, cv::Mat &K1,cv::Mat &D1, cv::Mat &R1, cv::Mat &T1,
-                     bool isLeft, ImVec2 &offset, double x, double y, double z,
+  void project3dTo2d(CameraParams &cameraParams,ImVec2 &offset, Eigen::Vector3f& oi,
                      double &sx, double &sy) {
     
-    Eigen::Vector4f oi;
-    oi << x,y,z,1;
     auto oo = rotMatrix * oi;
-    x = oo(0);
-    y = oo(1);
-    z = oo(2);
+    float x = oo(0);
+    float y = oo(1);
+    float z = oo(2);
     
-    double fx = P1.at<double>(0, 0);
-    double fy = P1.at<double>(1, 1);
-    double cx = P1.at<double>(0, 2);
-    double cy = P1.at<double>(1, 2);
-    double baseline = T1.at<double>(0, 0) / 1000.0; // input is in mm
+    double baseline = cameraParams.T.at<double>(0, 0) / 1000.0; // input is in mm
 
     // This might be wrong. If the camera is to the left. Then we need to add baseline/2. Because the left camera is to the right of the origin
     // This is correct. xo (center origin x coordinate) xo = xl + b/2 ( since xl is shifted in the positive x axis. when xl = 0, xo = b/2. makes sense.)
     //Make sure baseline is positive. Everything comes with that. And baseline is positive when the left camera is the left camera when seen from the front.
-    double sgn = isLeft ? -1 : 1;
+    double sgn = cameraParams.isLeft ? -1 : 1;
 
-    double xl = ((x + sgn * (baseline / 2.0)) * (fx / z)) + cx;
-    double yl = (y * (fy / z)) + cy;
+    double xx = (x + sgn * (baseline / 2.0))/z;
+    double yy = y/z;
 
-    double frx = K1.at<double>(0, 0);
-    double fry = K1.at<double>(1, 1);
-    double crx = K1.at<double>(0, 2);
-    double cry = K1.at<double>(1, 2);
+    cv::Mat pt = cameraParams.R.inv() * (cv::Mat_<double>(3, 1) << xx, yy, 1);
 
-    double xx = (xl - cx) / fx;
-    double yy = (yl - cy) / fy;
+    vector<cv::Point3d> inputPoints = {{pt.at<double>(0,0),pt.at<double>(1,0),1}};
+    vector<cv::Point2d> outputPoints;
 
-    cv::Mat newOld = R1.inv() * (cv::Mat_<double>(3, 1) << xx, yy, 1);
+    auto rtvec = cv::Mat::zeros(3,1,CV_32FC1);
 
-    double newx = newOld.at<double>(0, 0)/newOld.at<double>(2, 0);
-    double newy = newOld.at<double>(1, 0)/newOld.at<double>(2, 0);
-
-    //Need to distort here.
-     double k1 = D1.at<double>(0,0);
-    double k2 = D1.at<double>(1,0);
-    double p1 = D1.at<double>(2,0);
-    double p2 = D1.at<double>(3,0);
-    double k3 = D1.at<double>(4,0);
-    double r1 = sqrt(newx*newx + newy*newy);
-    newx = newx*(1 + k1*pow(r1,2) + k2*pow(r1,4) + k3*pow(r1,6)) + 2*p1*newx*newy  + p2*(r1*r1 + 2*newx*newx);
-    newy = newy*(1 + k1*pow(r1,2) + k2*pow(r1,4) + k3*pow(r1,6)) + p1*(r1*r1 + 2*newy*newy) + 2*p2*newx*newy; 
-
-    newx = (newx * frx) + crx;
-    newy = (newy * fry) + cry;
+    cv::projectPoints(inputPoints,rtvec,rtvec,cameraParams.K,cameraParams.D,outputPoints);
 
     double ratio = windowSize.x / 1280;
 
-    sx = offset.x + ratio * newx;
-    sy = offset.y + ratio * newy;
+    sx = offset.x + ratio * outputPoints[0].x;
+    sy = offset.y + ratio * outputPoints[0].y;
   }
 
-  void renderLeftPred(ImVec2 &p) {
+  void renderOnCameraView(ImVec2 &offset,bool isLeft = true){
+    CameraParams &cameraParams = isLeft ? stereoCameraParams.C1 : stereoCameraParams.C2;
 
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    // Draw trajectories
     for (const auto &[_, traj] : trajectories) {
       int trainingCount = trainingPointCount(traj.alignedContours.size());
       double timeElapsed =
@@ -450,54 +415,28 @@ public:
       double px, py, pz;
       getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
                               timeElapsed, px, py, pz);
+      Eigen::Vector3f p3d;
+      p3d << px ,py,pz;
+
       double sx, sy;
-      project3dTo2d(cameraParams.P1, cameraParams.K1,cameraParams.D1, cameraParams.R1,
-                    cameraParams.T1, true, p, px, py, pz, sx, sy);
+      project3dTo2d(cameraParams, offset, p3d, sx, sy);
 
       draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
     }
-    {
-      double lx1, lx2, ly1, ly2;
 
-      project3dTo2d(cameraParams.P1, cameraParams.K1,cameraParams.D1, cameraParams.R1,
-                    cameraParams.T1, true, p, 0.5, 1.72, 1, lx1, ly1);
-      project3dTo2d(cameraParams.P1, cameraParams.K1, cameraParams.D1,cameraParams.R1,
-                    cameraParams.T1, true, p, 0.5, 1.72, 20.03, lx2, ly2);
-      draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
-                         2);
-    }
- 
+    Eigen::Vector3f p1(0,1.72,2);
+    Eigen::Vector3f p2(0,1.72,20);
+
+    renderLine(p1,p2,cameraParams,offset);
   }
 
-  void renderRightPred(ImVec2 &p) {
-
+  void renderLine(Eigen::Vector3f &p1,Eigen::Vector3f &p2,CameraParams &cameraParams,ImVec2& offset){
+    double lx1, lx2, ly1, ly2;
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    for (const auto &[_, traj] : trajectories) {
-      int trainingCount = trainingPointCount(traj.alignedContours.size());
-      double timeElapsed =
-          scaledDelayInMs(currentTime, traj.alignedContours[0].t_avg) / 1000.0;
-      double px, py, pz;
-      getPredictedPointAtTime(traj.estimatedParams.at(trainingCount),
-                              timeElapsed, px, py, pz);
+    project3dTo2d(cameraParams,offset,p1, lx1, ly1);
+    project3dTo2d(cameraParams,offset, p2, lx2, ly2);
 
-      double sx, sy;
-      project3dTo2d(cameraParams.P2, cameraParams.K2,cameraParams.D2, cameraParams.R2,
-                    cameraParams.T2, false, p, px, py, pz, sx, sy);
-      draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
-    }
-
-    {
-
-      double lx1, lx2, ly1, ly2;
-
-      project3dTo2d(cameraParams.P2, cameraParams.K2,cameraParams.D2, cameraParams.R2,
-                    cameraParams.T2, false, p,0.5, 1.72, 1, lx1, ly1);
-      project3dTo2d(cameraParams.P2, cameraParams.K2,cameraParams.D2, cameraParams.R2,
-                    cameraParams.T2, false, p, 0.5, 1.72, 20.03, lx2, ly2);
-
-      draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],
-                         2);
-    }
+    draw_list->AddLine(ImVec2(lx1, ly1), ImVec2(lx2, ly2), colorPalette[4],2);
   }
 
   void renderMetrics() {
