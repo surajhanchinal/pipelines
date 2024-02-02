@@ -123,6 +123,7 @@ public:
           auto &params = fullTraj.estimatedParams[6];
           // add transformation
           std::vector<Solution> sols;
+          sent = true;
 
           Eigen::Vector4f pos;
           pos << params.x0 , params.y0 , params.z0 , 1;
@@ -135,7 +136,6 @@ public:
           std::cout<<"position: "<<pos<<std::endl;
           std::cout<<"velocity: "<<vel<<std::endl;
           if(sols.size()){
-            sent = true;
             common_data::solutionFound = true;
             auto &sol = sols[0];
             FKMatrices::fk(sol.j1,sol.j2,sol.j3,sol.j4,sol.j5,common_data::bat_fk);

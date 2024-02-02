@@ -37,6 +37,7 @@ public:
     FK(2, 2) = sin(J5_a) * sin(J2_a + J3_a + J4_a);
     FK(2, 3) = J1_Lz + J2_Lz * cos(J2_a) + J3_Lz * cos(J2_a + J3_a) + J4_Lz * cos(J2_a + J3_a + J4_a) -
                J5_Lx * sin(J2_a + J3_a + J4_a) * cos(J5_a);
+    FK(3,3) = 1;
   }
 
   static void t1(double J1_a, double J2_a, double J3_a, double J4_a, double J5_a, Matrix4f& T1)
