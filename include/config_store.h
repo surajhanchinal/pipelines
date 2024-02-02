@@ -30,7 +30,7 @@ public:
   // Time to live in milliseconds. Vary this based on your framerate. Usually
   // for nice-looking videos, use around 10 frames worth, but for actual usage
   // use, 3-4x frame time.
-  static constexpr double contourGroupTimeToLive = (frameTime / 1000.0) * 7.0;
+  static constexpr double contourGroupTimeToLive = (realFrameTime / 1000.0) * 7.0;
   // static constexpr int contourGroupTimeToLive = 160;
 
   static constexpr double groundHeight = 1.7;
@@ -42,7 +42,7 @@ public:
   static constexpr double j4_start = 0;
   static constexpr double j5_start = 0;
   // Angle in degrees 
-  static constexpr double x_angle_offset = 0.82;
-  static constexpr double y_angle_offset = -5.88;
-  static constexpr double z_angle_offset = -1.18;
+  static constexpr double x_angle_offset = -0.68;
+  static constexpr double y_angle_offset = -3.3;
+  static constexpr double z_angle_offset = -1.56;
 };
