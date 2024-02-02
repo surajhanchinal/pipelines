@@ -51,6 +51,6 @@ void loadCameraParams(StereoCameraParams &stereoCameraParams) {
   fs["R2"] >> stereoCameraParams.C2.R;
   fs["P2"] >> stereoCameraParams.C2.P;
   fs["T"] >> stereoCameraParams.C2.T;
-  stereoCameraParams.C1.isLeft = false;
+  stereoCameraParams.C2.isLeft = false;
 
 }
