@@ -170,22 +170,22 @@ while(True):
 
     width = 0.995
     height = 1.035
-    distance = 5.34
-    groundHeight = 1.72
-    x_offset = -0.5
-    x1 = 0 + x_offset
+    distance = 5.78 + x_offset
+    groundHeight = 1.73
+    fix_x_offset = -0.37
+    x1 = 0 + fix_x_offset
     y1 = groundHeight - height
     z1 = distance
 
-    x2 = width + x_offset
+    x2 = width + fix_x_offset
     y2 = groundHeight - height
     z2 = distance
 
-    x3 = width + x_offset
+    x3 = width + fix_x_offset
     y3 = groundHeight
     z3 = distance
 
-    x4 = 0 + x_offset
+    x4 = 0 + fix_x_offset
     y4 = groundHeight
     z4 = distance
     
@@ -198,13 +198,41 @@ while(True):
     draw_line2(frame2,x2,y2,z2,x3,y3,z3)    
     draw_line2(frame2,x3,y3,z3,x4,y4,z4)    
     draw_line2(frame2,x4,y4,z4,x1,y1,z1)    
+    
+    new_x_offset = 0.42
+    x21 = 0 + fix_x_offset + new_x_offset
+    y21 = groundHeight
+    z21 = distance
+    
+    x22 = 0 + fix_x_offset + new_x_offset + 0.2
+    y22 = groundHeight
+    z22 = distance
 
-    #draw_line1(frame1,0,groundHeight,3,0,groundHeight,8.87)
-    #draw_line2(frame2,0,groundHeight,3,0,groundHeight,8.87)
-    draw_line2(frame2,x4,y4,z4,x4,y4,6.61)
-    draw_line2(frame2,x3,y3,z3,x3,y3,6.54)
-    draw_line1(frame1,x4,y4,z4,x4,y4,6.61)
-    draw_line1(frame1,x3,y3,z3,x3,y3,6.54)
+    x23 = 0 + fix_x_offset + new_x_offset
+    y23 = groundHeight
+    z23 = distance + 0.25
+    
+    x24 = 0 + fix_x_offset + new_x_offset + 0.2
+    y24 = groundHeight
+    z24 = distance + 0.25
+
+    draw_line1(frame1,x21,y21,z21,x22,y22,z22)
+    draw_line1(frame1,x22,y22,z22,x24,y24,z24)    
+    draw_line1(frame1,x23,y23,z23,x21,y21,z21)    
+    draw_line1(frame1,x24,y24,z24,x23,y23,z23)    
+
+    draw_line2(frame2,x21,y21,z21,x22,y22,z22)
+    draw_line2(frame2,x22,y22,z22,x24,y24,z24)    
+    draw_line2(frame2,x23,y23,z23,x21,y21,z21)    
+    draw_line2(frame2,x24,y24,z24,x23,y23,z23)    
+
+
+    draw_line1(frame1,-0.3,groundHeight,3,-0.3,groundHeight,10)
+    draw_line2(frame2,-0.3,groundHeight,3,-0.3,groundHeight,10)
+    #draw_line2(frame2,x4,y4,z4,x4,y4,6.61)
+    #draw_line2(frame2,x3,y3,z3,x3,y3,6.54)
+    #draw_line1(frame1,x4,y4,z4,x4,y4,6.61)
+    #draw_line1(frame1,x3,y3,z3,x3,y3,6.54)
 
     frame1 = cv2.resize(frame1, up_points, interpolation= cv2.INTER_LINEAR)
     frame2 = cv2.resize(frame2, up_points, interpolation= cv2.INTER_LINEAR)
