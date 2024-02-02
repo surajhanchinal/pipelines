@@ -86,6 +86,10 @@ public:
 
       // cv::GaussianBlur(gcurr, gcurr_blur, cv::Size(5, 5), 0);
 
+
+      // When you want to detect at home and it's not detecting
+      // initially, reduce this gaussian blur to 3 and next ones to 11 and
+      // reduce the binaryThreshold to 5.
       cv::GaussianBlur(gnext, gnext, cv::Size(5, 5), 0);
 
       cv::absdiff(gprev, gcurr, diff1);

@@ -8,6 +8,7 @@ public:
   static constexpr double minAspectRatio = 0.8;
   static constexpr double maxAspectRatio = 1.2;
   static constexpr double minExtent = 0.5;
+  // Reduce this to 5 in case of bad detection at home.
   static constexpr int binaryThreshold = 10;
 
   // Contour tree params
