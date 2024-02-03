@@ -496,8 +496,10 @@ public:
 
       double speed = sqrt(vx * vx + vy * vy + vz * vz);
 
+      // Replace below with solver which gets exact time it'll reach
+      // including all the elasticity params.
       double z = traj.alignedContours.at(paramIndex - 1).z;
-      double remainingZ = 22 - z;
+      double remainingZ = ConfigStore::Y_OFFSET - z;
       double remainingTime = remainingZ / vz;
 
       // ImGui::Text("Gravity: %.2f m/s2",gravity);
@@ -509,9 +511,9 @@ public:
 
   void calculatePositionTranformation()
   {
-    Eigen::Affine3f pos_tf = translate(0.5, 20.03, 0);
+    Eigen::Affine3f pos_tf = translate(ConfigStore::X_OFFSET, ConfigStore::Y_OFFSET, 0);
     pos_tf = pos_tf * rotate(0, 0, M_PI);
-    pos_tf = pos_tf * translate(0, 0, 1.72);
+    pos_tf = pos_tf * translate(0, 0, ConfigStore::groundHeight);
     pos_tf = pos_tf * rotate(-M_PI / 2.0, 0, 0);
     pos_transform = pos_tf.matrix();
   }

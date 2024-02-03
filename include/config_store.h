@@ -54,4 +54,9 @@ public:
   static constexpr double X_MAX = 2;
   static constexpr double Z_MIN = 0;
   static constexpr double Z_MAX = 16.9;
+
+  // Robot position offset parameters. These are in
+  // robot coordinate system
+  static constexpr double X_OFFSET = 0.4;
+  static constexpr double Y_OFFSET = 20; 
 };
