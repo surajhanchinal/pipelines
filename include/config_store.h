@@ -43,7 +43,15 @@ public:
   static constexpr double j4_start = 0;
   static constexpr double j5_start = 0;
   // Angle in degrees 
-  static constexpr double x_angle_offset = -0.68;
-  static constexpr double y_angle_offset = -3.3;
-  static constexpr double z_angle_offset = -1.56;
+  static constexpr double x_angle_offset = 1.22;
+  static constexpr double y_angle_offset = -4.52;
+  static constexpr double z_angle_offset = 0.02;
+
+  // Range for lines xz and yz screens.
+  static constexpr double Y_MAX = groundHeight + 0.1;
+  static constexpr double Y_MIN = -0.8;
+  static constexpr double X_MIN = -2;
+  static constexpr double X_MAX = 2;
+  static constexpr double Z_MIN = 0;
+  static constexpr double Z_MAX = 16.9;
 };

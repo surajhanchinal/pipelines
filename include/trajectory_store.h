@@ -55,7 +55,7 @@ private:
   }
 
   std::vector<ImColor> colorPalette = { ImColor(83, 200, 33),  ImColor(255, 201, 40), ImColor(255, 148, 35),
-                                        ImColor(255, 72, 162), ImColor(122, 71, 255), ImColor(42, 153, 235) };
+                                        ImColor(255, 72, 162), ImColor(122, 71, 255), ImColor(42, 153, 235),ImColor(255,0,0) };
 
   ImVec2 windowSize, screenSize;
   std::chrono::time_point<std::chrono::system_clock> currentTime;
@@ -296,8 +296,8 @@ public:
 
   void getScreenYZ(ImVec2& p, double y, double z, double& sx, double& sy)
   {
-    sx = (z / 20) * windowSize.x + p.x;
-    sy = ((y + 0.8) / (0.8 + ConfigStore::groundHeight + 0.1)) * windowSize.y + p.y;
+    sx = (z - ConfigStore::Z_MIN)*(windowSize.x/(ConfigStore::Z_MAX - ConfigStore::Z_MIN)) + p.x;
+    sy = (y - ConfigStore::Y_MIN)*(windowSize.y)/(ConfigStore::Y_MAX - ConfigStore::Y_MIN) +  p.y;
   }
 
   void render_yz_line(ImVec2& p, double y1, double z1, double y2, double z2)
@@ -315,7 +315,7 @@ public:
   {
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-    render_yz_line(p, 1.72, 2, 1.72, 20);
+    render_yz_line(p, 1.72, 0, 1.72, 20);
 
     for (auto const& [_, traj] : trajectories)
     {
@@ -357,8 +357,9 @@ public:
   {
     auto height = 2 * windowSize.y;
     auto width = screenSize.x - 2 * windowSize.x;
-    sy = height - (z / 20) * height + p.y;
-    sx = (x / 2.0) * (width / 2.0) + width / 2.0 + p.x;
+    double fsy = (z - ConfigStore::Z_MIN)*(height/(ConfigStore::Z_MAX - ConfigStore::Z_MIN));
+    sy = height - fsy + p.y;
+    sx = (x - ConfigStore::X_MIN)*(width/(ConfigStore::X_MAX - ConfigStore::X_MIN)) + p.x;
   }
 
   void render_xz_line(ImVec2& p, double x1, double z1, double x2, double z2)
@@ -443,11 +444,13 @@ public:
       double sx, sy;
       project3dTo2d(cameraParams, offset, p3d, sx, sy);
 
-      draw_list->AddCircle(ImVec2(sx, sy), 10, colorPalette[5], -1, 2);
+      draw_list->AddCircle(ImVec2(sx, sy), 5, colorPalette[6], -1, 2);
+      draw_list->AddCircle(ImVec2(sx, sy), 1, colorPalette[6], -1, 1);
+    
     }
 
-    Eigen::Vector3f p1(0, 1.72, 2);
-    Eigen::Vector3f p2(0, 1.72, 20);
+    Eigen::Vector3f p1(0, 1.73, 2);
+    Eigen::Vector3f p2(0, 1.73, 16.9);
 
     renderLine(p1, p2, cameraParams, offset);
 
