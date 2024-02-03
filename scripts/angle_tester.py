@@ -5,6 +5,7 @@ import os
 import argparse
 from scipy.spatial.transform import Rotation   
 import shutil
+from camera_reader import getCameraPaths
 
 def rot_x(theta):
     theta = theta*(np.pi/180)
@@ -36,8 +37,10 @@ def rot_z(theta):
         [0, 0, 0, 1]
     ])
 
-camera1 = cv2.VideoCapture(4,cv2.CAP_V4L2)
-camera2 = cv2.VideoCapture(2,cv2.CAP_V4L2)
+leftCam,rightCam = getCameraPaths()
+
+camera1 = cv2.VideoCapture(leftCam,cv2.CAP_V4L2)
+camera2 = cv2.VideoCapture(rightCam,cv2.CAP_V4L2)
 cv_file = cv2.FileStorage('stereoParams.xml', cv2.FILE_STORAGE_READ)
 
 # Setting Motion Codecs
@@ -170,9 +173,9 @@ while(True):
 
     width = 0.995
     height = 1.035
-    distance = 5.78 + x_offset
+    distance = 16.8 + x_offset
     groundHeight = 1.73
-    fix_x_offset = -0.37
+    fix_x_offset = -0.47
     x1 = 0 + fix_x_offset
     y1 = groundHeight - height
     z1 = distance

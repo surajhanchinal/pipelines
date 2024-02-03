@@ -13,6 +13,7 @@ typedef Eigen::Matrix<float, 4, 4> Matrix4f;
 struct CameraParams {
   cv::Mat K, D, R , T, P;
   bool isLeft;
+  int cameraNumber;
 };
 
 struct StereoCameraParams {

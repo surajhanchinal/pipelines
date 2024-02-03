@@ -30,20 +30,20 @@ int main() {
   const int height = 720;
   const int width = 1280;
   const cv::Size captureSize(width, height);
+  StereoCameraParams stereoCameraParams;
+  loadCameraParams(stereoCameraParams);
 
   auto captureSignaler = new CaptureSignaler();
 
-  auto frameReader1 = new FrameReader(4, "camera1", captureSize);
+  auto frameReader1 = new FrameReader(stereoCameraParams.C1.cameraNumber, "camera1", captureSize);
 
-  auto frameReader2 = new FrameReader(2, "camera2", captureSize);
+  auto frameReader2 = new FrameReader(stereoCameraParams.C2.cameraNumber, "camera2", captureSize);
 
   auto frameProcessor1 = new FrameProcessor(captureSize, 0);
 
   auto frameProcessor2 = new FrameProcessor(captureSize, 0);
 
-  StereoCameraParams stereoCameraParams;
-  loadCameraParams(stereoCameraParams);
-
+  
   auto frameSyncer = new FrameSyncer(stereoCameraParams);
 
   glfwSetErrorCallback(glfw_error_callback);

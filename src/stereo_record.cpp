@@ -29,18 +29,20 @@ int main() {
   const int width = 1280;
   const cv::Size captureSize(width, height);
   bool shouldClose = true;
+  StereoCameraParams stereoCameraParams;
+  loadCameraParams(stereoCameraParams);
 
   auto captureSignaler = new CaptureSignaler();
 
-  auto frameReader1 = new FrameReader(4, "left", captureSize);
+  auto frameReader1 = new FrameReader(stereoCameraParams.C1.cameraNumber, "left", captureSize);
 
-  auto frameReader2 = new FrameReader(2, "right", captureSize);
+  auto frameReader2 = new FrameReader(stereoCameraParams.C2.cameraNumber, "right", captureSize);
 
   auto frameSyncer = new LightFrameSyncer();
 
-  auto leftWriter = new GstVideoWriter("new_left_1", captureSize);
+  auto leftWriter = new GstVideoWriter("ground_left_bounce_9", captureSize);
 
-  auto rightWriter = new GstVideoWriter("new_left_2", captureSize);
+  auto rightWriter = new GstVideoWriter("ground_right_bounce_9", captureSize);
 
   auto o1 = Orchestrator();
 

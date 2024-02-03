@@ -39,12 +39,15 @@ Eigen::Affine3f rotate(double ax, double ay, double az) {
 
 void loadCameraParams(StereoCameraParams &stereoCameraParams) {
   cv::FileStorage fs("../scripts/stereoParams.xml", cv::FileStorage::READ);
+  cv::FileStorage cameraAssignment("../scripts/camera_assignment.xml", cv::FileStorage::READ);
+
   fs["K1"] >> stereoCameraParams.C1.K;
   fs["D1"] >> stereoCameraParams.C1.D;
   fs["R1"] >> stereoCameraParams.C1.R;
   fs["P1"] >> stereoCameraParams.C1.P;
   fs["T"] >> stereoCameraParams.C1.T;
   stereoCameraParams.C1.isLeft = true;
+  cameraAssignment["left_camera_path"] >> stereoCameraParams.C1.cameraNumber;
 
   fs["K2"] >> stereoCameraParams.C2.K;
   fs["D2"] >> stereoCameraParams.C2.D;
@@ -52,5 +55,11 @@ void loadCameraParams(StereoCameraParams &stereoCameraParams) {
   fs["P2"] >> stereoCameraParams.C2.P;
   fs["T"] >> stereoCameraParams.C2.T;
   stereoCameraParams.C2.isLeft = false;
+  cameraAssignment["right_camera_path"] >> stereoCameraParams.C2.cameraNumber;
+}
 
+void loadFileParams(std::pair<string,string> &filePaths){
+  cv::FileStorage fileAssignment("../scripts/file_assignment.xml", cv::FileStorage::READ);
+  fileAssignment["left_file_path"] >> filePaths.first;
+  fileAssignment["right_file_path"] >> filePaths.second;
 }

@@ -4,7 +4,7 @@ import time
 import os
 import argparse
 import shutil
-
+from camera_reader import getCameraPaths
 
 
 parser = argparse.ArgumentParser();
@@ -70,8 +70,11 @@ except:
 
 
 
-camera1 = cv2.VideoCapture(0,cv2.CAP_V4L2)
-camera2 = cv2.VideoCapture(2,cv2.CAP_V4L2)
+
+leftCam,rightCam = getCameraPaths()
+
+camera1 = cv2.VideoCapture(leftCam,cv2.CAP_V4L2)
+camera2 = cv2.VideoCapture(rightCam,cv2.CAP_V4L2)
 
 # Setting Motion Codecs
 camera1.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('m','j','p','g'))
