@@ -140,42 +140,37 @@ while(True):
     #xr,yr = project3dTo2d(K2,D2,R2,T,False,x_slider,y_slider,z_slider)
     
     def draw_line1(frame,x1,y1,z1,x2,y2,z2):
-        x1l,y1l = project3dTo2d(K1,D1,R1,T,True,x1,y1,z1)
-        x2l,y2l = project3dTo2d(K1,D1,R1,T,True,x2,y2,z2)
-        cv2.line(frame,(x1l,y1l),(x2l,y2l),(0,0,255),1)
-    
+        p1 = np.array([x1,y1,z1])
+        p2 = np.array([x2,y2,z2])
+        dir = p2 - p1
+        mag = np.sqrt(np.sum(np.square(dir)))
+        for i in range(100):
+            val1 = (i/100)
+            val2 = ((i+1)/100)
+            pt1 = p1 + val1*dir
+            pt2 = p1 + val2*dir
+            x1l,y1l = project3dTo2d(K1,D1,R1,T,True,pt1[0],pt1[1],pt1[2])
+            x2l,y2l = project3dTo2d(K1,D1,R1,T,True,pt2[0],pt2[1],pt2[2])
+            cv2.line(frame,(x1l,y1l),(x2l,y2l),(0,0,255),1)  
     def draw_line2(frame,x1,y1,z1,x2,y2,z2):
-        x1l,y1l = project3dTo2d(K2,D2,R2,T,False,x1,y1,z1)
-        x2l,y2l = project3dTo2d(K2,D2,R2,T,False,x2,y2,z2)
-        cv2.line(frame,(x1l,y1l),(x2l,y2l),(0,0,255),1)
-    
-
-    
-
-    #cv2.circle(frame1,(xl,yl),1,(0,0,255),3)
-    #cv2.circle(frame1,(xc,yc),1,(0,255,255),3)
-    #cv2.circle(frame2,(xr,yr),1,(0,0,255),3)
-    #cv2.circle(frame2,(xc,yc),1,(0,255,255),3)
-    
-    #draw_line1(frame1,-2,1.37,5.58,2,1.37,5.58)
-    #draw_line1(frame1,-2,1.37,6.58,2,1.37,6.58)
-    #draw_line1(frame1,-2,1.37,9.83,2,1.37,9.83)
-
-    #draw_line2(frame2,-2,1.37,5.58,2,1.37,5.58)
-    #draw_line2(frame2,-2,1.37,6.58,2,1.37,6.58)
-    #draw_line2(frame2,-2,1.37,9.83,2,1.37,9.83)
-
-    #draw_line1(frame1,-1,0.73,4.49,1,0.73,4.49)
-    #draw_line2(frame2,-1,0.73,4.49,1,0.73,4.49)
-    #draw_line1(frame1,-1,1.16,4.49,1,1.16,4.49)
-    #draw_line2(frame2,-1,1.16,4.49,1,1.16,4.49)
-        
+        p1 = np.array([x1,y1,z1])
+        p2 = np.array([x2,y2,z2])
+        dir = p2 - p1
+        mag = np.sqrt(np.sum(np.square(dir)))
+        for i in range(100):
+            val1 = (i/100)
+            val2 = ((i+1)/100)
+            pt1 = p1 + val1*dir
+            pt2 = p1 + val2*dir
+            x1l,y1l = project3dTo2d(K2,D2,R2,T,False,pt1[0],pt1[1],pt1[2])
+            x2l,y2l = project3dTo2d(K2,D2,R2,T,False,pt2[0],pt2[1],pt2[2])
+            cv2.line(frame,(x1l,y1l),(x2l,y2l),(0,0,255),1)  
 
     width = 0.995
     height = 1.035
-    distance = 16.8 + x_offset
+    distance = 8.68 + x_offset
     groundHeight = 1.73
-    fix_x_offset = -0.47
+    fix_x_offset = -0.37
     x1 = 0 + fix_x_offset
     y1 = groundHeight - height
     z1 = distance
@@ -200,43 +195,8 @@ while(True):
     draw_line2(frame2,x1,y1,z1,x2,y2,z2)
     draw_line2(frame2,x2,y2,z2,x3,y3,z3)    
     draw_line2(frame2,x3,y3,z3,x4,y4,z4)    
-    draw_line2(frame2,x4,y4,z4,x1,y1,z1)    
+    draw_line2(frame2,x4,y4,z4,x1,y1,z1)
     
-    new_x_offset = 0.42
-    x21 = 0 + fix_x_offset + new_x_offset
-    y21 = groundHeight
-    z21 = distance
-    
-    x22 = 0 + fix_x_offset + new_x_offset + 0.2
-    y22 = groundHeight
-    z22 = distance
-
-    x23 = 0 + fix_x_offset + new_x_offset
-    y23 = groundHeight
-    z23 = distance + 0.25
-    
-    x24 = 0 + fix_x_offset + new_x_offset + 0.2
-    y24 = groundHeight
-    z24 = distance + 0.25
-
-    draw_line1(frame1,x21,y21,z21,x22,y22,z22)
-    draw_line1(frame1,x22,y22,z22,x24,y24,z24)    
-    draw_line1(frame1,x23,y23,z23,x21,y21,z21)    
-    draw_line1(frame1,x24,y24,z24,x23,y23,z23)    
-
-    draw_line2(frame2,x21,y21,z21,x22,y22,z22)
-    draw_line2(frame2,x22,y22,z22,x24,y24,z24)    
-    draw_line2(frame2,x23,y23,z23,x21,y21,z21)    
-    draw_line2(frame2,x24,y24,z24,x23,y23,z23)    
-
-
-    draw_line1(frame1,-0.3,groundHeight,3,-0.3,groundHeight,10)
-    draw_line2(frame2,-0.3,groundHeight,3,-0.3,groundHeight,10)
-    #draw_line2(frame2,x4,y4,z4,x4,y4,6.61)
-    #draw_line2(frame2,x3,y3,z3,x3,y3,6.54)
-    #draw_line1(frame1,x4,y4,z4,x4,y4,6.61)
-    #draw_line1(frame1,x3,y3,z3,x3,y3,6.54)
-
     frame1 = cv2.resize(frame1, up_points, interpolation= cv2.INTER_LINEAR)
     frame2 = cv2.resize(frame2, up_points, interpolation= cv2.INTER_LINEAR)
 

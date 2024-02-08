@@ -74,13 +74,13 @@ def calculateDepth(lx,ly,rx,ry):
 
     pts1 = cv2.undistortPoints(bowl,K1,D1,None,R1,P1).squeeze()
     pts2 = cv2.undistortPoints(bowr,K2,D2,None,R2,P2).squeeze()
-
     baseline = abs(T[0,0]/1000.0)
-    depth = P1[0,0]*(baseline)/(abs(pts1[:,0] - pts2[:,0]))
-    xl = depth*((pts1[:,0]  - P1[0,2]))/((P1[0,0])) + baseline/2   
-    xr = depth*((pts2[:,0] - P2[0,2]))/((P1[0,0]))   - baseline/2
-    yl = depth*(pts1[:,1]  - P1[1,2] )/(P1[1,1])
-    yr = depth*(pts2[:,1]  - P2[1,2])/(P2[1,1])
+    depth = P1[0,0]*(baseline)/(abs(pts1[0] - pts2[0]))
+    xl = depth*((pts1[0]  - P1[0,2]))/((P1[0,0])) + baseline/2   
+    xr = depth*((pts2[0] - P2[0,2]))/((P1[0,0]))   - baseline/2
+    yl = depth*(pts1[1]  - P1[1,2] )/(P1[1,1])
+    yr = depth*(pts2[1]  - P2[1,2])/(P2[1,1])
+    print(abs(pts1[1] - pts2[1]),(xl+xr)/2,yl,depth)
     return xl,yl,depth
 
 while(True):
