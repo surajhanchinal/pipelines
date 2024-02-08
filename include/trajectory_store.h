@@ -315,7 +315,7 @@ public:
   {
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-    render_yz_line(p, 1.72, 0, 1.72, 20);
+    render_yz_line(p, ConfigStore::groundHeight, 0, ConfigStore::groundHeight, 20);
 
     for (auto const& [_, traj] : trajectories)
     {
@@ -377,7 +377,7 @@ public:
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     // Render center line
-    render_xz_line(p, 0, 2, 0, 20);
+    render_xz_line(p, ConfigStore::X_OFFSET, 0, ConfigStore::X_OFFSET, 20);
 
     for (const auto& [_, traj] : trajectories)
     {
@@ -449,8 +449,8 @@ public:
     
     }
 
-    Eigen::Vector3f p1(0, 1.73, 2);
-    Eigen::Vector3f p2(0, 1.73, 16.9);
+    Eigen::Vector3f p1(ConfigStore::X_OFFSET, ConfigStore::groundHeight, 2);
+    Eigen::Vector3f p2(ConfigStore::X_OFFSET, ConfigStore::groundHeight, ConfigStore::Y_OFFSET);
 
     renderLine(p1, p2, cameraParams, offset);
 
