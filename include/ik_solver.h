@@ -82,27 +82,19 @@ class IKSolver
     return acos(num/den);
   }
 
-  std::vector<float> j2(float j3e, float j1e, float j5e, float j234e, float Px, float Py, float Pz)
+  std::vector<pair<float,float>> j2(float j3e, float j1e, float j5e, float j234e, float Px, float Py, float Pz)
   {
     float c1_e = c1(j1e, j5e, j234e, Px, Py);
     float c2_e = c2(j5e, j234e, Pz);
     float k1_e = k1();
     float k2_e = k2();
     float t1 = atan(c1_e / c2_e);
-    float t11 = t1 + M_PI_2;
-    float t12 = t1 - M_PI_2;
-    std::vector<float> t1_e = {t1,t11,t12};
     float t2 = atan(k2_e * sin(j3e) / (k1_e + k2_e * cos(j3e)));
-    float t21 = t2 + M_PI_2;
-    float t22 = t2 - M_PI_2;
-    std::vector<float> t2_e = {t2,t21,t22};
-    std::vector<float> sols;
-    for(int i=0;i<3;i++){
-      for(int j=0;j<3;j++){
-        sols.push_back(t1_e[i] - t2_e[j]);
-        sols.push_back(t1_e[i] + t2_e[j]);
-      }
-    }
+    
+    std::vector<pair<float,float>> sols;
+    sols.push_back({t1-t2,t1+t2});
+    sols.push_back({t1-t2 + M_PI_2,t1+t2 + M_PI_2});
+    sols.push_back({t1-t2 - M_PI_2,t1+t2 - M_PI_2});
     return sols;
   }
 
@@ -234,11 +226,11 @@ class IKSolver
     
     float j3e = j3(j1e,j5e,j234e,Px,Py,Pz);
     auto j2e = j2(j3e,j1e,j5e,j234e,Px,Py,Pz);
-    for(float & j2 : j2e){
-      float j4_e1 = j234e - j3e - j2;
-      float j4_e2 = j234e + j3e - j2;
-      sols.push_back({.j1=getOptimalAngle(j1e),.j2=getOptimalAngle(j2),.j3=getOptimalAngle(j3e),.j4=getOptimalAngle(j4_e1),.j5=getOptimalAngle(j5e),.t = t});
-      sols.push_back({.j1=getOptimalAngle(j1e),.j2=getOptimalAngle(j2),.j3=getOptimalAngle(-j3e),.j4=getOptimalAngle(j4_e2),.j5=getOptimalAngle(j5e),.t = t});
+    for(auto &j2_e : j2e){
+      float j4_e1 = j234e - j3e - j2_e.first;
+      float j4_e2 = j234e + j3e - j2_e.second;
+      sols.push_back({.j1=getOptimalAngle(j1e),.j2=getOptimalAngle(j2_e.first),.j3=getOptimalAngle(j3e),.j4=getOptimalAngle(j4_e1),.j5=getOptimalAngle(j5e),.t = t});
+      sols.push_back({.j1=getOptimalAngle(j1e),.j2=getOptimalAngle(j2_e.second),.j3=getOptimalAngle(-j3e),.j4=getOptimalAngle(j4_e2),.j5=getOptimalAngle(j5e),.t = t});
     }
   }
 
