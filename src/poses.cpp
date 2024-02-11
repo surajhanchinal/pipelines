@@ -45,13 +45,16 @@ int main()
   }
 
   auto start = std::chrono::high_resolution_clock::now();
+  Matrix4f fk;
+  FKMatrices::fk(0,M_PI_2,0,-M_PI_2,0,fk);
+  cout<<fk(0,3)<<" "<<fk(1,3)<<" "<<fk(2,3)<<endl;
   for (int i = 0; i < 1; i++)
   {
     std::vector<Solution> sols;
-    //solver.position_ik(0.260434 ,-0.00401968 ,0.705937,sols);
+    //solver.position_ik(1.1025 ,-0.00401968 ,0.81,0,sols);
 
-    solver.trajectory_ik(0.474851,7.21219,1.5522,-0.394081,-10.2628,-1.66987,sols);
-    if(sols.size()){
+    solver.trajectory_ik(0.8,7.21219,1.5522,-0.0,-10.2628,-1.66987,sols);
+    /*if(sols.size()){
       long t = (1000.0*sols[0].t);
       auto nownow = chrono::system_clock::now();
       auto timeToContact = nownow + chrono::milliseconds(t);
@@ -59,7 +62,7 @@ int main()
       std::cout<<timeToContact.time_since_epoch().count()<<endl;
       std::cout<<nownow.time_since_epoch().count()<<endl;
       std::cout<<t<<" "<<duration.count()<<std::endl;
-    }
+    }*/
     cout<<"final: "<<sols.size()<<endl;
   }
   auto end = std::chrono::high_resolution_clock::now();

@@ -117,10 +117,10 @@ public:
       }
       if(!sent){
         for(auto &[_,fullTraj]: trajectoryStore->trajectories){
-          if(fullTraj.alignedContours.size() < 6){
+          if(fullTraj.alignedContours.size() < 10){
             continue;
           }
-          auto &params = fullTraj.estimatedParams[6];
+          auto &params = fullTraj.estimatedParams[10];
           // add transformation
           std::vector<Solution> sols;
           sent = true;
@@ -146,13 +146,13 @@ public:
             long j4_a = ((float)sol.j4*(180.0/M_PI)*(3600.0/360.0));
             long j5_a = ((float)sol.j5*(180.0/M_PI)*(3600.0/360.0));
             std::ostringstream oss;
-            oss << "MRT ";
+            oss << "MR ";
             oss << j1_a << " ";
             oss << j2_a << " ";
             oss << j3_a << " ";
             oss << j4_a << " ";
             oss << j5_a << " ";
-            oss << timeToContact.time_since_epoch().count() << " ";
+            //oss << timeToContact.time_since_epoch().count() << " ";
             cout<<oss.str()<<endl;
             redis->publish("channel:1",oss.str());
           }

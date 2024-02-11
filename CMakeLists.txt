@@ -79,7 +79,6 @@ target_link_libraries(RecorderTest ${REDIS_PLUS_PLUS_LIB})
 target_include_directories(RecorderTest PUBLIC ${HIREDIS_HEADER})
 target_include_directories(RecorderTest PUBLIC ${REDIS_PLUS_PLUS_HEADER})
 target_include_directories(RecorderTest PRIVATE ${CMAKE_SOURCE_DIR}/include)
-
 add_executable(PosesTest src/poses.cpp)
 target_link_libraries( PosesTest ${OpenCV_LIBS} OpenGL glfw IMGUI GLEW Eigen3::Eigen)
 target_link_libraries(PosesTest ${HIREDIS_LIB})

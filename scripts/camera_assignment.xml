@@ -1,9 +1,9 @@
 <?xml version="1.0" ?> 
 <opencv_storage>
     <left_camera_path>
-        2
+        0
     </left_camera_path>
     <right_camera_path>
-        4
+        2
     </right_camera_path>
 </opencv_storage>

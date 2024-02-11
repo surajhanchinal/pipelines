@@ -351,6 +351,14 @@ public:
         render_yz_line(p, newy1, newz1, newy2, newz2);
       }
     }
+
+    if (common_data::solutionFound)
+    {
+      Eigen::Vector3f p1;
+      Eigen::Vector3f p2;
+      getBatFk(p1, p2);
+      render_yz_line(p, p1(1), p1(2), p2(1), p2(2));
+    }
   }
 
   void getScreenXZ(ImVec2& p, double x, double z, double& sx, double& sy)
@@ -378,6 +386,8 @@ public:
 
     // Render center line
     render_xz_line(p, ConfigStore::X_OFFSET, 0, ConfigStore::X_OFFSET, 20);
+
+    render_xz_line(p, ConfigStore::X_OFFSET-1, 0, ConfigStore::X_OFFSET-1, 20);
 
     for (const auto& [_, traj] : trajectories)
     {
@@ -449,11 +459,23 @@ public:
     
     }
 
+    {
     Eigen::Vector3f p1(ConfigStore::X_OFFSET, ConfigStore::groundHeight, 2);
     Eigen::Vector3f p2(ConfigStore::X_OFFSET, ConfigStore::groundHeight, ConfigStore::Y_OFFSET);
 
     renderLine(p1, p2, cameraParams, offset);
 
+    }
+
+{
+    Eigen::Vector3f p1(ConfigStore::X_OFFSET-1, ConfigStore::groundHeight, 2);
+    Eigen::Vector3f p2(ConfigStore::X_OFFSET-1, ConfigStore::groundHeight, ConfigStore::Y_OFFSET);
+
+    renderLine(p1, p2, cameraParams, offset);
+
+    }
+
+    
     if (common_data::solutionFound)
     {
       Eigen::Vector3f p1;
@@ -478,7 +500,7 @@ public:
     auto pti = pos_transform.inverse();
     auto comb = pti * common_data::bat_fk;
     auto pt1 = Eigen::Vector4f(0, 0, 0, 1);
-    auto pt2 = Eigen::Vector4f(0, 0, 3, 1);
+    auto pt2 = Eigen::Vector4f(0, 0, 1, 1);
 
     p1 = (comb * pt1).head(3);
     p2 = (comb * pt2).head(3);

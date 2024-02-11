@@ -1,9 +1,9 @@
 <?xml version="1.0" ?> 
 <opencv_storage>
     <left_file_path>
-        ../new_home_left_3.mp4
+        ../ground_niket_left_1.mp4
     </left_file_path>
     <right_file_path>
-        ../new_home_right_3.mp4
+        ../ground_niket_right_1.mp4
     </right_file_path>
 </opencv_storage>
